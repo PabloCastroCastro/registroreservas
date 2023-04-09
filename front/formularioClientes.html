@@ -2,8 +2,45 @@
 <html>
   <head>
     <title> Casa de Miranda </title>
+    <script src="formularioClientes.js"></script>
   </head>
   <body>
-    <h1>Casa de Miranda </h1>
+    <h1>Casa de miranda </h1>
+    <p> Registro de reservas </p>
+
+    <form id="mi-formulario">
+      <label for="nombre">Nombre:</label>
+      <input type="text" id="nombre" name="nombre" required>
+      
+      <label for="apellidos">Apellidos:</label>
+      <input type="text" id="apellidos" name="apellidos" required>
+      
+      <label for="dni">DNI:</label>
+      <input type="text" id="dni" name="dni" required>
+      
+      <label for="fecha-checkin">Fecha de check-in:</label>
+      <input type="date" id="fecha-checkin" name="fechaCheckIn">    
+  
+      <label for="fecha-checkout">Fecha de check-out:</label>
+      <input type="date" id="fecha-checkout" name="fechaCheckOut">    
+  
+  
+      <label for="selectorhabitacion">Selecciona una habitación:</label>
+      <select id="selectorhabitacion" onchange="mostrarCampos()">
+        <option value="">--Selecciona una opción--</option>
+        <option value="afonte">A Fonte</option>
+        <option value="ocarpinteiro">O Carpinteiro</option>
+        <option value="ocuberto">O Cuberto</option>
+        <option value="ofaiado">O Faiado</option>
+      </select>
+      
+      <div id="precio" style="display: none;">
+        <label for="precio">Precio</label>
+        <input type="text" id="precio">
+      </div>
+      
+      <button type="submit">Enviar datos</button>
+    </form>
   </body>
 </html>
+>>>>>>> 885aa4e (feat: init project)
