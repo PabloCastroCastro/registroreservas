@@ -1,54 +1,42 @@
-window.addEventListener('load', () => {
-    startForm('mi-formulario');
-});
+window.addEventListener("load", () => {
 
+    function sendForm() {
 
-function sendForm(formularioId) {
-    const formulario = document.getElementById(formularioId);
+        const datosFormulario = {};
+        for (var pair of new FormData(form).entries()) {
+            const clave = pair[0];
+            const valor = pair[1];
+            datosFormulario[clave] = valor;
+        }
 
-    console.log(formulario)
-    const datosFormulario = new FormData(formulario);
-
-    const url = "http://localhost:3000/factura"; 
-    const parametros = {
-        method: "POST",
-        body: datosFormulario 
-    };
-
-console.log(JSON.stringify(datosFormulario));
-
-    fetch(url, parametros)
-        .then(respuesta => {
-            console.log("Formulario enviado correctamente");
-            formulario.reset();
-        })
-        .catch(error => {
-            console.error("Error al enviar el formulario:", error);
+        console.log(JSON.stringify(datosFormulario));
+        $.ajax({
+            url: 'http://localhost:3000/factura',
+            method: 'POST',
+            data: datosFormulario,
+            success: function () {
+                $('#mi-formulario')[0].reset();
+            }
         });
-}
+    }
 
-function startForm(formularioId) {
-    const formulario = document.getElementById(formularioId);
+    const form = document.getElementById("mi-formulario");
 
-    formulario.addEventListener('submit', (evento) => {
-        evento.preventDefault();
-        sendForm(formularioId);
+    form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        sendForm();
     });
-}
-
-
+});
 
 function mostrarCampos() {
     var selector = document.getElementById("selectorhabitacion");
     var opcionSeleccionada = selector.value;
 
-    if (opcionSeleccionada == "afonte") {
+    if (opcionSeleccionada != null) {
         document.getElementById("precio").style.display = "block";
-    } else if (opcionSeleccionada == "opcion2") {
-        document.getElementById("precio").style.display = "block";
-    } else if (opcionSeleccionada == "opcion3") {
-        document.getElementById("precio").style.display = "block";
+        document.getElementById("supletoria").style.display = "block";
     } else {
         document.getElementById("precio").style.display = "none";
+        document.getElementById("supletoria").style.display = "none";
     }
 }
