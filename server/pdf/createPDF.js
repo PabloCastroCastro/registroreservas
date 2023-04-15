@@ -8,7 +8,7 @@ const generarFactura = (reserva, cliente) => {
     const doc = new PDFDocument();
 
     // Pipe its output somewhere, like to a file or HTTP response
-    doc.pipe(fs.createWriteStream(reserva.numeroFactura + '.pdf'));
+    doc.pipe(fs.createWriteStream('./facturas-cliente/'+reserva.numeroFactura + '.pdf'));
 
     // line cap settings
     doc.lineCap('butt')

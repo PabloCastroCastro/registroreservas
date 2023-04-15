@@ -20,6 +20,7 @@ app.post('/factura', function (req, res) {
     const checkinDate = req.body.fechaCheckIn;
     const fechaFactura = new Date(checkinDate).toLocaleDateString('es-ES');
     const checkOutDate = new Date(req.body.fechaCheckOut).toLocaleDateString('es-ES');
+    const dias = req.body.fechaCheckOut - req.body.fechaCheckIn;
     const fechaFormateada = checkinDate.replace(/-/g,"");
     const min = 1;
     const max = 1000;
@@ -35,10 +36,11 @@ app.post('/factura', function (req, res) {
         fechaReserva: fechaFactura,
         fechaCheckIn: fechaFactura,
         fechaCheckOut: checkOutDate,
-        habitacion:'O Carpinteiro',
-        dias: 1,
-        supletoria:'no',
-        precio: 90
+        habitacion: req.body.habitacion,
+        precio: req.body.precio,
+        dias: dias,
+        supletoria: req.body.numsupletoria,
+        precioSupletoria: req.body.preciosupletoria
     };
 
     const cliente = {
@@ -54,14 +56,9 @@ app.post('/factura', function (req, res) {
     readFileExcel(numeroFactura,fechaFactura);
     generarFactura(reserva, cliente);
 
->>>>>>> 885aa4e (feat: init project)
     res.send('Datos recibidos correctamente.');
 });
 
 app.listen(3000, function () {
   console.log('Servidor escuchando en el puerto 3000.');
-<<<<<<< HEAD
 });
-=======
-});
->>>>>>> 885aa4e (feat: init project)
