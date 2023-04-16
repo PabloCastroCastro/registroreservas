@@ -8,7 +8,7 @@ const generarFactura = (reserva, cliente) => {
     const doc = new PDFDocument();
 
     // Pipe its output somewhere, like to a file or HTTP response
-    doc.pipe(fs.createWriteStream('./facturas-cliente/'+reserva.numeroFactura + '.pdf'));
+    doc.pipe(fs.createWriteStream('./facturas-cliente/' + reserva.numeroFactura + '.pdf'));
 
     // line cap settings
     doc.lineCap('butt')
@@ -102,124 +102,106 @@ const generarFactura = (reserva, cliente) => {
         .fontSize(12)
         .fillColor('#154360').text('Precio total', 465, 300);
 
-    doc.lineCap('butt')
-        .moveTo(75, 320)
-        .lineTo(525, 320)
-        .lineWidth(15)
-        .fillOpacity(0.8)
-        .fillAndStroke('#E5E8E8');
 
-    doc.font('Times-Roman')
-        .fontSize(10)
-        .fillColor('#1B2631').text('Habitación Doble ('+reserva.habitacion+')', 76, 316);
+    //entradas de habitaciones
+    const start = 320;
+    var index = 320;
+    var color = '#E5E8E8';
+    var importeTotal = 0;
+    for (var i = 0; i < reserva.habitaciones.length; i++) {
 
-    doc.font('Times-Roman')
-        .fontSize(10)
-        .fillColor('#1B2631').text(reserva.dias, 342, 316);
-
-    doc.font('Times-Roman')
-        .fontSize(10)
-        .fillColor('#1B2631').text(reserva.precio + ' €', 422, 316);    
-
-    doc.font('Times-Roman')
-        .fontSize(10)
-        .fillColor('#1B2631').text(reserva.dias*reserva.precio + ' €', 507, 316);    
-
-    doc.lineCap('butt')
-        .moveTo(75, 335)
-        .lineTo(525, 335)
-        .lineWidth(15)
-        .fillOpacity(0.8)
-        .fillAndStroke('white');
-
-    doc.font('Times-Roman')
-        .fontSize(10)
-        .fillColor('#1B2631').text('Desayuno incluido', 76, 331);
-
-    doc.font('Times-Roman')
-        .fontSize(10)
-        .fillColor('#1B2631').text(reserva.dias, 342, 331);
-
-    doc.font('Times-Roman')
-        .fontSize(10)
-        .fillColor('#1B2631').text('0,00 €', 415, 331);    
-
-    doc.font('Times-Roman')
-        .fontSize(10)
-        .fillColor('#1B2631').text('0,00 €', 500, 331);    
+        doc.lineCap('butt')
+            .moveTo(75, index)
+            .lineTo(525, index)
+            .lineWidth(15)
+            .fillOpacity(0.8)
+            .fillAndStroke(color);
 
 
-    doc.lineCap('butt')
-        .moveTo(75, 350)
-        .lineTo(525, 350)
-        .lineWidth(15)
-        .fillOpacity(0.8)
-        .fillAndStroke('#E5E8E8');
+        doc.font('Times-Roman')
+            .fontSize(10)
+            .fillColor('#1B2631').text('Habitación Doble (' + reserva.habitaciones[i].habitacion + ')', 76, index - 4);
 
-    doc.font('Times-Roman')
-        .fontSize(10)
-        .fillColor('#1B2631').text('Habitación Doble (O Cuberto)', 76, 346);
+        doc.font('Times-Roman')
+            .fontSize(10)
+            .fillColor('#1B2631').text(reserva.dias, 342, index - 4);
 
-    doc.font('Times-Roman')
-        .fontSize(10)
-        .fillColor('#1B2631').text('2', 342, 346);
+        doc.font('Times-Roman')
+            .fontSize(10)
+            .fillColor('#1B2631').text(reserva.habitaciones[i].precio + ' €', 422, index - 4);
 
-    doc.font('Times-Roman')
-        .fontSize(10)
-        .fillColor('#1B2631').text('220 €', 417, 346);    
+        doc.font('Times-Roman')
+            .fontSize(10)
+            .fillColor('#1B2631').text(reserva.dias * reserva.habitaciones[i].precio + ' €', 506, index - 4);
 
-    doc.font('Times-Roman')
-        .fontSize(10)
-        .fillColor('#1B2631').text('220 €', 502, 346);   
+        importeTotal = importeTotal +(reserva.dias * reserva.habitaciones[i].precio);
+        if (color == '#E5E8E8') {
+            color = 'white';
+        } else {
+            color = '#E5E8E8';
+        }
 
-    doc.lineCap('butt')
-        .moveTo(75, 365)
-        .lineTo(525, 365)
-        .lineWidth(15)
-        .fillOpacity(0.8)
-        .fillAndStroke('white');
+        index = index + 15
 
-    doc.lineCap('butt')
-        .moveTo(75, 380)
-        .lineTo(525, 380)
-        .lineWidth(15)
-        .fillOpacity(0.8)
-        .fillAndStroke('#E5E8E8');
+        doc.lineCap('butt')
+            .moveTo(75, index)
+            .lineTo(525, index)
+            .lineWidth(15)
+            .fillOpacity(0.8)
+            .fillAndStroke(color);
 
-    doc.lineCap('butt')
-        .moveTo(75, 395)
-        .lineTo(525, 395)
-        .lineWidth(15)
-        .fillOpacity(0.8)
-        .fillAndStroke('white');
+        // desayunos
+        doc.font('Times-Roman')
+            .fontSize(10)
+            .fillColor('#1B2631').text('Desayuno incluido', 76, index - 4);
 
-    doc.lineCap('butt')
-        .moveTo(75, 410)
-        .lineTo(525, 410)
-        .lineWidth(15)
-        .fillOpacity(0.8)
-        .fillAndStroke('#E5E8E8');
+        doc.font('Times-Roman')
+            .fontSize(10)
+            .fillColor('#1B2631').text(reserva.dias, 342, index - 4);
 
-    doc.lineCap('butt')
-        .moveTo(75, 425)
-        .lineTo(525, 425)
-        .lineWidth(15)
-        .fillOpacity(0.8)
-        .fillAndStroke('white');
+        doc.font('Times-Roman')
+            .fontSize(10)
+            .fillColor('#1B2631').text('0,00 €', 415, index - 4);
 
-    doc.lineCap('butt')
-        .moveTo(75, 440)
-        .lineTo(525, 440)
-        .lineWidth(15)
-        .fillOpacity(0.8)
-        .fillAndStroke('#E5E8E8');
+        doc.font('Times-Roman')
+            .fontSize(10)
+            .fillColor('#1B2631').text('0,00 €', 500, index - 4);
+
+        if (color == '#E5E8E8') {
+            color = 'white';
+        } else {
+            color = '#E5E8E8';
+        }
+
+        index = index + 15
+
+    }
+
+    while (index < 455) {
+
+        doc.lineCap('butt')
+            .moveTo(75, index)
+            .lineTo(525, index)
+            .lineWidth(15)
+            .fillOpacity(0.8)
+            .fillAndStroke(color);
+
+        if (color == '#E5E8E8') {
+            color = 'white';
+        } else {
+            color = '#E5E8E8';
+        }
+
+        index = index + 15
+
+    }
 
     doc.lineCap('butt')
         .moveTo(75, 455)
         .lineTo(525, 455)
         .lineWidth(15)
         .fillOpacity(0.8)
-        .fillAndStroke('white');
+        .fillAndStroke(color);
 
     doc.font('Times-Roman')
         .fontSize(10)
@@ -227,7 +209,7 @@ const generarFactura = (reserva, cliente) => {
 
     doc.font('Times-Roman')
         .fontSize(10)
-        .fillColor('#1B2631').text('10% IVA €', 480, 451);  
+        .fillColor('#1B2631').text('10% IVA €', 480, 451);
 
     doc.lineCap('butt')
         .moveTo(75, 461)
@@ -235,14 +217,14 @@ const generarFactura = (reserva, cliente) => {
         .lineWidth(1)
         .fillAndStroke('grey');
 
-    
+
     doc.font('Times-Roman')
         .fontSize(10)
         .fillColor('#154360').text('Subtotal', 440, 470);
 
     doc.font('Times-Bold')
         .fontSize(10)
-        .fillColor('#1B2631').text('90,00 €', 495, 470);   
+        .fillColor('#1B2631').text(importeTotal+' €', 495, 470);
 
     doc.font('Times-Roman')
         .fontSize(10)
@@ -250,11 +232,11 @@ const generarFactura = (reserva, cliente) => {
 
     doc.font('Times-Roman')
         .fontSize(10)
-        .fillColor('#1B2631').text('0,00 €', 500, 490);   
+        .fillColor('#1B2631').text('0,00 €', 500, 490);
 
     doc.font('Times-Bold')
         .fontSize(20)
-        .fillColor('green').text('90,00 €', 465, 510);  
+        .fillColor('green').text(importeTotal+' €', 465, 510);
 
     // Finalize PDF file
     doc.end();

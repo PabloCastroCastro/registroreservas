@@ -7,51 +7,75 @@
     <script src="formularioClientes.js"></script>
   </head>
   <body>
-    <h1>Casa de miranda </h1>
+    <h1>Casa de Miranda </h1>
     <div id="registroReservas">
       <p> Registro de reservas </p>
       <form id="mi-formulario">
-        <label for="nombre">Nombre:</label>
-        <input type="text" id="nombre" name="nombre" required>
-        
-        <label for="apellidos">Apellidos:</label>
-        <input type="text" id="apellidos" name="apellidos" required>
-        
-        <label for="dni">DNI:</label>
-        <input type="text" id="dni" name="dni" required>
-        
-        <label for="fecha-checkin">Fecha de check-in:</label>
-        <input type="date" id="fecha-checkin" name="fechaCheckIn">    
+        <div id="datos-reserva">
+          <div class="formulario-elemento">
+            <label for="nombre">Nombre:</label>
+            <input type="text" id="nombre" name="nombre" required>
+          </div>
+          
+          <div class="formulario-elemento">
+            <label for="apellidos">Apellidos:</label>
+            <input type="text" id="apellidos" name="apellidos" required>
+          </div>
+          
+          <div class="formulario-elemento">
+            <label for="dni">DNI:</label>
+            <input type="text" id="dni" name="dni" required>
+          </div>
+          
+          <div class="formulario-elemento">
+            <label for="fecha-checkin">Fecha de check-in:</label>
+            <input type="date" id="fecha-checkin" name="fechaCheckIn" required>    
+          </div>
+      
+          <div class="formulario-elemento">
+            <label for="fecha-checkout">Fecha de check-out:</label>
+            <input type="date" id="fecha-checkout" name="fechaCheckOut" required>
+          </div>
+        </div>
+
+        <div id="datos-habitacion">
+          <div class="formulario-elemento">
+            <label for="selectorhabitacion">Selecciona una habitación:</label>
+            <select id="selectorhabitacion" onchange="mostrarCampos()" name="habitacion">
+              <option value="">--Selecciona una opción--</option>
+              <option value="A Fonte">A Fonte</option>
+              <option value="O Carpinteiro">O Carpinteiro</option>
+              <option value="O Cuberto">O Cuberto</option>
+              <option value="O Faiado">O Faiado</option>
+            </select>
+          </div>
+          
+          <div class="formulario-elemento" id="precio" style="display: none;">
+            <label for="precio">Precio</label>
+            <input type="text" id="preciohab" name="precio">
+          </div>
     
-        <label for="fecha-checkout">Fecha de check-out:</label>
-        <input type="date" id="fecha-checkout" name="fechaCheckOut">
-        
-        <label for="selectorhabitacion">Selecciona una habitación:</label>
-        <select id="selectorhabitacion" onchange="mostrarCampos()" name="habitacion">
-          <option value="">--Selecciona una opción--</option>
-          <option value="afonte">A Fonte</option>
-          <option value="ocarpinteiro">O Carpinteiro</option>
-          <option value="ocuberto">O Cuberto</option>
-          <option value="ofaiado">O Faiado</option>
-        </select>
-        
-        <div id="precio" style="display: none;">
-          <label for="precio">Precio</label>
-          <input type="text" id="precio" name="precio">
+          <div class="formulario-elemento" id="supletoria" style="display: none;">
+            <label for="numerosupl">Número de supletorias:</label>
+            <input type="text" id="numerosupl" name="numsupletoria" >
+            <label for="preciosupl">Precio de cada supletoria:</label>
+            <input type="text" id="preciosupl" name="preciosupletoria">
+          </div>
+    
+          <div class="formulario-elemento" id="boton-hatitacion">
+            <button type="button" onclick=agregarHabitacion()>Añadir habitación</button>
+          </div>
         </div>
-  
-        <div id="supletoria" style="display: none;">
-          <label for="numerosupl">Número de supletorias:</label>
-          <input type="text" id="numerosupl" name="numsupletoria">
-          <label for="preciosupl">Precio de cada supletoria:</label>
-          <input type="text" id="preciosupl" name="preciosupletoria">
+
+        <ul id="lista-habitaciones"></ul>
+
+
+        <div class="formulario-elemento" id="boton-enviar">
+          <button type="submit">Enviar datos</button>
         </div>
-  
-        <button type="submit">Enviar datos</button>
+        
       </form>
     </div>
-
-
   </body>
 </html>
 >>>>>>> 885aa4e (feat: init project)
