@@ -122,19 +122,25 @@ const generarFactura = (reserva, cliente) => {
             .fontSize(10)
             .fillColor('#1B2631').text('Habitación Doble (' + reserva.habitaciones[i].habitacion + ')', 76, index - 4);
 
+        let lengthDays = reserva.dias.toString().length * 5;
         doc.font('Times-Roman')
             .fontSize(10)
-            .fillColor('#1B2631').text(reserva.dias, 342, index - 4);
+            .fillColor('#1B2631').text(reserva.dias, 345 - lengthDays, index - 4);
 
+        let price = parseFloat(reserva.habitaciones[i].precio).toFixed(2);
+        //cada letra en tamano 10 son 5px
+        let lengthPrice = price.toString().length * 5;
         doc.font('Times-Roman')
             .fontSize(10)
-            .fillColor('#1B2631').text(reserva.habitaciones[i].precio + ' €', 422, index - 4);
+            .fillColor('#1B2631').text(price + ' €', 440 - lengthPrice, index - 4);
 
+        let totalRoomPrice = (reserva.dias * reserva.habitaciones[i].precio).toFixed(2);
+        let lengthTotalRoomPrice = totalRoomPrice.toString().length * 5;
         doc.font('Times-Roman')
             .fontSize(10)
-            .fillColor('#1B2631').text(reserva.dias * reserva.habitaciones[i].precio + ' €', 506, index - 4);
+            .fillColor('#1B2631').text(totalRoomPrice + ' €', 520 - lengthTotalRoomPrice, index - 4);
 
-        importeTotal = importeTotal +(reserva.dias * reserva.habitaciones[i].precio);
+        importeTotal = importeTotal + (reserva.dias * reserva.habitaciones[i].precio);
         if (color == '#E5E8E8') {
             color = 'white';
         } else {
@@ -150,6 +156,46 @@ const generarFactura = (reserva, cliente) => {
             .fillOpacity(0.8)
             .fillAndStroke(color);
 
+        //supletorias
+        if (reserva.habitaciones[i].supletorias != null && reserva.habitaciones[i].supletorias > 0) {
+            doc.font('Times-Roman')
+                .fontSize(10)
+                .fillColor('#1B2631').text('Supletoria', 76, index - 4);
+
+            doc.font('Times-Roman')
+                .fontSize(10)
+                .fillColor('#1B2631').text(reserva.dias, 345 - lengthDays, index - 4);
+
+            let extraBedPrice = parseFloat(reserva.habitaciones[i].precioSupletoria).toFixed(2);
+            let extraBedPriceLength = extraBedPrice.toString().length * 5;
+            doc.font('Times-Roman')
+                .fontSize(10)
+                .fillColor('#1B2631').text(extraBedPrice + ' €', 440 - extraBedPriceLength, index - 4);
+
+            let totalExtraBedPrice = (reserva.dias * reserva.habitaciones[i].supletorias * reserva.habitaciones[i].precioSupletoria).toFixed(2);
+            let lengthTotalExtraBedPrice = totalExtraBedPrice.toString().length * 5;
+            doc.font('Times-Roman')
+                .fontSize(10)
+                .fillColor('#1B2631').text(totalExtraBedPrice + ' €', 520 - lengthTotalExtraBedPrice, index - 4);
+
+            importeTotal = importeTotal + (reserva.dias * reserva.habitaciones[i].supletorias * reserva.habitaciones[i].precioSupletoria);
+            if (color == '#E5E8E8') {
+                color = 'white';
+            } else {
+                color = '#E5E8E8';
+            }
+
+            index = index + 15
+        }
+
+
+        doc.lineCap('butt')
+            .moveTo(75, index)
+            .lineTo(525, index)
+            .lineWidth(15)
+            .fillOpacity(0.8)
+            .fillAndStroke(color);
+
         // desayunos
         doc.font('Times-Roman')
             .fontSize(10)
@@ -157,15 +203,17 @@ const generarFactura = (reserva, cliente) => {
 
         doc.font('Times-Roman')
             .fontSize(10)
-            .fillColor('#1B2631').text(reserva.dias, 342, index - 4);
+            .fillColor('#1B2631').text(reserva.dias, 345 - lengthDays, index - 4);
+
+        let zeroPrice = parseFloat('0').toFixed(2);
+        let constantLengthPrice = zeroPrice.toString().length * 5;
+        doc.font('Times-Roman')
+            .fontSize(10)
+            .fillColor('#1B2631').text(zeroPrice + ' €', 440 - constantLengthPrice, index - 4);
 
         doc.font('Times-Roman')
             .fontSize(10)
-            .fillColor('#1B2631').text('0,00 €', 415, index - 4);
-
-        doc.font('Times-Roman')
-            .fontSize(10)
-            .fillColor('#1B2631').text('0,00 €', 500, index - 4);
+            .fillColor('#1B2631').text(zeroPrice + ' €', 520 - constantLengthPrice, index - 4);
 
         if (color == '#E5E8E8') {
             color = 'white';
@@ -222,21 +270,25 @@ const generarFactura = (reserva, cliente) => {
         .fontSize(10)
         .fillColor('#154360').text('Subtotal', 440, 470);
 
+    let totalAmount = parseFloat(importeTotal).toFixed(2);
+    let totalAmountLength = totalAmount.toString().length * 5;
     doc.font('Times-Bold')
         .fontSize(10)
-        .fillColor('#1B2631').text(importeTotal+' €', 495, 470);
+        .fillColor('#1B2631').text(totalAmount + ' €', 520 - totalAmountLength, 470);
 
     doc.font('Times-Roman')
         .fontSize(10)
-        .fillColor('#154360').text('Ajustes', 440, 490);
+        .fillColor('#154360').text('Ajustes', 440, 480);
 
     doc.font('Times-Roman')
         .fontSize(10)
-        .fillColor('#1B2631').text('0,00 €', 500, 490);
+        .fillColor('#1B2631').text('0.00 €', 500, 480);
 
+    let totalAmount20Px = parseFloat(importeTotal).toFixed(2);
+    let totalAmount20PxLength = totalAmount20Px.toString().length * 10;
     doc.font('Times-Bold')
         .fontSize(20)
-        .fillColor('green').text(importeTotal+' €', 465, 510);
+        .fillColor('green').text(totalAmount20Px + ' €', 515 - totalAmount20PxLength, 510);
 
     // Finalize PDF file
     doc.end();
