@@ -1,5 +1,7 @@
 /server/facturas-cliente
 /server/node_modules
+/server/password.txt
+/server/confmail.PNG
 
 # Logs
 logs
