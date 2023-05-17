@@ -4,6 +4,7 @@ const cors = require('cors');
 const app = express();
 const generarFactura = require('./pdf/createPDF');
 const readFileExcel = require('./excel/functionsExcel');
+const sendMail = require('./mail/sendMail');
 
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -24,17 +25,13 @@ app.post('/factura', function (req, res) {
     const diferenciaEnMilisegundos = new Date(req.body.fechaCheckOut) - new Date(req.body.fechaCheckIn);
     const milisegundosEnUnDia = 1000 * 60 * 60 * 24;
     const dias = Math.floor(diferenciaEnMilisegundos / milisegundosEnUnDia);
-    const fechaFormateada = checkinDate.replace(/-/g,"");
+    const fechaFormateada = checkinDate.replace(/-/g, "");
     const min = 1;
     const max = 1000;
     const numeroAleatorio = Math.floor(Math.random() * (max - min + 1)) + min;
     const numeroFormateado = numeroAleatorio.toString().padStart(3, '0');
     const numeroFactura = fechaFormateada.toString() + numeroFormateado;
     const habitaciones = JSON.parse(req.body.habitaciones);
-
-    console.log(habitaciones);
-    console.log(numeroFactura); // Ejemplo de salida: "20230407"
-
 
     const reserva = {
         numeroFactura: numeroFactura,
@@ -50,19 +47,18 @@ app.post('/factura', function (req, res) {
         apellidos: apellidos,
         dni: dni
     };
-    
+
     console.log(reserva);
     console.log(dias);
 
 
-    // Hacer algo con los datos recibidos, como guardarlos en una base de datos
-    // modificar datos de un excel y subirlo al drive
-    readFileExcel(numeroFactura,fechaFactura);
+    readFileExcel(numeroFactura, fechaFactura);
     generarFactura(reserva, cliente);
+    sendMail(numeroFactura, nombre, apellidos);
 
     res.send('Datos recibidos correctamente.');
 });
 
 app.listen(3000, function () {
-  console.log('Servidor escuchando en el puerto 3000.');
+    console.log('Servidor escuchando en el puerto 3000.');
 });
