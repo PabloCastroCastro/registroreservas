@@ -5,7 +5,7 @@ const app = express();
 const generarFactura = require('./pdf/createPDF');
 const readFileExcel = require('./excel/functionsExcel');
 const sendMail = require('./mail/sendMail');
-
+const sendConfirmationBookingMail = require('./confirmacion-reserva/sendMailConfirmationBooking');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -18,6 +18,7 @@ app.post('/factura', function (req, res) {
     const nombre = req.body.nombre;
     const apellidos = req.body.apellidos;
     const dni = req.body.dni;
+    const email = req.body.email;
     const checkinDate = req.body.fechaCheckIn;
     const fechaFactura = new Date(checkinDate).toLocaleDateString('es-ES');
     const checkOutDate = new Date(req.body.fechaCheckOut).toLocaleDateString('es-ES');
@@ -45,7 +46,8 @@ app.post('/factura', function (req, res) {
     const cliente = {
         nombre: nombre,
         apellidos: apellidos,
-        dni: dni
+        dni: dni,
+        email: email,
     };
 
     console.log(reserva);
@@ -55,6 +57,7 @@ app.post('/factura', function (req, res) {
     readFileExcel(numeroFactura, fechaFactura);
     generarFactura(reserva, cliente);
     sendMail(numeroFactura, nombre, apellidos);
+    sendConfirmationBookingMail(numeroFactura, cliente, reserva);
 
     res.send('Datos recibidos correctamente.');
 });
