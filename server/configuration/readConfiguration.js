@@ -8,7 +8,7 @@ const readProperty = (property) => {
         return configPassword[property];
     }
 
-    const genericConfig = JSON.parse(fs.readFileSync('./configuration/password.json', 'utf8'));
+    const genericConfig = JSON.parse(fs.readFileSync('./configuration/configuration.json', 'utf8'));
     if (genericConfig.hasOwnProperty(property)){
         return genericConfig[property];
     }
