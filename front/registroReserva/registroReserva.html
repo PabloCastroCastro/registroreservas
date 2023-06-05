@@ -2,9 +2,9 @@
 <html>
   <head>
     <title> Casa de Miranda </title>
-    <link rel="stylesheet" href="formularioClientes.css">
+    <link rel="stylesheet" href="registroReserva.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="formularioClientes.js"></script>
+    <script src="registroReserva.js"></script>
   </head>
   <body>
     <h1>Casa de Miranda </h1>
@@ -31,6 +31,12 @@
             <label for="email">Email:</label>
             <input type="text" id="email" name="email" required>
           </div>
+
+          <div class="formulario-elemento">
+            <label for="confirmationEmail">Confirmación email:</label>
+            <input type="text" id="confirmation-email" name="confirmation-email" required>
+          </div>
+
 
           <div class="formulario-elemento">
             <label for="fecha-checkin">Fecha de check-in:</label>
@@ -75,7 +81,7 @@
         <ul id="lista-habitaciones"></ul>
 
         <div class="formulario-elemento" id="boton-enviar">
-          <button type="submit">Generar factura</button>
+          <button type="submit">Registro reserva</button>
         </div>
       </form>
     </div>

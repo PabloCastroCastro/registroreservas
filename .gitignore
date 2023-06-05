@@ -1,5 +1,6 @@
 /server/facturas-cliente
 /server/node_modules
+/server/configuration/password.json
 /server/password.txt
 /server/confmail.PNG
 
