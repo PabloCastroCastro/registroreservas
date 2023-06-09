@@ -6,6 +6,7 @@ const generarFactura = require('./pdf/createPDF');
 const readFileExcel = require('./excel/functionsExcel');
 const sendMail = require('./mail/sendMail');
 const sendConfirmationBookingMail = require('./confirmacion-reserva/sendMailConfirmationBooking');
+const saveBooking = require('./bookings/saveBooking')
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -50,6 +51,7 @@ app.post('/reserva', function (req, res) {
     };
 
     console.log('envio confirmacion reserva');
+    saveBooking.save(reserva, cliente);
     sendConfirmationBookingMail(numeroFactura, cliente, reserva);
 
     res.send('Reserva generada correctamente.');

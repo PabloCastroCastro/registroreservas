@@ -3,6 +3,7 @@
 /server/configuration/password.json
 /server/password.txt
 /server/confmail.PNG
+/infrastructure/bbdd/data
 
 # Logs
 logs
