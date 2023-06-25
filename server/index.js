@@ -22,6 +22,8 @@ app.post('/reserva', function (req, res) {
     const checkinDate = req.body.fechaCheckIn;
     const fechaFactura = new Date(checkinDate).toLocaleDateString('es-ES');
     const checkOutDate = new Date(req.body.fechaCheckOut).toLocaleDateString('es-ES');
+    const sendConfirmationEmail = req.body.envioConfirmacion;
+
 
     const diferenciaEnMilisegundos = new Date(req.body.fechaCheckOut) - new Date(req.body.fechaCheckIn);
     const milisegundosEnUnDia = 1000 * 60 * 60 * 24;
@@ -52,8 +54,10 @@ app.post('/reserva', function (req, res) {
 
     console.log('envio confirmacion reserva');
     saveBooking.save(reserva, cliente);
-    sendConfirmationBookingMail(numeroFactura, cliente, reserva);
-
+    if (sendConfirmationEmail != null && sendConfirmationEmail == "on") {
+        console.log('send mail');
+        sendConfirmationBookingMail(numeroFactura, cliente, reserva);
+    }
     res.send('Reserva generada correctamente.');
 })
 
@@ -67,6 +71,7 @@ app.post('/factura', function (req, res) {
     const checkinDate = req.body.fechaCheckIn;
     const fechaFactura = new Date(checkinDate).toLocaleDateString('es-ES');
     const checkOutDate = new Date(req.body.fechaCheckOut).toLocaleDateString('es-ES');
+    const sendConfirmationEmail = req.body.envioConfirmacion;
 
     const diferenciaEnMilisegundos = new Date(req.body.fechaCheckOut) - new Date(req.body.fechaCheckIn);
     const milisegundosEnUnDia = 1000 * 60 * 60 * 24;
@@ -102,7 +107,10 @@ app.post('/factura', function (req, res) {
     readFileExcel(numeroFactura, fechaFactura);
     generarFactura(reserva, cliente);
     sendMail(numeroFactura, nombre, apellidos);
-    sendConfirmationBookingMail(numeroFactura, cliente, reserva);
+    if (sendConfirmationEmail != null && sendConfirmationEmail == "on") {
+        console.log('send mail');
+        sendConfirmationBookingMail(numeroFactura, cliente, reserva);
+    }
 
     res.send('Datos recibidos correctamente.');
 });
