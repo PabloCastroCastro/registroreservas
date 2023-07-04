@@ -12,7 +12,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors());
 
-app.post('/reserva', function (req, res) {
+app.post('/reserva', async (req, res) => {
     console.log(JSON.stringify(req.body))
 
     const nombre = req.body.nombre;
@@ -53,7 +53,7 @@ app.post('/reserva', function (req, res) {
     };
 
     console.log('envio confirmacion reserva');
-    saveBooking.save(reserva, cliente);
+    await saveBooking.save(reserva, cliente);
     if (sendConfirmationEmail != null && sendConfirmationEmail == "on") {
         console.log('send mail');
         sendConfirmationBookingMail(numeroFactura, cliente, reserva);

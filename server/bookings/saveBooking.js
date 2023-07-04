@@ -17,11 +17,13 @@ var config = {
 };
 
 
-const save = (booking, customer) => {
+const save = async (booking, customer) => {
 
     //saveRooms(booking.habitaciones).then(rooms => console.log(rooms));
-    update('INSERT INTO casademiranda.customers (name, surname,identifier,email) VALUES (?, ?, ?, ?);', [customer.nombre, customer.apellidos, customer.dni, customer.email]).then(result => console.log(result));
-    update('INSERT INTO casademiranda.bookings (check_in, check_out) VALUES (?, ?);', [new Date(booking.fechaCheckIn), new Date(booking.fechaCheckOut)]).then(result=> console.log(result));
+    let idCustomer = await update('INSERT INTO casademiranda.customers (name, surname,identifier,email) VALUES (?, ?, ?, ?);', [customer.nombre, customer.apellidos, customer.dni, customer.email]);
+    console.log("idCustomer", idCustomer);
+    let idBooking = await update('INSERT INTO casademiranda.bookings (check_in, check_out) VALUES (?, ?);', [new Date(booking.fechaCheckIn), new Date(booking.fechaCheckOut)]);
+    console.log("idCustomer", idCustomer);
 }
 
 const saveRooms = (rooms) => {
@@ -42,36 +44,33 @@ const saveRooms = (rooms) => {
 }
 
 const update = (query, params) => {
-    return new Promise((resolve, reject) => {
-        var connection = sql.createConnection(config);
+    var connection = sql.createConnection(config);
 
-        connection.connect();
-        let queryresult = connection.query(query, params, (error, results) => {
-            if (error) {
-                reject({ error: error });
-            }
-            console.log('Query: ' + query + 'The solution: ', results);
-            return results;
-        });
+    connection.connect();
+    let queryresult = connection.query(query, params, (error, results) => {
+        if (error) {
+            reject({ error: error });
+        }
+        console.log('Query: ' + query + 'The solution: ', results);
+        return results;
+    });
 
-        connection.end();
-        console.log('Insert id: ', queryresult.insertId);
-
-        resolve(queryresult);
-    })
+    connection.end();
+    console.log('Insert id: ', queryresult.insertId);
+    return queryresult;
 }
 
 const query = (query, params) => {
 
     return new Promise((resolve, reject) => {
-         var connection = sql.createConnection(config);
+        var connection = sql.createConnection(config);
 
         connection.connect();
         connection.query(query, params, function (error, results, fields) {
             if (error) reject(error);
             resolve(results)
         })
-        connection.end();   
+        connection.end();
     })
 
 }
