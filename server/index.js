@@ -6,12 +6,27 @@ const generarFactura = require('./pdf/createPDF');
 const readFileExcel = require('./excel/functionsExcel');
 const sendMail = require('./mail/sendMail');
 const sendConfirmationBookingMail = require('./confirmacion-reserva/sendMailConfirmationBooking');
+const saveBooking = require('./bookings/saveBooking')
+const listBookings = require('./bookings/listBooking');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors());
 
-app.post('/reserva', function (req, res) {
+app.get('/reserva', async (req, res) =>{
+
+    let identifier = req.query.dni;
+    let bookings;
+    if(identifier != null && identifier != ""){
+        bookings = await listBookings.listBookingByCustomer(identifier).then((value)=> {return value});
+    } else {
+        bookings = await listBookings.listAllBookings().then((value)=> {return value});
+    }
+
+    res.send(bookings);
+})
+
+app.post('/reserva', async (req, res) => {
     console.log(JSON.stringify(req.body))
 
     const nombre = req.body.nombre;
@@ -21,6 +36,8 @@ app.post('/reserva', function (req, res) {
     const checkinDate = req.body.fechaCheckIn;
     const fechaFactura = new Date(checkinDate).toLocaleDateString('es-ES');
     const checkOutDate = new Date(req.body.fechaCheckOut).toLocaleDateString('es-ES');
+    const sendConfirmationEmail = req.body.envioConfirmacion;
+
 
     const diferenciaEnMilisegundos = new Date(req.body.fechaCheckOut) - new Date(req.body.fechaCheckIn);
     const milisegundosEnUnDia = 1000 * 60 * 60 * 24;
@@ -38,6 +55,8 @@ app.post('/reserva', function (req, res) {
         fechaReserva: fechaFactura,
         fechaCheckIn: fechaFactura,
         fechaCheckOut: checkOutDate,
+        checkInDate: req.body.fechaCheckIn,
+        checkOutDate: req.body.fechaCheckOut,
         dias: dias,
         habitaciones: habitaciones,
     };
@@ -50,8 +69,11 @@ app.post('/reserva', function (req, res) {
     };
 
     console.log('envio confirmacion reserva');
-    sendConfirmationBookingMail(numeroFactura, cliente, reserva);
-
+    await saveBooking.save(reserva, cliente);
+    if (sendConfirmationEmail != null && sendConfirmationEmail == "on") {
+        console.log('send mail');
+        sendConfirmationBookingMail(numeroFactura, cliente, reserva);
+    }
     res.send('Reserva generada correctamente.');
 })
 
@@ -65,6 +87,7 @@ app.post('/factura', function (req, res) {
     const checkinDate = req.body.fechaCheckIn;
     const fechaFactura = new Date(checkinDate).toLocaleDateString('es-ES');
     const checkOutDate = new Date(req.body.fechaCheckOut).toLocaleDateString('es-ES');
+    const sendConfirmationEmail = req.body.envioConfirmacion;
 
     const diferenciaEnMilisegundos = new Date(req.body.fechaCheckOut) - new Date(req.body.fechaCheckIn);
     const milisegundosEnUnDia = 1000 * 60 * 60 * 24;
@@ -100,8 +123,6 @@ app.post('/factura', function (req, res) {
     readFileExcel(numeroFactura, fechaFactura);
     generarFactura(reserva, cliente);
     sendMail(numeroFactura, nombre, apellidos);
-    sendConfirmationBookingMail(numeroFactura, cliente, reserva);
-
     res.send('Datos recibidos correctamente.');
 });
 
