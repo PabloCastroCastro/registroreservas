@@ -1,0 +1,30 @@
+<html>
+
+<head>
+    <title> Casa de Miranda </title>
+    <link rel="stylesheet" href="reservas.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="reservas.js"></script>
+</head>
+
+<body>
+    <h3>Buscar reservas</h3>
+    <div>
+        <input id="findByIdentifierText" value="Dni..">
+        <button id="findByIdentifier" onclick="find()">Buscar</button>
+    </div>
+    <div id="divTable">
+        <table id="bookingTable">
+            <thead>
+              <tr>
+                <th>Reserva</th>
+                <th>Nombre</th>
+                <th>Apellidos</th>
+                <th>Habitaciones</th>
+              </tr>
+            </thead>
+            <tbody id="tBodyBookings">
+            </tbody>
+          </table>
+    </div>
+</body>

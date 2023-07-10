@@ -1,78 +1,38 @@
-var sql = require("mysql2");
-const readProperty = require('../configuration/readConfiguration');
-const roomEnum = require('../rooms/room');
+const sql = require('../sql/sqlUtils')
 
-const pass = readProperty("sql.password");
-const user = readProperty("sql.user");
-const server = readProperty("sql.server");
-const port = readProperty("sql.port");
-const database = readProperty("sql.database");
-
-var config = {
-    user: user,
-    password: pass,
-    server: server,
-    port: port,
-    database: database
-};
 
 
 const save = async (booking, customer) => {
 
-    //saveRooms(booking.habitaciones).then(rooms => console.log(rooms));
-    let idCustomer = await update('INSERT INTO casademiranda.customers (name, surname,identifier,email) VALUES (?, ?, ?, ?);', [customer.nombre, customer.apellidos, customer.dni, customer.email]);
-    console.log("idCustomer", idCustomer);
-    let idBooking = await update('INSERT INTO casademiranda.bookings (check_in, check_out) VALUES (?, ?);', [new Date(booking.fechaCheckIn), new Date(booking.fechaCheckOut)]);
-    console.log("idCustomer", idCustomer);
+    const customers = await sql.executeQuery('SELECT customer_id FROM casademiranda.customers WHERE identifier=?', [customer.dni]);
+    let idCustomer = 0;
+    if (customers.length == 0) {
+        const customerInserted = await sql.executeQuery('INSERT INTO casademiranda.customers (name, surname,identifier,email) VALUES (?, ?, ?, ?);', [customer.nombre, customer.apellidos, customer.dni, customer.email]);
+        idCustomer = customerInserted.insertId;
+    } else if (customers.length > 1) {
+        throw new Error('Only one customer for identifier');
+    } else {
+        idCustomer = customers[0].customer_id;
+    }
+
+    const idBooking = await sql.executeQuery('INSERT INTO casademiranda.bookings (check_in, check_out) VALUES (?, ?);', [booking.checkInDate, booking.checkOutDate]);
+    const idBookingCustomer = await sql.executeQuery('INSERT INTO casademiranda.booking_customer (booking_id, customer_id) VALUES (?, ?)', [idBooking.insertId, idCustomer])
+    saveRoom(booking.habitaciones, idBooking);
 }
 
-const saveRooms = (rooms) => {
-    return new Promise((resolve, reject) => {
-        let rooms = [];
-        for (var i = 0; i < rooms.length; i++) {
-            let name = rooms[i].habitacion;
-            let roomId = roomEnum(name);
-            let room = query('SELECT * FROM casademiranda.rooms WHERE room_id = ?', [roomId]);
-            console.log('Room: ', room);
-            let price = rooms[i].precio;
-            let extra_bed = rooms[i].supletorias;
-            let extra_bed_price = rooms[i].precioSupletoria;
-            rooms.push(room);
+const saveRoom = async (rooms, idBooking) => {
+
+    for (var i = 0; i < rooms.length; i++) {
+        const idRoom = await sql.executeQuery('SELECT room_id FROM casademiranda.rooms WHERE name = ?', [rooms[i].habitacion]);
+        if (idRoom.length > 1) {
+            throw new Error("only one room for name");
         }
-        resolve(rooms);
-    })
-}
-
-const update = (query, params) => {
-    var connection = sql.createConnection(config);
-
-    connection.connect();
-    let queryresult = connection.query(query, params, (error, results) => {
-        if (error) {
-            reject({ error: error });
+        const idBookingRoom = await sql.executeQuery('INSERT INTO casademiranda.booking_room (booking_id, room_id, price) VALUES (?, ?, ?)', [idBooking.insertId, idRoom[0].room_id, rooms[i].precio]);
+        console.log('BookingId: ', idBookingRoom)
+        if (rooms[i].supletorias > 0) {
+            sql.executeQuery('INSERT INTO casademiranda.booking_room_extra_bed (booking_room_id, number_bed, price_bed) VALUES (?, ?, ?)', [idBookingRoom.insertId, rooms[i].supletorias, rooms[i].precioSupletoria]);
         }
-        console.log('Query: ' + query + 'The solution: ', results);
-        return results;
-    });
-
-    connection.end();
-    console.log('Insert id: ', queryresult.insertId);
-    return queryresult;
-}
-
-const query = (query, params) => {
-
-    return new Promise((resolve, reject) => {
-        var connection = sql.createConnection(config);
-
-        connection.connect();
-        connection.query(query, params, function (error, results, fields) {
-            if (error) reject(error);
-            resolve(results)
-        })
-        connection.end();
-    })
-
+    }
 }
 
 module.exports = {

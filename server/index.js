@@ -7,10 +7,24 @@ const readFileExcel = require('./excel/functionsExcel');
 const sendMail = require('./mail/sendMail');
 const sendConfirmationBookingMail = require('./confirmacion-reserva/sendMailConfirmationBooking');
 const saveBooking = require('./bookings/saveBooking')
+const listBookings = require('./bookings/listBooking');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors());
+
+app.get('/reserva', async (req, res) =>{
+
+    let identifier = req.query.dni;
+    let bookings;
+    if(identifier != null && identifier != ""){
+        bookings = await listBookings.listBookingByCustomer(identifier).then((value)=> {return value});
+    } else {
+        bookings = await listBookings.listAllBookings().then((value)=> {return value});
+    }
+
+    res.send(bookings);
+})
 
 app.post('/reserva', async (req, res) => {
     console.log(JSON.stringify(req.body))
@@ -41,6 +55,8 @@ app.post('/reserva', async (req, res) => {
         fechaReserva: fechaFactura,
         fechaCheckIn: fechaFactura,
         fechaCheckOut: checkOutDate,
+        checkInDate: req.body.fechaCheckIn,
+        checkOutDate: req.body.fechaCheckOut,
         dias: dias,
         habitaciones: habitaciones,
     };
@@ -107,11 +123,6 @@ app.post('/factura', function (req, res) {
     readFileExcel(numeroFactura, fechaFactura);
     generarFactura(reserva, cliente);
     sendMail(numeroFactura, nombre, apellidos);
-    if (sendConfirmationEmail != null && sendConfirmationEmail == "on") {
-        console.log('send mail');
-        sendConfirmationBookingMail(numeroFactura, cliente, reserva);
-    }
-
     res.send('Datos recibidos correctamente.');
 });
 
