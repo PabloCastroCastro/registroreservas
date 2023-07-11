@@ -57,28 +57,28 @@ const generarFactura = (reserva, cliente) => {
     doc.font('Times-Bold')
         .fontSize(12)
         .fillColor('#1B2631')
-        .text('Dni:', 200, 210);
+        .text('Dni:', 250, 210);
     doc.font('Times-Bold')
         .fontSize(12)
         .fillColor('#1B2631')
-        .text('Check-in:', 300, 210);
+        .text('Check-in:', 350, 210);
     doc.font('Times-Bold')
         .fontSize(12)
         .fillColor('#1B2631')
-        .text('Check-out:', 400, 210);
+        .text('Check-out:', 450, 210);
 
     doc.font('Times-Roman')
         .fontSize(12)
         .fillColor('grey').text(cliente.nombre + ' ' + cliente.apellidos, 75, 224);
     doc.font('Times-Roman')
         .fontSize(12)
-        .fillColor('grey').text(cliente.dni, 200, 224);
+        .fillColor('grey').text(cliente.dni, 250, 224);
     doc.font('Times-Roman')
         .fontSize(12)
-        .fillColor('grey').text(reserva.fechaCheckIn, 300, 224);
+        .fillColor('grey').text(reserva.fechaCheckIn, 350, 224);
     doc.font('Times-Roman')
         .fontSize(12)
-        .fillColor('grey').text(reserva.fechaCheckOut, 400, 224);
+        .fillColor('grey').text(reserva.fechaCheckOut, 450, 224);
 
     doc.lineCap('butt')
         .moveTo(75, 275)

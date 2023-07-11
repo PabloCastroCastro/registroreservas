@@ -54,7 +54,7 @@ const sendConfirmationBookingMail = (idBooking, client, reserva) => {
     transporter.sendMail({
         from: '"Reservas Casa de Miranda" <reservas@casademiranda.com>',
         to: client.email,
-        cc: "pablinho6699@gmail.com",
+        cc: "casademirandaezaro@gmail.com",
         subject: 'Tu reserva en Casa de Miranda está confirmada. Confirmación ' + idBooking,
         html: bodyHtml,
         attachments: [

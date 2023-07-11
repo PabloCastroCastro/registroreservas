@@ -34,7 +34,8 @@ app.post('/reserva', async (req, res) => {
     const dni = req.body.dni;
     const email = req.body.email;
     const checkinDate = req.body.fechaCheckIn;
-    const fechaFactura = new Date(checkinDate).toLocaleDateString('es-ES');
+    const fechaFactura = new Date(Date.now()).toLocaleDateString('es-ES');
+    const checkInDate = new Date(req.body.fechaCheckIn).toLocaleDateString('es-ES');
     const checkOutDate = new Date(req.body.fechaCheckOut).toLocaleDateString('es-ES');
     const sendConfirmationEmail = req.body.envioConfirmacion;
 
@@ -53,7 +54,7 @@ app.post('/reserva', async (req, res) => {
     const reserva = {
         numeroFactura: numeroFactura,
         fechaReserva: fechaFactura,
-        fechaCheckIn: fechaFactura,
+        fechaCheckIn: checkInDate,
         fechaCheckOut: checkOutDate,
         checkInDate: req.body.fechaCheckIn,
         checkOutDate: req.body.fechaCheckOut,
@@ -85,7 +86,8 @@ app.post('/factura', function (req, res) {
     const dni = req.body.dni;
     const email = req.body.email;
     const checkinDate = req.body.fechaCheckIn;
-    const fechaFactura = new Date(checkinDate).toLocaleDateString('es-ES');
+    const fechaFactura = new Date(Date.now()).toLocaleDateString('es-ES');
+    const checkInDate = new Date(req.body.fechaCheckIn).toLocaleDateString('es-ES');
     const checkOutDate = new Date(req.body.fechaCheckOut).toLocaleDateString('es-ES');
     const sendConfirmationEmail = req.body.envioConfirmacion;
 
@@ -103,7 +105,7 @@ app.post('/factura', function (req, res) {
     const reserva = {
         numeroFactura: numeroFactura,
         fechaReserva: fechaFactura,
-        fechaCheckIn: fechaFactura,
+        fechaCheckIn: checkInDate,
         fechaCheckOut: checkOutDate,
         dias: dias,
         habitaciones: habitaciones,
@@ -122,7 +124,7 @@ app.post('/factura', function (req, res) {
 
     readFileExcel(numeroFactura, fechaFactura);
     generarFactura(reserva, cliente);
-    sendMail(numeroFactura, nombre, apellidos);
+    sendMail(numeroFactura, nombre, apellidos, email);
     res.send('Datos recibidos correctamente.');
 });
 
