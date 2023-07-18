@@ -8,19 +8,20 @@ const sendMail = require('./mail/sendMail');
 const sendConfirmationBookingMail = require('./confirmacion-reserva/sendMailConfirmationBooking');
 const saveBooking = require('./bookings/saveBooking')
 const listBookings = require('./bookings/listBooking');
+const getBookingNumber = require('./bookings/getBookingNumber');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors());
 
-app.get('/reserva', async (req, res) =>{
+app.get('/reserva', async (req, res) => {
 
     let identifier = req.query.dni;
     let bookings;
-    if(identifier != null && identifier != ""){
-        bookings = await listBookings.listBookingByCustomer(identifier).then((value)=> {return value});
+    if (identifier != null && identifier != "") {
+        bookings = await listBookings.listBookingByCustomer(identifier).then((value) => { return value });
     } else {
-        bookings = await listBookings.listAllBookings().then((value)=> {return value});
+        bookings = await listBookings.listAllBookings().then((value) => { return value });
     }
 
     res.send(bookings);
@@ -78,7 +79,7 @@ app.post('/reserva', async (req, res) => {
     res.send('Reserva generada correctamente.');
 })
 
-app.post('/factura', function (req, res) {
+app.post('/factura', async function (req, res) {
 
     console.log(JSON.stringify(req.body))
     const nombre = req.body.nombre;
@@ -95,11 +96,11 @@ app.post('/factura', function (req, res) {
     const milisegundosEnUnDia = 1000 * 60 * 60 * 24;
     const dias = Math.floor(diferenciaEnMilisegundos / milisegundosEnUnDia);
     const fechaFormateada = checkinDate.replace(/-/g, "");
-    const min = 1;
-    const max = 1000;
-    const numeroAleatorio = Math.floor(Math.random() * (max - min + 1)) + min;
-    const numeroFormateado = numeroAleatorio.toString().padStart(3, '0');
-    const numeroFactura = fechaFormateada.toString() + numeroFormateado;
+    //const min = 1;
+    //const max = 1000;
+    //const numeroAleatorio = Math.floor(Math.random() * (max - min + 1)) + min;
+    //const numeroFormateado = numeroAleatorio.toString().padStart(3, '0');
+    let numeroFactura = await getBookingNumber.getBookingNumber(fechaFormateada.toString()).then(value => {return value});
     const habitaciones = JSON.parse(req.body.habitaciones);
 
     const reserva = {
@@ -120,7 +121,6 @@ app.post('/factura', function (req, res) {
 
     console.log(reserva);
     console.log(dias);
-
 
     readFileExcel(numeroFactura, fechaFactura);
     generarFactura(reserva, cliente);
