@@ -34,8 +34,8 @@ app.post('/reserva', async (req, res) => {
     const apellidos = req.body.apellidos;
     const dni = req.body.dni;
     const email = req.body.email;
-    const checkinDate = req.body.fechaCheckIn;
-    const fechaFactura = new Date(Date.now()).toLocaleDateString('es-ES');
+    const dateNow = new Date(Date.now());
+    const fechaFactura = dateNow.toLocaleDateString('es-ES');
     const checkInDate = new Date(req.body.fechaCheckIn).toLocaleDateString('es-ES');
     const checkOutDate = new Date(req.body.fechaCheckOut).toLocaleDateString('es-ES');
     const sendConfirmationEmail = req.body.envioConfirmacion;
@@ -44,7 +44,7 @@ app.post('/reserva', async (req, res) => {
     const diferenciaEnMilisegundos = new Date(req.body.fechaCheckOut) - new Date(req.body.fechaCheckIn);
     const milisegundosEnUnDia = 1000 * 60 * 60 * 24;
     const dias = Math.floor(diferenciaEnMilisegundos / milisegundosEnUnDia);
-    const fechaFormateada = checkinDate.replace(/-/g, "");
+    const fechaFormateada = dateNow.toISOString().split("T")[0].replace(/-/g, "");
     let numeroFactura = await getBookingNumber.getBookingNumber(fechaFormateada.toString()).then(value => {return value});
     const habitaciones = JSON.parse(req.body.habitaciones);
 
@@ -82,8 +82,8 @@ app.post('/factura', async function (req, res) {
     const apellidos = req.body.apellidos;
     const dni = req.body.dni;
     const email = req.body.email;
-    const checkinDate = req.body.fechaCheckIn;
-    const fechaFactura = new Date(Date.now()).toLocaleDateString('es-ES');
+    const dateNow = new Date(Date.now());
+    const fechaFactura = dateNow.toLocaleDateString('es-ES');
     const checkInDate = new Date(req.body.fechaCheckIn).toLocaleDateString('es-ES');
     const checkOutDate = new Date(req.body.fechaCheckOut).toLocaleDateString('es-ES');
     const sendConfirmationEmail = req.body.envioConfirmacion;
@@ -91,7 +91,7 @@ app.post('/factura', async function (req, res) {
     const diferenciaEnMilisegundos = new Date(req.body.fechaCheckOut) - new Date(req.body.fechaCheckIn);
     const milisegundosEnUnDia = 1000 * 60 * 60 * 24;
     const dias = Math.floor(diferenciaEnMilisegundos / milisegundosEnUnDia);
-    const fechaFormateada = checkinDate.replace(/-/g, "");
+    const fechaFormateada = dateNow.toISOString().split("T")[0].replace(/-/g, "");
     let numeroFactura = await getBookingNumber.getBookingNumber(fechaFormateada.toString()).then(value => {return value});
     const habitaciones = JSON.parse(req.body.habitaciones);
 
