@@ -45,11 +45,7 @@ app.post('/reserva', async (req, res) => {
     const milisegundosEnUnDia = 1000 * 60 * 60 * 24;
     const dias = Math.floor(diferenciaEnMilisegundos / milisegundosEnUnDia);
     const fechaFormateada = checkinDate.replace(/-/g, "");
-    const min = 1;
-    const max = 1000;
-    const numeroAleatorio = Math.floor(Math.random() * (max - min + 1)) + min;
-    const numeroFormateado = numeroAleatorio.toString().padStart(3, '0');
-    const numeroFactura = fechaFormateada.toString() + numeroFormateado;
+    let numeroFactura = await getBookingNumber.getBookingNumber(fechaFormateada.toString()).then(value => {return value});
     const habitaciones = JSON.parse(req.body.habitaciones);
 
     const reserva = {
@@ -96,10 +92,6 @@ app.post('/factura', async function (req, res) {
     const milisegundosEnUnDia = 1000 * 60 * 60 * 24;
     const dias = Math.floor(diferenciaEnMilisegundos / milisegundosEnUnDia);
     const fechaFormateada = checkinDate.replace(/-/g, "");
-    //const min = 1;
-    //const max = 1000;
-    //const numeroAleatorio = Math.floor(Math.random() * (max - min + 1)) + min;
-    //const numeroFormateado = numeroAleatorio.toString().padStart(3, '0');
     let numeroFactura = await getBookingNumber.getBookingNumber(fechaFormateada.toString()).then(value => {return value});
     const habitaciones = JSON.parse(req.body.habitaciones);
 

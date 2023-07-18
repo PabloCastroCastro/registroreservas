@@ -23,7 +23,7 @@ const sendMail = (idBooking, name, surname, email) => {
     transporter.sendMail({
         from: '"Facturacion Casa de Miranda" <facturacion@casademiranda.com>',
         to: email,
-        cc: "pablinho6699@gmail.com",
+        cc: "casademirandaezaro@gmail.com",
         subject: "Factura " + idBooking,
         html: bodyHtml,
         attachments: [

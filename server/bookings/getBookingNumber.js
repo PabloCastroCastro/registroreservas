@@ -14,12 +14,9 @@ const getBookingNumber = async (bookingDate) => {
             numberBookingDay += 1;
             bookingNumber = bookingDate + "00" + numberBookingDay;
         } catch (err) {
-            console.log(err)
             existBooking = false;
         }
     }
-    console.log('Exists booking', existBooking);
-    console.log('Booking number', bookingNumber);
     return bookingNumber;
 }
 
