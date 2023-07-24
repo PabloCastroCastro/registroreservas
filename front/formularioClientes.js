@@ -23,7 +23,7 @@ window.addEventListener("load", () => {
         console.log(datosFormulario);
         console.log(JSON.stringify(datosFormulario));
         $.ajax({
-            url: 'http://localhost:3000/factura',
+            url: 'http://localhost:3003/factura',
             method: 'POST',
             data: datosFormulario,
             success: function () {

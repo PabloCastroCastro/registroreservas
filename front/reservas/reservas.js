@@ -13,7 +13,7 @@ function find() {
     var identifier = document.getElementById("findByIdentifierText").value;
     var table = document.getElementById('tBodyBookings');
     table.innerHTML = "";
-    var url = 'http://localhost:3000/reserva';
+    var url = 'http://localhost:3003/reserva';
     if (identifier != null && identifier != "") {
         url = url + '?dni=' + identifier;
     }

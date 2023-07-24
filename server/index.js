@@ -120,6 +120,6 @@ app.post('/factura', async function (req, res) {
     res.send('Datos recibidos correctamente.');
 });
 
-app.listen(3000, function () {
-    console.log('Servidor escuchando en el puerto 3000.');
+app.listen(3003, function () {
+    console.log('Servidor escuchando en el puerto 3003.');
 });
