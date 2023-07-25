@@ -1,29 +1,31 @@
 'use client';
 import React, { Suspense } from "react";
 import './bookings.css'
-import { fetchData } from '../data/fetchData';
 import { Button, TextInput } from 'flowbite-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import * as API from "../../services/bookings";
 
-let apiData = fetchData('http://localhost:3003/reserva');
 
 export default function Bookings() {
 
     const [identifier, setIdentifier] = useState("Dni...");
-    let data = apiData.read();
-
+    const [bookings, setBookings] = useState([]);
 
     function find() {
         alert(identifier);
-        apiData = fetchData('http://localhost:3003/reserva?dni='+identifier);
-        data = apiData.read();
+        API.getBookingByIdentifier(identifier).then(setBookings).catch(console.log);
     }
+
+    useEffect(() => {
+        API.getAllBookings().then(setBookings).catch(console.log);
+    }, []);
+
 
     return (
         <div>
             <div className="flex flex-row">
                 <div className='basis-2/4'></div>
-                <TextInput id="small" className="basis-1/4" sizing="sm" type="text" name="identifier" defaultValue="DNI..." value = {identifier}  onChange={identifier => setIdentifier(identifier.target.value)}></TextInput>
+                <TextInput id="small" className="basis-1/4" sizing="sm" type="text" name="identifier" defaultValue="DNI..." value={identifier} onChange={identifier => setIdentifier(identifier.target.value)}></TextInput>
                 <Button className="basis-1/4" size="sm" onClick={find}>Buscar</Button>
             </div>
             <div id="divTable">
@@ -38,7 +40,7 @@ export default function Bookings() {
                             </tr>
                         </thead>
                         <tbody id="tBodyBookings">
-                            {data?.map((item) => (
+                            {bookings?.map((item) => (
                                 <tr>
                                     <td>{item.booking_id}</td>
                                     <td>{item.name}</td>
