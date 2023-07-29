@@ -3,7 +3,11 @@ import React, { Suspense } from "react";
 import './bookings.css'
 import { Button, TextInput } from 'flowbite-react';
 import { useState, useEffect } from 'react';
+import type { Booking } from '../../interfaces/booking'
+
+
 import * as API from "../../services/bookings";
+import BookingComponent from "./bookingComponent";
 
 
 export default function Bookings() {
@@ -12,7 +16,6 @@ export default function Bookings() {
     const [bookings, setBookings] = useState([]);
 
     function find() {
-        alert(identifier);
         API.getBookingByIdentifier(identifier).then(setBookings).catch(console.log);
     }
 
@@ -25,7 +28,7 @@ export default function Bookings() {
         <div>
             <div className="flex flex-row">
                 <div className='basis-2/4'></div>
-                <TextInput id="small" className="basis-1/4" sizing="sm" type="text" name="identifier" defaultValue="DNI..." value={identifier} onChange={identifier => setIdentifier(identifier.target.value)}></TextInput>
+                <TextInput id="small" className="basis-1/4" sizing="sm" type="text" name="identifier" value={identifier} onChange={identifier => setIdentifier(identifier.target.value)}></TextInput>
                 <Button className="basis-1/4" size="sm" onClick={find}>Buscar</Button>
             </div>
             <div id="divTable">
@@ -41,23 +44,7 @@ export default function Bookings() {
                         </thead>
                         <tbody id="tBodyBookings">
                             {bookings?.map((item) => (
-                                <tr>
-                                    <td>{item.booking_id}</td>
-                                    <td>{item.name}</td>
-                                    <td>{item.surname}</td>
-                                    <td>
-                                        <table>
-                                            {item.rooms?.map((room) => (
-                                                <tbody>
-                                                    <tr>
-                                                        <td>{room.name}</td>
-                                                        <td>{room.extra_beds}</td>
-                                                    </tr>
-                                                </tbody>
-                                            ))}
-                                        </table>
-                                    </td>
-                                </tr>
+                                <BookingComponent key={item.booking_id} booking={item} />
                             ))}
                         </tbody>
                     </table>

@@ -27,6 +27,18 @@ app.get('/reserva', async (req, res) => {
     res.send(bookings);
 })
 
+app.get('/reserva/:id', async (req, res) => {
+
+    let identifier = req.params['id'];
+    let bookings;
+    if (identifier != null && identifier != "") {
+        bookings = await listBookings.listBookingById(identifier).then((value) => { return value });
+    }
+    console.log(bookings);
+
+    res.send(bookings);
+})
+
 app.post('/reserva', async (req, res) => {
     console.log(JSON.stringify(req.body))
 
@@ -77,7 +89,7 @@ app.post('/reserva', async (req, res) => {
 
 app.post('/factura', async function (req, res) {
 
-    console.log(JSON.stringify(req.body))
+    console.log('Factura: ', JSON.stringify(req.body))
     const nombre = req.body.nombre;
     const apellidos = req.body.apellidos;
     const dni = req.body.dni;
@@ -93,8 +105,14 @@ app.post('/factura', async function (req, res) {
     const dias = Math.floor(diferenciaEnMilisegundos / milisegundosEnUnDia);
     const fechaFormateada = dateNow.toISOString().split("T")[0].replace(/-/g, "");
     let numeroFactura = await getBookingNumber.getBookingNumber(fechaFormateada.toString()).then(value => {return value});
-    const habitaciones = JSON.parse(req.body.habitaciones);
-
+    let habitaciones;
+    try{
+        habitaciones = JSON.parse(req.body.habitaciones);
+    } catch(e){
+        console.log(e);
+        habitaciones = req.body.habitaciones;
+    }
+    
     const reserva = {
         numeroFactura: numeroFactura,
         fechaReserva: fechaFactura,

@@ -20,6 +20,17 @@ export async function getBookingByIdentifier(identifier) {
   }
 }
 
+export async function getBookingById(bookingId) {
+  try {
+    const response = await fetch(`${API_URL}/${bookingId}`);
+    const data = await response.json(); 
+    console.log(JSON.stringify(data))
+    return data;
+  } catch (error) {
+    return { message: error};
+  }
+}
+
 const getSuspender = (promise) => {
     let status = "pending";
     let response;
