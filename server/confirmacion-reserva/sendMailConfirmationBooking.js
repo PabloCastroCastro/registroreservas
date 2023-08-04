@@ -17,11 +17,14 @@ const sendConfirmationBookingMail = (idBooking, client, reserva) => {
             switch (reserva.habitaciones[i].habitacion) {
                 case "O Faiado":
                     roomType = "Habitación doble";
+                    break;
                 case "O Cuberto":
                     roomType = "Apartamento";
+                    break;
                 case "A Fonte":
                 case "O Carpinteiro":
                     roomType = "Habitación doble con terraza";
+                    break;
             }
 
             if (reserva.habitaciones[i].supletorias != null && reserva.habitaciones[i].supletorias > 0) {

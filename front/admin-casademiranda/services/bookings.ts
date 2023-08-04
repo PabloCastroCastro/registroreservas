@@ -1,4 +1,25 @@
+import { Booking } from "@/interfaces/booking";
+
 const API_URL = 'http://localhost:3003/reserva';
+
+export async function createBooking(booking:Booking) {
+  try {
+
+      console.log('Booking: ', JSON.stringify(booking))
+
+      const requestOptions = {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(booking)
+      };
+
+      const response = await fetch(`${API_URL}`, requestOptions);
+      const data = await response.json();
+      return data;
+  } catch (error) {
+      console.error(error);
+  }
+}
 
 export async function getAllBookings() {
   try {
