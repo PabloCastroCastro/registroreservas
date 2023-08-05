@@ -1,4 +1,4 @@
-import type { Room } from './room'
+import type { Room, RequestRoom } from './room'
 
 export type Booking = {
     booking_id: string
@@ -10,6 +10,16 @@ export type Booking = {
     rooms: Room[]
   }
   
+  export type RequestBooking = {
+    nombre: string
+    apellidos: string
+    dni: string
+    fechaCheckIn: Date
+    fechaCheckOut: Date
+    envioConfirmacion: boolean,
+    habitaciones: RequestRoom[]
+  }
+
   export type ResponseError = {
     message: string
   }

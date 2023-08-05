@@ -1,8 +1,8 @@
-import { Booking } from "@/interfaces/booking";
+import { Booking, RequestBooking } from "@/interfaces/booking";
 
 const API_URL = 'http://localhost:3003/reserva';
 
-export async function createBooking(booking:Booking) {
+export async function createBooking(booking:RequestBooking) {
   try {
 
       console.log('Booking: ', JSON.stringify(booking))

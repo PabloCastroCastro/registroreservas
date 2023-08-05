@@ -3,11 +3,11 @@ import RoomComponent from '@/components/rooms/roomComponent';
 import { useRouter } from 'next/router'
 import type { Booking, ResponseError } from '../../interfaces/booking'
 import type { Bill } from '@/interfaces/bill'
-import type { RoomBill } from '@/interfaces/roomBill';
 import * as APIBooking from "../../services/bookings";
 import * as APIBilling from "../../services/bills";
 import { useState, useEffect } from 'react';
 import { Button } from 'flowbite-react';
+import { RequestRoom } from '@/interfaces/room';
 
 export default function BookingPage() {
     const { query } = useRouter()
@@ -29,7 +29,7 @@ export default function BookingPage() {
             fechaCheckIn: booking ? booking.check_in.toLocaleString() : new Date().toLocaleString(),
             fechaCheckOut: booking ? booking.check_out.toLocaleString() : new Date().toLocaleString(),
             habitaciones: booking ? booking.rooms.map(room => {
-                let roomBill: RoomBill = {
+                let roomBill: RequestRoom = {
                     habitacion: room.name,
                     precio: 90,
                     supletorias: room.extra_beds?room.extra_beds:0,

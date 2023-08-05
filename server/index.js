@@ -48,17 +48,33 @@ app.post('/reserva', async (req, res) => {
     const email = req.body.email;
     const dateNow = new Date(Date.now());
     const fechaFactura = dateNow.toLocaleDateString('es-ES');
-    const checkInDate = new Date(req.body.fechaCheckIn).toLocaleDateString('es-ES');
-    const checkOutDate = new Date(req.body.fechaCheckOut).toLocaleDateString('es-ES');
+    let checkInDate;
+    try{
+        checkInDate = new Date(req.body.fechaCheckIn).toLocaleDateString('es-ES');
+    }catch(e){
+        console.log(e);
+        checkInDate = req.body.fechaCheckIn;
+    }
+    let checkOutDate;
+    try{
+        checkOutDate = new Date(req.body.fechaCheckOut).toLocaleDateString('es-ES');
+    }catch(e){
+        console.log(e);
+        checkOutDate = req.body.fechaCheckOut;
+    }
+
     const sendConfirmationEmail = req.body.envioConfirmacion;
-
-
     const diferenciaEnMilisegundos = new Date(req.body.fechaCheckOut) - new Date(req.body.fechaCheckIn);
     const milisegundosEnUnDia = 1000 * 60 * 60 * 24;
     const dias = Math.floor(diferenciaEnMilisegundos / milisegundosEnUnDia);
     const fechaFormateada = dateNow.toISOString().split("T")[0].replace(/-/g, "");
     let numeroFactura = await getBookingNumber.getBookingNumber(fechaFormateada.toString()).then(value => {return value});
-    const habitaciones = JSON.parse(req.body.habitaciones);
+    try{
+        habitaciones = JSON.parse(req.body.habitaciones);
+    } catch(e){
+        console.log(e);
+        habitaciones = req.body.habitaciones;
+    }
 
     const reserva = {
         numeroFactura: numeroFactura,

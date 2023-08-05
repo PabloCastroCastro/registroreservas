@@ -20,9 +20,7 @@ export default function DefaultNavbar() {
             </Navbar.Brand>
             <Navbar.Toggle />
             <Navbar.Collapse>
-                <Navbar.Link active href="#">
-                    <Link href="/">Home</Link>
-                </Navbar.Link>
+                <Link href="/">Home</Link>
             </Navbar.Collapse>
         </Navbar>
     )

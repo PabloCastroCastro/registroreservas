@@ -1,4 +1,4 @@
-import type { RoomBill } from './roomBill'
+import type { RequestRoom } from './room'
 
 export type Bill = {
     numeroFactura: string
@@ -8,5 +8,5 @@ export type Bill = {
     email: string
     fechaCheckIn: string
     fechaCheckOut: string
-    habitaciones: RoomBill[]
+    habitaciones: RequestRoom[]
   }
