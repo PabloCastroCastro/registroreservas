@@ -38,6 +38,11 @@ export default function NewBooking() {
 
     const handleSubmit = () => {
 
+        if(email !== confirmedEmail){
+            alert('Los correos no son iguales')
+            return new Error('Mails are distincts')
+        }
+
         let booking: RequestBooking = {
             nombre: name,
             apellidos: surname,
@@ -45,6 +50,7 @@ export default function NewBooking() {
             fechaCheckIn: new Date(checkIn),
             fechaCheckOut: new Date(checkOut),
             envioConfirmacion: sendEmail,
+            email: email,
             habitaciones: rooms
         };
 

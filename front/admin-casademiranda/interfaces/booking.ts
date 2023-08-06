@@ -16,7 +16,8 @@ export type Booking = {
     dni: string
     fechaCheckIn: Date
     fechaCheckOut: Date
-    envioConfirmacion: boolean,
+    email: string
+    envioConfirmacion: boolean
     habitaciones: RequestRoom[]
   }
 
