@@ -15,7 +15,7 @@ const save = async (booking, customer) => {
         idCustomer = customers[0].customer_id;
     }
 
-    const idBooking = await sql.executeQuery('INSERT INTO casademiranda.bookings (check_in, check_out) VALUES (?, ?);', [booking.checkInDate.split("T")[0], booking.checkOutDate.split("T")[0]]);
+    const idBooking = await sql.executeQuery('INSERT INTO casademiranda.bookings (check_in, check_out, confirmation_number) VALUES (?, ?, ?);', [booking.checkInDate.split("T")[0], booking.checkOutDate.split("T")[0], booking.numeroConfirmacion]);
     const idBookingCustomer = await sql.executeQuery('INSERT INTO casademiranda.booking_customer (booking_id, customer_id) VALUES (?, ?)', [idBooking.insertId, idCustomer])
     saveRoom(booking.habitaciones, idBooking);
 }

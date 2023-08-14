@@ -68,7 +68,12 @@ app.post('/reserva', async (req, res) => {
     const milisegundosEnUnDia = 1000 * 60 * 60 * 24;
     const dias = Math.floor(diferenciaEnMilisegundos / milisegundosEnUnDia);
     const fechaFormateada = dateNow.toISOString().split("T")[0].replace(/-/g, "");
-    let numeroFactura = await getBookingNumber.getBookingNumber(fechaFormateada.toString()).then(value => {return value});
+    const min = 1;
+    const max = 1000;
+    const numeroAleatorio = Math.floor(Math.random() * (max - min + 1)) + min;
+    const numeroFormateado = numeroAleatorio.toString().padStart(3, '0');
+    const numeroConfirmacion = fechaFormateada.toString() + numeroFormateado;
+
     try{
         habitaciones = JSON.parse(req.body.habitaciones);
     } catch(e){
@@ -77,7 +82,7 @@ app.post('/reserva', async (req, res) => {
     }
 
     const reserva = {
-        numeroFactura: numeroFactura,
+        numeroConfirmacion: numeroConfirmacion,
         fechaReserva: fechaFactura,
         fechaCheckIn: checkInDate,
         fechaCheckOut: checkOutDate,
@@ -98,7 +103,7 @@ app.post('/reserva', async (req, res) => {
     await saveBooking.save(reserva, cliente);
     if (sendConfirmationEmail != null && sendConfirmationEmail == "on") {
         console.log('send mail');
-        sendConfirmationBookingMail(numeroFactura, cliente, reserva);
+        sendConfirmationBookingMail(numeroConfirmacion, cliente, reserva);
     }
     res.send('Reserva generada correctamente.');
 })
