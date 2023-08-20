@@ -7,7 +7,7 @@ const save = async (booking, customer) => {
     const customers = await sql.executeQuery('SELECT customer_id FROM casademiranda.customers WHERE identifier=?', [customer.dni]);
     let idCustomer = 0;
     if (customers.length == 0) {
-        const customerInserted = await sql.executeQuery('INSERT INTO casademiranda.customers (name, surname,identifier,email) VALUES (?, ?, ?, ?);', [customer.nombre, customer.apellidos, customer.dni, customer.email]);
+        const customerInserted = await sql.executeQuery('INSERT INTO casademiranda.customers (name, surname,identifier,email,made_booking) VALUES (?, ?, ?, ?, 1);', [customer.nombre, customer.apellidos, customer.dni, customer.email]);
         idCustomer = customerInserted.insertId;
     } else if (customers.length > 1) {
         throw new Error('Only one customer for identifier');

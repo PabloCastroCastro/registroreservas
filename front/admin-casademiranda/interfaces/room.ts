@@ -1,6 +1,8 @@
 export type Room = {
   name: string
-  extra_beds: number
+  price: number,
+  extra_beds: number,
+  price_extra_bed: number
 }
 
 export type RequestRoom = {

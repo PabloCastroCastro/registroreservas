@@ -4,9 +4,11 @@ import type { RequestBooking } from '@/interfaces/booking';
 import type { RequestRoom, Room } from '@/interfaces/room';
 import RoomItemComponent from '@/components/rooms/roomItemComponent';
 import * as APIBooking from "../../services/bookings";
+import { useRouter } from 'next/router';
 
 export default function NewBooking() {
 
+    const router = useRouter()
 
     const [selectedRoom, setSelectedRoom] = useState("");
     const [name, setName] = useState("");
@@ -22,7 +24,6 @@ export default function NewBooking() {
     const [numExtraBed, setNumExtraBed] = useState(0);
     const [priceExtraBed, setPriceExtraBed] = useState(0);
     const [rooms, setRooms] = useState<RequestRoom[]>([]);
-    const [bookingStatus, setBookingStatus] = useState(200);
 
 
 
@@ -55,7 +56,8 @@ export default function NewBooking() {
         };
 
         console.log(JSON.stringify(booking));
-        APIBooking.createBooking(booking).then(setBookingStatus).catch(console.log);
+        //Check response, if is 200 ok router if is not print the error
+        APIBooking.createBooking(booking).then(res => router.push("/")).catch(console.log);
 
     }
     

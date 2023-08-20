@@ -8,6 +8,8 @@ import * as APIBilling from "../../services/bills";
 import { useState, useEffect } from 'react';
 import { Button } from 'flowbite-react';
 import { RequestRoom } from '@/interfaces/room';
+import Link from 'next/link'
+import DateComponent from '@/components/dates/DateComponent';
 
 export default function BookingPage() {
     const { query } = useRouter()
@@ -31,9 +33,9 @@ export default function BookingPage() {
             habitaciones: booking ? booking.rooms.map(room => {
                 let roomBill: RequestRoom = {
                     habitacion: room.name,
-                    precio: 90,
+                    precio: room.price,
                     supletorias: room.extra_beds?room.extra_beds:0,
-                    precioSupletorias: room.extra_beds?15:0
+                    precioSupletoria: room.extra_beds?room.price_extra_bed:0
                 }
                 return roomBill;
             }) : []
@@ -50,10 +52,11 @@ export default function BookingPage() {
             <p>Nombre: {booking?.name}</p>
             <p>Apellidos: {booking?.surname}</p>
             <p>Dni: {booking?.identifier}</p>
-            <p>Check_in: <Date>{booking?.check_in}</Date></p>
-            <p>Check_out: <Date>{booking?.check_out}</Date></p>
-            <p>Hablitaciones: {booking?.rooms.map(r => (<RoomComponent room={r} />))}</p>
+            <DateComponent dateProps={{label:"Check_in: ", date:booking?.check_in}}></DateComponent>
+            <DateComponent dateProps={{label:"Check_out: ", date:booking?.check_out}}></DateComponent>
+            <p>Habitaciones: {booking?.rooms.map(r => (<RoomComponent room={r} />))}</p>
             <Button onClick={createBill}>Generar Factura</Button>
+            <Link href="/booking/[id]/check-in" as={`/booking/${booking?.booking_id}/check-in`}><Button>Check In</Button></Link>
         </>
     )
 }

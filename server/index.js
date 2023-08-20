@@ -8,11 +8,91 @@ const sendMail = require('./mail/sendMail');
 const sendConfirmationBookingMail = require('./confirmacion-reserva/sendMailConfirmationBooking');
 const saveBooking = require('./bookings/saveBooking')
 const listBookings = require('./bookings/listBooking');
+const saveClients = require('./clients/saveClient');
+const listClients = require('./clients/listClient');
 const getBookingNumber = require('./bookings/getBookingNumber');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors());
+
+
+app.post('/cliente', async (req, res) => {
+
+    const reserva = req.body.booking_id;
+    const cliente = {
+        cliente_id: req.body.client_id,
+        nombre: req.body.name,
+        apellidos: req.body.firstSurname+" "+req.body.secondSurname,
+        nacionalidad: req.body.nacionality,
+        tipo_documento: req.body.document_type,
+        numero_documento: req.body.document_number,
+        fecha_expedicion: req.body.expedition_date,
+        genero: req.body.gender,
+        fecha_nacimiento: req.body.birthdate,
+        hizo_reserva: req.body.made_booking
+    };
+
+    console.log('Reserva: ', reserva, 'Customer: ', JSON.stringify(cliente));
+
+    let clients =  await saveClients.save(reserva, cliente);
+
+    console.log('Client Id: ', JSON.stringify(clients));
+    res.send("Cliente registrado correctamente");
+})
+
+app.put('/cliente', async (req, res) => {
+
+    const reserva = req.body.booking_id;
+    const cliente = {
+        cliente_id: req.body.client_id,
+        nombre: req.body.name,
+        apellidos: req.body.firstSurname+" "+req.body.secondSurname,
+        nacionalidad: req.body.nacionality,
+        tipo_documento: req.body.document_type,
+        numero_documento: req.body.document_number,
+        fecha_expedicion: req.body.expedition_date,
+        genero: req.body.gender,
+        fecha_nacimiento: req.body.birthdate,
+        hizo_reserva: req.body.made_booking
+    };
+
+    let clients =  await saveClients.update(reserva, cliente);
+    res.send(clients);
+})
+
+app.get('/cliente', async (req, res) => {
+
+    console.log('query: ', JSON.stringify(req.query));
+
+
+    let identifier = req.query.dni;
+    let reservaId = req.query.reservaId;
+    let clients;
+    if (identifier != null && identifier != "") {
+        clients = await listClients.listCustomerByIdentifier(identifier).then((value) => { return value });
+    } else if (reservaId !== null && reservaId !== "") {
+        clients = await listClients.listCustomerByBookingId(reservaId).then((value) => { return value });
+    } else {
+        clients = await listClients.listAllCustomers().then((value) => { return value });
+    }
+    console.log('no for id Clients: ', JSON.stringify(clients));
+
+
+    res.send(clients);
+})
+
+app.get('/cliente/:id', async (req, res) => {
+
+    let client_id = req.params['id'];
+    let clients;
+    if (client_id != null && client_id != "") {
+        clients = await listClients.listCustomerById(client_id).then((value) => { return value });
+    }
+    console.log('Clients: ', JSON.stringify(clients));
+
+    res.send(clients);
+})
 
 app.get('/reserva', async (req, res) => {
 
@@ -49,16 +129,16 @@ app.post('/reserva', async (req, res) => {
     const dateNow = new Date(Date.now());
     const fechaFactura = dateNow.toLocaleDateString('es-ES');
     let checkInDate;
-    try{
+    try {
         checkInDate = new Date(req.body.fechaCheckIn).toLocaleDateString('es-ES');
-    }catch(e){
+    } catch (e) {
         console.log(e);
         checkInDate = req.body.fechaCheckIn;
     }
     let checkOutDate;
-    try{
+    try {
         checkOutDate = new Date(req.body.fechaCheckOut).toLocaleDateString('es-ES');
-    }catch(e){
+    } catch (e) {
         console.log(e);
         checkOutDate = req.body.fechaCheckOut;
     }
@@ -74,9 +154,9 @@ app.post('/reserva', async (req, res) => {
     const numeroFormateado = numeroAleatorio.toString().padStart(3, '0');
     const numeroConfirmacion = fechaFormateada.toString() + numeroFormateado;
 
-    try{
+    try {
         habitaciones = JSON.parse(req.body.habitaciones);
-    } catch(e){
+    } catch (e) {
         console.log(e);
         habitaciones = req.body.habitaciones;
     }
@@ -125,15 +205,15 @@ app.post('/factura', async function (req, res) {
     const milisegundosEnUnDia = 1000 * 60 * 60 * 24;
     const dias = Math.floor(diferenciaEnMilisegundos / milisegundosEnUnDia);
     const fechaFormateada = dateNow.toISOString().split("T")[0].replace(/-/g, "");
-    let numeroFactura = await getBookingNumber.getBookingNumber(fechaFormateada.toString()).then(value => {return value});
+    let numeroFactura = await getBookingNumber.getBookingNumber(fechaFormateada.toString()).then(value => { return value });
     let habitaciones;
-    try{
+    try {
         habitaciones = JSON.parse(req.body.habitaciones);
-    } catch(e){
+    } catch (e) {
         console.log(e);
         habitaciones = req.body.habitaciones;
     }
-    
+
     const reserva = {
         numeroFactura: numeroFactura,
         fechaReserva: fechaFactura,

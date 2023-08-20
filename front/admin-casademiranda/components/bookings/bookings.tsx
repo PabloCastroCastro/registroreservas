@@ -9,6 +9,7 @@ import Link from 'next/link';
 
 import * as API from "../../services/bookings";
 import BookingComponent from "./bookingComponent";
+import Navbar from "../navbar/navbar";
 
 
 export default function Bookings() {
@@ -26,9 +27,10 @@ export default function Bookings() {
 
 
     return (
-        <div>
-            <div className="flex flex-row">
-                <Link href="/booking/new-booking"><Button>Crear Reserva</Button></Link>
+        <div className = "bg-black">
+
+            <div className="columns-4">
+                <Link href="/booking/new-booking"><Button className="text-3xl font-bold underline">Crear Reserva</Button></Link>
                 <div className='basis-1/4'></div>
                 <TextInput id="small" className="basis-1/4" sizing="sm" type="text" name="identifier" value={identifier} onChange={identifier => setIdentifier(identifier.target.value)}></TextInput>
                 <Button className="basis-1/4" size="sm" onClick={find}>Buscar</Button>

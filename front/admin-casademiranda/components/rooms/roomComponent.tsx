@@ -9,7 +9,8 @@ export default function RoomComponent({ room }: RoomProps) {
     return (
         <div>
             <p>Nombre: {room.name}</p>
-            {room.extra_beds?(<p>Supletorias: {room.extra_beds}</p>):(<p>Sin supletorias</p>)}
+            <p>Precio: {room.price}</p>
+            {room.extra_beds?(<div><p>Supletorias: {room.extra_beds}</p><p>Precio supletoria: {room.price_extra_bed}</p></div>):(<p>Sin supletorias</p>)}
         </div>
     )
 }
