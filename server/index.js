@@ -233,9 +233,9 @@ app.post('/factura', async function (req, res) {
     console.log(reserva);
     console.log(dias);
 
-    readFileExcel(numeroFactura, fechaFactura);
-    generarFactura(reserva, cliente);
-    sendMail(numeroFactura, nombre, apellidos, email);
+    //readFileExcel(numeroFactura, fechaFactura);
+    //generarFactura(reserva, cliente);
+    sendMail('20230831002', nombre, apellidos, email);
     res.send('Datos recibidos correctamente.');
 });
 
