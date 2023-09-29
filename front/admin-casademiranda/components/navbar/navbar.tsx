@@ -8,19 +8,19 @@ import Link from 'next/link';
 export default function DefaultNavbar() {
     return (
         <Navbar fluid rounded>
-            <Navbar.Brand>
+            <Navbar.Brand href="/">
                 <Image
                     alt="Logo Casa de Miranda"
-                    className="mr-3 h-6 sm:h-9"
+                    className="mr-3"
                     src={logo}
-                    width="100" 
-                    height="80"
+                    width="180" 
+                    height="150"
                 />
-                <span className="self-center whitespace-nowrap text-xl font-semibold dark:text-white">Casa de Miranda</span>
             </Navbar.Brand>
             <Navbar.Toggle />
             <Navbar.Collapse>
-                <Link href="/">Home</Link>
+                <Link href="/booking/new-booking"><p className='text-gray text-opacity-75 font-semibold'>Crear Reserva</p></Link>
+                <Link href="/"><p className='text-gray text-opacity-75 font-semibold'>Home</p></Link>
             </Navbar.Collapse>
         </Navbar>
     )

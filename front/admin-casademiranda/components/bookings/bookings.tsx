@@ -24,25 +24,25 @@ export default function Bookings() {
     useEffect(() => {
         API.getAllBookings().then(setBookings).catch(console.log);
     }, []);
+    
 
 
     return (
         <>
             <div className="flex flex-row">
-            <Link href="/booking/new-booking"><button className="basis-1/4 rounded-full bg-blue">Crear Reserva</button></Link>
-                <div className='basis-1/4'></div>
-                <TextInput className="basis-1/4" type="text" name="identifier" value={identifier} onChange={identifier => setIdentifier(identifier.target.value)}></TextInput>
-                <button className="basis-1/4 rounded-full bg-blue" onClick={find}>Buscar</button>
+                <div className='basis-6/12'></div>
+                <TextInput className="basis-4/12" type="text" name="identifier" value={identifier} onChange={identifier => setIdentifier(identifier.target.value)}></TextInput>
+                <button className="basis-2/12 rounded-full bg-green bg-opacity-50" onClick={find}><p className="text-black text-opacity-75 font-semibold">Buscar</p></button>
             </div>
             <div id="divTable">
                 <Suspense fallback={<div>Loading...</div>}>
                     <table id="bookingTable">
                         <thead>
                             <tr>
-                                <th>Reserva</th>
-                                <th>Nombre</th>
-                                <th>Apellidos</th>
-                                <th>Habitaciones</th>
+                                <th><p className="text-black text-opacity-75 font-semibold">Reserva</p></th>
+                                <th><p className="text-black text-opacity-75 font-semibold">Nombre</p></th>
+                                <th><p className="text-black text-opacity-75 font-semibold">Apellidos</p></th>
+                                <th><p className="text-black text-opacity-75 font-semibold">Habitaciones</p></th>
                             </tr>
                         </thead>
                         <tbody id="tBodyBookings">

@@ -21,12 +21,12 @@ CREATE TABLE IF NOT EXISTS `casademiranda`.`customers` (
   `surname` VARCHAR(90) NULL DEFAULT NULL,
   `identifier` VARCHAR(45) NULL DEFAULT NULL,
   `email` VARCHAR(120) NULL DEFAULT NULL,
+  `made_booking` BIT DEFAULT 0,
   PRIMARY KEY (`customer_id`),
   INDEX `fk_customers_identifier_idx` (`identifier` ASC),
   INDEX `fk_customers_email_idx` (`email` ASC))
   DEFAULT CHARACTER SET = utf8
   COLLATE = utf8_general_ci;
-
 
 CREATE TABLE IF NOT EXISTS `casademiranda`.`booking_room` (
   `booking_room_id` INT NOT NULL AUTO_INCREMENT,
