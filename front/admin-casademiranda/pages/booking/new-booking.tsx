@@ -1,3 +1,4 @@
+import "@/app/globals.css";
 import { useState, useEffect } from 'react';
 import  Navbar from '@/components/navbar/navbar';
 import type { RequestBooking } from '@/interfaces/booking';
@@ -69,7 +70,7 @@ export default function NewBooking() {
                 <div><h1 className='relative left-5 text-xl text-green text-opacity-75 font-semibold'>Nueva Reserva: </h1></div>
                 <div id="registroReservas">
                     <form id="mi-formulario" onSubmit={handleSubmit}>
-                        <div id="datos-reserva" className='grid grid-cols-3 gap-3'>
+                        <div id="datos-reserva" className='grid grid-cols-2 gap-3'>
                             <div className="grid grid-cols-1">
                                 <label className='text-gray-dark text-opacity-75' id="nombre">Nombre </label>
                                 <div className='flex flex-row'>
@@ -77,9 +78,11 @@ export default function NewBooking() {
                                 </div>
                             </div>
 
-                            <div className="formulario-elemento">
-                                <label id="apellidos">Apellidos:</label>
-                                <input type="text" id="apellidos" name="apellidos" value={surname} onChange={(e) => setSurname(e.target.value)} required />
+                            <div className="grid grid-cols-1">
+                                <label className='text-gray-dark text-opacity-75' id="apellidos">Apellidos </label>
+                                <div className='flex flex-row'>
+                                    <input className='rounded-full' type="text" id="apellidos" name="apellidos" value={surname} onChange={(e) => setSurname(e.target.value)} required  />
+                                </div>
                             </div>
 
                             <div className="formulario-elemento">
