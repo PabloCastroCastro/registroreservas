@@ -1,4 +1,4 @@
-const sql = require('../sql/sqlUtils')
+import sql from '../sql/sqlUtils.js';
 
 
 const listAllCustomers = async (limit) => {
@@ -40,11 +40,6 @@ const listCustomerByIdentifier = async (identifier) => {
 }
 
 
-module.exports = {
-    listAllCustomers: listAllCustomers,
-    listCustomerById: listCustomerById,
-    listCustomerByBookingId: listCustomerByBookingId,
-    listCustomerByIdentifier: listCustomerByIdentifier
-};
+export { listAllCustomers, listCustomerById, listCustomerByBookingId, listCustomerByIdentifier};
 
 

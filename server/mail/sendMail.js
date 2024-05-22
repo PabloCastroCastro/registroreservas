@@ -1,6 +1,5 @@
-const nodemailer = require("nodemailer");
-const fs = require('fs');
-const readProperty = require('../configuration/readConfiguration');
+import nodemailer from 'nodemailer';
+import readProperty from '../configuration/readConfiguration.js';
 
 
 const sendMail = (idBooking, name, surname, email) => {
@@ -52,4 +51,4 @@ const sendMail = (idBooking, name, surname, email) => {
 
 }
 
-module.exports = sendMail;
+export default sendMail;

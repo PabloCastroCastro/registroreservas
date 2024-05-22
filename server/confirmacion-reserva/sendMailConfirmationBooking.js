@@ -1,6 +1,5 @@
-const nodemailer = require("nodemailer");
-const fs = require('fs');
-const readProperty = require('../configuration/readConfiguration');
+import nodemailer from 'nodemailer';
+import readProperty from '../configuration/readConfiguration.js';
 
 
 const sendConfirmationBookingMail = (confirmationNumber, client, reserva) => {
@@ -99,4 +98,4 @@ const sendConfirmationBookingMail = (confirmationNumber, client, reserva) => {
 
 }
 
-module.exports = sendConfirmationBookingMail;
+export default sendConfirmationBookingMail;

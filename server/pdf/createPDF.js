@@ -1,5 +1,5 @@
-const PDFDocument = require('pdfkit');
-const fs = require('fs');
+import PDFDocument from 'pdfkit';
+import fs from 'fs';
 
 const generarFactura = (reserva, cliente) => {
 
@@ -295,4 +295,4 @@ const generarFactura = (reserva, cliente) => {
 
 }
 
-module.exports = generarFactura;
+export default generarFactura;

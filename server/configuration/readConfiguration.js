@@ -1,4 +1,4 @@
-const fs = require('fs');
+import fs from 'fs';
 
 const readProperty = (property) => {
 
@@ -16,4 +16,4 @@ const readProperty = (property) => {
     return "";
 }
 
-module.exports = readProperty;
+export default readProperty;

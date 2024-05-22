@@ -1,0 +1,61 @@
+version: '3'
+services:
+  db:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - 3306:3306
+    volumes:
+      - ./bbdd/data:/var/lib/mysql
+  
+  back-end:
+    build: 
+      context: ../server
+    container_name: back-end
+    working_dir: /usr/src/app
+    networks: 
+      - node-network
+    volumes: 
+      - ./node:/usr/src/app/back
+      - /usr/src/app/back/node_modules
+    tty: true
+    ports: 
+      - "3001:3001"
+    command: npm run start
+    depends_on:
+       - db
+
+  front-end:
+    build: 
+      context: ../front/admin-casademiranda
+    container_name: front-end
+    working_dir: /usr/src/app
+    networks: 
+      - node-network
+    volumes: 
+      - ./react:/usr/src/app/front
+      - /usr/src/app/front/node_modules
+    tty: true
+    ports: 
+      - "3000:3000"
+    command: npm run dev
+
+  nginx:
+    build: 
+      context: nginx
+    container_name: nginx
+    restart: always
+    tty: true
+    ports: 
+      - "8000:80"
+    networks: 
+      - node-network
+    depends_on:
+       - back-end
+       - front-end
+       
+networks:
+  node-network:
+    driver: bridge

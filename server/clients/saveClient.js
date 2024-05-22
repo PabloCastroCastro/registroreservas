@@ -1,4 +1,4 @@
-const sql = require('../sql/sqlUtils')
+import sql from '../sql/sqlUtils.js';
 
 
 
@@ -44,7 +44,4 @@ const update = async (booking_id, customer) => {
     return customerUpdated[0];
 }
 
-module.exports = {
-    save: save,
-    update: update
-};
+export {save, update};

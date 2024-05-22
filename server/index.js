@@ -1,16 +1,18 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
+import express from 'express';
+import bodyParser from 'body-parser';
+import cors from 'cors';
+import generarFactura from './pdf/createPDF.js';
+import readFileExcel from './excel/functionsExcel.js';
+import sendMail from './mail/sendMail.js';
+import sendConfirmationBookingMail from './confirmacion-reserva/sendMailConfirmationBooking.js';
+import saveBooking from './bookings/saveBooking.js';
+import {listAllBookings, listBookingByCustomer, listBookingById} from './bookings/listBooking.js';
+import {save, update} from './clients/saveClient.js';
+import { listAllCustomers, listCustomerById, listCustomerByBookingId, listCustomerByIdentifier} from './clients/listClient.js';
+import getBookingNumber from './bookings/getBookingNumber.js';
+
 const app = express();
-const generarFactura = require('./pdf/createPDF');
-const readFileExcel = require('./excel/functionsExcel');
-const sendMail = require('./mail/sendMail');
-const sendConfirmationBookingMail = require('./confirmacion-reserva/sendMailConfirmationBooking');
-const saveBooking = require('./bookings/saveBooking')
-const listBookings = require('./bookings/listBooking');
-const saveClients = require('./clients/saveClient');
-const listClients = require('./clients/listClient');
-const getBookingNumber = require('./bookings/getBookingNumber');
+
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -35,7 +37,7 @@ app.post('/cliente', async (req, res) => {
 
     console.log('Reserva: ', reserva, 'Customer: ', JSON.stringify(cliente));
 
-    let clients =  await saveClients.save(reserva, cliente);
+    let clients =  await save(reserva, cliente);
 
     console.log('Client Id: ', JSON.stringify(clients));
     res.send("Cliente registrado correctamente");
@@ -57,7 +59,7 @@ app.put('/cliente', async (req, res) => {
         hizo_reserva: req.body.made_booking
     };
 
-    let clients =  await saveClients.update(reserva, cliente);
+    let clients =  await update(reserva, cliente);
     res.send(clients);
 })
 
@@ -70,11 +72,11 @@ app.get('/cliente', async (req, res) => {
     let reservaId = req.query.reservaId;
     let clients;
     if (identifier != null && identifier != "") {
-        clients = await listClients.listCustomerByIdentifier(identifier).then((value) => { return value });
+        clients = await listCustomerByIdentifier(identifier).then((value) => { return value });
     } else if (reservaId !== null && reservaId !== "") {
-        clients = await listClients.listCustomerByBookingId(reservaId).then((value) => { return value });
+        clients = await listCustomerByBookingId(reservaId).then((value) => { return value });
     } else {
-        clients = await listClients.listAllCustomers().then((value) => { return value });
+        clients = await listAllCustomers().then((value) => { return value });
     }
     console.log('no for id Clients: ', JSON.stringify(clients));
 
@@ -87,7 +89,7 @@ app.get('/cliente/:id', async (req, res) => {
     let client_id = req.params['id'];
     let clients;
     if (client_id != null && client_id != "") {
-        clients = await listClients.listCustomerById(client_id).then((value) => { return value });
+        clients = await listCustomerById(client_id).then((value) => { return value });
     }
     console.log('Clients: ', JSON.stringify(clients));
 
@@ -99,9 +101,9 @@ app.get('/reserva', async (req, res) => {
     let identifier = req.query.dni;
     let bookings;
     if (identifier != null && identifier != "") {
-        bookings = await listBookings.listBookingByCustomer(identifier).then((value) => { return value });
+        bookings = await listBookingByCustomer(identifier).then((value) => { return value });
     } else {
-        bookings = await listBookings.listAllBookings().then((value) => { return value });
+        bookings = await listAllBookings().then((value) => { return value });
     }
 
     res.send(bookings);
@@ -112,7 +114,7 @@ app.get('/reserva/:id', async (req, res) => {
     let identifier = req.params['id'];
     let bookings;
     if (identifier != null && identifier != "") {
-        bookings = await listBookings.listBookingById(identifier).then((value) => { return value });
+        bookings = await listBookingById(identifier).then((value) => { return value });
     }
     console.log(bookings);
 
@@ -153,6 +155,7 @@ app.post('/reserva', async (req, res) => {
     const numeroAleatorio = Math.floor(Math.random() * (max - min + 1)) + min;
     const numeroFormateado = numeroAleatorio.toString().padStart(3, '0');
     const numeroConfirmacion = fechaFormateada.toString() + numeroFormateado;
+    let habitaciones;
 
     try {
         habitaciones = JSON.parse(req.body.habitaciones);
@@ -180,7 +183,7 @@ app.post('/reserva', async (req, res) => {
     };
 
     console.log('envio confirmacion reserva');
-    await saveBooking.save(reserva, cliente);
+    await saveBooking(reserva, cliente);
     if (sendConfirmationEmail != null && sendConfirmationEmail == "on") {
         console.log('send mail');
         sendConfirmationBookingMail(numeroConfirmacion, cliente, reserva);
@@ -205,7 +208,7 @@ app.post('/factura', async function (req, res) {
     const milisegundosEnUnDia = 1000 * 60 * 60 * 24;
     const dias = Math.floor(diferenciaEnMilisegundos / milisegundosEnUnDia);
     const fechaFormateada = dateNow.toISOString().split("T")[0].replace(/-/g, "");
-    let numeroFactura = await getBookingNumber.getBookingNumber(fechaFormateada.toString()).then(value => { return value });
+    let numeroFactura = await getBookingNumber(fechaFormateada.toString()).then(value => { return value });
     let habitaciones;
     try {
         habitaciones = JSON.parse(req.body.habitaciones);

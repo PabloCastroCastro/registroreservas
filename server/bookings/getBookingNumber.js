@@ -1,4 +1,4 @@
-const fs = require('fs');
+import fs from 'fs';
 
 const getBookingNumber = async (bookingDate) => {
 
@@ -22,6 +22,4 @@ const getBookingNumber = async (bookingDate) => {
 
 
 
-module.exports = {
-    getBookingNumber: getBookingNumber,
-};
+export default getBookingNumber;

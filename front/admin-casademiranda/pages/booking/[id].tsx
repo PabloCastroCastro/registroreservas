@@ -34,8 +34,8 @@ export default function BookingPage() {
                 let roomBill: RequestRoom = {
                     habitacion: room.name,
                     precio: room.price,
-                    supletorias: room.extra_beds?room.extra_beds:0,
-                    precioSupletoria: room.extra_beds?room.price_extra_bed:0
+                    supletorias: room.extra_beds ? room.extra_beds : 0,
+                    precioSupletoria: room.extra_beds ? room.price_extra_bed : 0
                 }
                 return roomBill;
             }) : []
@@ -48,15 +48,36 @@ export default function BookingPage() {
     return (
         <>
             <Navbar />
-            <h1>Reserva:</h1>
-            <p>Nombre: {booking?.name}</p>
-            <p>Apellidos: {booking?.surname}</p>
-            <p>Dni: {booking?.identifier}</p>
-            <DateComponent dateProps={{label:"Check_in: ", date:booking?.check_in}}></DateComponent>
-            <DateComponent dateProps={{label:"Check_out: ", date:booking?.check_out}}></DateComponent>
-            <p>Habitaciones: {booking?.rooms.map(r => (<RoomComponent room={r} />))}</p>
-            <Button onClick={createBill}>Generar Factura</Button>
-            <Link href="/booking/[id]/check-in" as={`/booking/${booking?.booking_id}/check-in`}><Button>Check In</Button></Link>
+            <h1 className='relative left-5 text-xl text-green text-opacity-75 font-semibold'>Reserva:</h1>
+            <div id="datos-reserva" className='grid grid-cols-3 gap-3'>
+                <div className="grid grid-cols-1">
+                    <label className='text-gray-dark text-opacity-75' id="nombre">Nombre: {booking?.name}</label>
+                </div>
+                <div className="grid grid-cols-1">
+                    <label className='text-gray-dark text-opacity-75' id="apellidos">Apellidos: {booking?.surname}</label>
+                </div>
+                <div className="grid grid-cols-1">
+                    <label className='text-gray-dark text-opacity-75' id="dni">Dni: {booking?.identifier}</label>
+                </div>
+                <div className="grid grid-cols-1">
+                    <DateComponent dateProps={{ label: "Fecha check_in: ", date: booking?.check_in }}></DateComponent>
+                </div>
+                <div className="grid grid-cols-1">
+                    <DateComponent dateProps={{ label: "Fecha Check_out: ", date: booking?.check_out }}></DateComponent>
+                </div>
+                <div className="grid grid-cols-1"></div>
+                <div className="grid grid-cols-1">
+                    <label className='text-gray-dark text-opacity-75' id="habitaciones">Habitaciones: {booking?.rooms.map(r => (<RoomComponent room={r} />))}</label>
+                </div>
+                <div className="grid grid-cols-1"></div>
+                <div className="grid grid-cols-1"></div>
+                <div className="grid grid-cols-1">
+                    <Button  className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' onClick={createBill}>Generar Factura</Button>
+                </div>
+                <div className="grid grid-cols-1">
+                    <Link className='rounded-full bg-green bg-opacity-50' href="/booking/[id]/check-in" as={`/booking/${booking?.booking_id}/check-in`}><Button  className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75'>Check In</Button></Link>
+                </div>
+            </div>
         </>
     )
 }
