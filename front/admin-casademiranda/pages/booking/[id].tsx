@@ -48,35 +48,45 @@ export default function BookingPage() {
     return (
         <>
             <Navbar />
-            <h1 className='relative left-5 text-xl text-green text-opacity-75 font-semibold'>Reserva:</h1>
-            <div id="datos-reserva" className='grid grid-cols-3 gap-3'>
-                <div className="grid grid-cols-1">
-                    <label className='text-gray-dark text-opacity-75' id="nombre">Nombre: {booking?.name}</label>
+            <div id="titulo" className='ml-5'>
+                <h1 className='relative text-xl text-green text-opacity-75 font-semibold'>Reserva:</h1>
+            </div>
+            <div id="datos-reserva" className='mt-5 ml-10 grid grid-cols-1 gap-2'>
+                <div id="datos-comunes" className='grid grid-cols-3 gap-3'>
+                    <div className="grid grid-cols-1">
+                        <label className='text-gray-dark text-opacity-75' id="nombre">Nombre: {booking?.name}</label>
+                    </div>
+                    <div className="grid grid-cols-1">
+                        <label className='text-gray-dark text-opacity-75' id="apellidos">Apellidos: {booking?.surname}</label>
+                    </div>
+                    <div className="grid grid-cols-1">
+                        <label className='text-gray-dark text-opacity-75' id="dni">Dni: {booking?.identifier}</label>
+                    </div>
+                    <div className="grid grid-cols-1">
+                        <DateComponent label="Fecha check_in: " date={booking?.check_in} />
+                    </div>
+                    <div className="grid grid-cols-1">
+                        <DateComponent label="Fecha check_out: " date={booking?.check_out} />
+                    </div>
+                    <div className="grid grid-cols-1"></div>
                 </div>
-                <div className="grid grid-cols-1">
-                    <label className='text-gray-dark text-opacity-75' id="apellidos">Apellidos: {booking?.surname}</label>
+                <div id="datos-habitaciones" className='grid grid-cols-3 gap-3'>
+                    <div className="grid grid-cols-1">
+                        <label className='text-gray-dark text-opacity-75' id="habitaciones">Habitaciones:</label>
+                    </div>
+                    <div className="grid grid-cols-1"></div>
+                    <div className="grid grid-cols-1"></div>
+                    {booking?.rooms.map(r => (<div className="grid grid-cols-1"><RoomComponent room={r} /></div>))}
                 </div>
-                <div className="grid grid-cols-1">
-                    <label className='text-gray-dark text-opacity-75' id="dni">Dni: {booking?.identifier}</label>
-                </div>
-                <div className="grid grid-cols-1">
-                    <DateComponent dateProps={{ label: "Fecha check_in: ", date: booking?.check_in }}></DateComponent>
-                </div>
-                <div className="grid grid-cols-1">
-                    <DateComponent dateProps={{ label: "Fecha Check_out: ", date: booking?.check_out }}></DateComponent>
-                </div>
-                <div className="grid grid-cols-1"></div>
-                <div className="grid grid-cols-1">
-                    <label className='text-gray-dark text-opacity-75' id="habitaciones">Habitaciones: {booking?.rooms.map(r => (<RoomComponent room={r} />))}</label>
-                </div>
-                <div className="grid grid-cols-1"></div>
-                <div className="grid grid-cols-1"></div>
-                <div className="grid grid-cols-1">
-                    <Button  className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' onClick={createBill}>Generar Factura</Button>
-                </div>
-                <div className="grid grid-cols-1">
-                    <Link className='rounded-full bg-green bg-opacity-50' href="/booking/[id]/check-in" as={`/booking/${booking?.booking_id}/check-in`}><Button  className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75'>Check In</Button></Link>
-                </div>
+            </div>
+            <div id="botones" className='mt-5 ml-5 grid grid-cols-6 gap-3'>
+                    <div className="grid grid-cols-1">
+                        <Button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' onClick={createBill}>Generar Factura</Button>
+                    </div>
+                    <div className="grid grid-cols-1">
+                        <Link className='rounded-full bg-green bg-opacity-50 hover:bg-gray-dark text-center text-gray-dark text-opacity-75 px-5 py-2.5' href="/booking/[id]/check-in" as={`/booking/${booking?.booking_id}/check-in`}><label>Check In</label></Link>
+                    </div>
+                    <div className="grid grid-cols-1"></div>
             </div>
         </>
     )

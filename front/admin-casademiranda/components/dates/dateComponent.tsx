@@ -1,12 +1,11 @@
-
-type DateProps = {
+interface DateProps {
     label: string,
     date: Date
 }
 
-export default function DateComponent({ dateProps }: DateProps) {
+export default function DateComponent({ label, date }: DateProps) {
 
     return (
-        <p>{dateProps !== undefined && dateProps.label !== undefined ?dateProps.label:"Date: "}{dateProps !== undefined && dateProps.date !== undefined && dateProps.date !== null ? dateProps.date.toLocaleString().split("T")[0]:""}</p>
+        <label className='text-gray-dark text-opacity-75'>{label !== undefined ?label:"Date: "}{date !== undefined ? date.toLocaleString().split("T")[0]:""}</label>
     )
 }
