@@ -10,19 +10,47 @@ type ClientProps = {
 export default function ClientComponent({ client }: ClientProps) {
 
     return (
+
         <div>
-            <p><Link href="/client/update-client/[id]" as={`/client/update-client/${client.client_id}`}>{client.client_id}</Link></p>
-            <p>{client.name}</p>
-            <p>{client.firstSurname}</p>
-            <p>{client.secondSurname}</p>
-            <DateComponent dateProps={{label:"Fecha Nacimiento: ", date:client.birthdate}}></DateComponent>
-            <p>{client.gender}</p>
-            <p>{client.nacionality}</p>
-            <p>{client.document_type}</p>
-            <p>{client.document_number}</p>
-            <DateComponent dateProps={{label:"Fecha Expedicion: ", date:client.expedition_date}}></DateComponent>
-            <DateComponent dateProps={{label:"Check In: ", date:client.check_in}}></DateComponent>
-            <Link href={"/client/update-client/[id]?booking_id="+client.booking_id} as={`/client/update-client/${client.client_id}?booking_id=${client.booking_id}`}><Button>Actualizar cliente</Button></Link>
-        </div>
+            <div id="datos-cliente" className='mt-5 ml-10 grid grid-cols-1 gap-2'>
+                <div id="datos-comunes" className='grid grid-cols-3 gap-3'>
+                    <div className="grid grid-cols-1">
+                        <label className='text-gray-dark text-opacity-75' id="nombre">Nombre: {client.name}</label>
+                    </div>
+                    <div className="grid grid-cols-1">
+                        <label className='text-gray-dark text-opacity-75' id="apellidos">Apellido 1: {client.firstSurname}</label>
+                    </div>
+                    <div className="grid grid-cols-1">
+                        <label className='text-gray-dark text-opacity-75' id="apellidos">Apellido 2: {client.secondSurname}</label>
+                    </div>
+                    <div className="grid grid-cols-1">
+                        <DateComponent label="Fecha Nacimiento: " date={client.birthdate} />
+                    </div>
+                    <div className="grid grid-cols-1">
+                        <label className='text-gray-dark text-opacity-75' id="genero">Genero: {client.gender}</label>
+                    </div>
+                    <div className="grid grid-cols-1">
+                        <label className='text-gray-dark text-opacity-75' id="nacionalidad">Nacionalidad: {client.gender}</label>
+                    </div>
+                    <div className="grid grid-cols-1">
+                        <label className='text-gray-dark text-opacity-75' id="tipodocumento">Tipo documento: {client.document_type}</label>
+                    </div>
+                    <div className="grid grid-cols-1">
+                        <label className='text-gray-dark text-opacity-75' id="numerodocumento">Numero documento: {client.document_number}</label>
+                    </div>
+                    <div className="grid grid-cols-1">
+                        <DateComponent label="Fecha Expedicion: " date={client.expedition_date} />
+                    </div>
+                    <div className="grid grid-cols-1">
+                        <DateComponent label="Fecha check in: " date={client.check_in} />
+                    </div>
+                </div>
+            </div>
+            <div id="botones" className='mt-5 ml-5 grid grid-cols-6 gap-3'>
+                <div className="grid grid-cols-1">
+                    <Link className='rounded-full bg-green bg-opacity-50 hover:bg-gray-dark text-center text-gray-dark text-opacity-75 px-5 py-2.5' href={"/client/update-client/[id]?booking_id=" + client.booking_id} as={`/client/update-client/${client.client_id}?booking_id=${client.booking_id}`}><label>Actualizar cliente</label></Link>
+                </div>
+            </div>
+        </div >
     )
 }
