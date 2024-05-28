@@ -5,19 +5,24 @@ import type { Booking, ResponseError } from '../../interfaces/booking'
 import type { Bill } from '@/interfaces/bill'
 import * as APIBooking from "../../services/bookings";
 import * as APIBilling from "../../services/bills";
+import * as APIClient from "@/services/clients";
 import { useState, useEffect } from 'react';
 import { Button } from 'flowbite-react';
 import { RequestRoom } from '@/interfaces/room';
 import Link from 'next/link'
-import DateComponent from '@/components/dates/DateComponent';
+import { Client } from '@/interfaces/client';
+import ClientComponent from '@/components/clients/clientComponent';
+import DateComponent from '@/components/dates/dateComponent';
 
 export default function BookingPage() {
     const { query } = useRouter()
     const [booking, setBooking] = useState<Booking>();
+    const [clients, setClients] = useState<Client[]>();
     const [billStatus, setBillStatus] = useState(200);
 
     useEffect(() => {
         APIBooking.getBookingById(query.id).then(setBooking).catch(console.log);
+        query.id !== undefined && typeof query.id === "string" ? APIClient.getClientsByBookingId(query.id).then(setClients).catch(console.log) : setClients([]);
     }, []);
 
     function createBill() {
@@ -78,15 +83,26 @@ export default function BookingPage() {
                     <div className="grid grid-cols-1"></div>
                     {booking?.rooms.map(r => (<div className="grid grid-cols-1"><RoomComponent room={r} /></div>))}
                 </div>
+                <div id="datos-clientes" className='grid grid-cols-3 gap-3'>
+                    <div className="grid grid-cols-1">
+                        <label className='text-gray-dark text-opacity-75' id="clientes">Huespedes:</label>
+                    </div>
+                    <div className="grid grid-cols-1"></div>
+                    <div className="grid grid-cols-1"></div>
+                    {clients && booking ? clients.map(client => (<ClientComponent client={{ ...client, booking_id: booking.booking_id }}></ClientComponent>)) : <></>}
+                    <div className="grid grid-cols-1">
+                        <Link className='w-12 h-12 rounded-full bg-green bg-opacity-50 hover:bg-gray-dark text-center text-gray-dark text-opacity-75' href={"/client/new-client?booking_id=" + booking?.booking_id}>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            </svg>
+                        </Link>
+                    </div>
+                </div>
             </div>
             <div id="botones" className='mt-5 ml-5 grid grid-cols-6 gap-3'>
                     <div className="grid grid-cols-1">
                         <Button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' onClick={createBill}>Generar Factura</Button>
                     </div>
-                    <div className="grid grid-cols-1">
-                        <Link className='rounded-full bg-green bg-opacity-50 hover:bg-gray-dark text-center text-gray-dark text-opacity-75 px-5 py-2.5' href="/booking/[id]/check-in" as={`/booking/${booking?.booking_id}/check-in`}><label>Check In</label></Link>
-                    </div>
-                    <div className="grid grid-cols-1"></div>
             </div>
         </>
     )

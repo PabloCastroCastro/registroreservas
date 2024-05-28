@@ -59,19 +59,20 @@ export default function NewClient() {
     return (
         <>
             <Navbar></Navbar>
-            <h1>Nuevo Cliente: </h1>
-            <div id="registroCliente">
+            <div id="titulo" className='ml-5'>
+                <h1 className='relative text-xl text-green text-opacity-75 font-semibold'>Nuevo Cliente:</h1>
+            </div>
+            <div id="datos-cliente" className='mt-5 ml-10 grid grid-cols-1 gap-2'>
                 <form id="mi-formulario" onSubmit={handleSubmit}>
-                    <div id="datos-cliente">
-
-                        <div className="formulario-elemento">
-                            <label id="fecha-checkin">Fecha de check-in:</label>
-                            <input type="date" id="fecha-checkin" name="fechaCheckIn" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} required />
+                    <div className='grid grid-cols-3 gap-3'>
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="fecha-checkin">Fecha de check-in:</label>
+                            <input type="date" className='rounded-full' id="fecha-checkin" name="fechaCheckIn" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} required />
                         </div>
 
-                        <div className="formulario-elemento">
-                            <label id="nacionality">Nacionalidad:</label>
-                            <select id="nacionality" name="nacionality" value={nacionality} onChange={(e) => setNacionality(e.target.value)}>
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="nacionality">Nacionalidad:</label>
+                            <select id="nacionality"className='rounded-full' name="nacionality" value={nacionality} onChange={(e) => setNacionality(e.target.value)}>
                                 <option value="">- Pais de Nacionalidad -</option>
                                 <option value="ESPAÑA">ESPAÑA</option>
                                 <option value="AFGANISTAN">AFGANISTAN</option>
@@ -289,9 +290,9 @@ export default function NewClient() {
                             </select>
                         </div>
 
-                        <div className="formulario-elemento">
-                            <label id="documentType">Tipo documento:</label>
-                            <select name="documentType" id="documentType" onChange={e => { setDocumentType(e.target.value); }} value={documentType} required>
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="documentType">Tipo documento:</label>
+                            <select name="documentType" id="documentType" className='rounded-full' onChange={e => { setDocumentType(e.target.value); }} value={documentType} required>
                                 <option value="">- Tipo Documento -</option>
                                 <option value="P">pasaporte</option>
                                 {nacionality && nacionality === 'ESPAÑA'?(<option value="C">permiso de conducir</option>):<></>}
@@ -301,49 +302,48 @@ export default function NewClient() {
                             </select>
                         </div>
 
-                        <div className="formulario-elemento">
-                            <label id="documentNumber">Número documento:</label>
-                            <input type="text" id="documentNumber" name="documentNumber" value={documentNumber} onChange={(e) => setDocumentNumber(e.target.value)} required />
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="documentNumber">Número documento:</label>
+                            <input type="text" className='rounded-full' id="documentNumber" name="documentNumber" value={documentNumber} onChange={(e) => setDocumentNumber(e.target.value)} required />
                         </div>
 
-                        <div className="formulario-elemento">
-                            <label id="expeditionDate">Fecha de expedición:</label>
-                            <input type="date" id="expeditionDate" name="expeditionDate" value={expeditionDate} onChange={(e) => setExpeditionDate(e.target.value)} required />
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="expeditionDate">Fecha de expedición:</label>
+                            <input type="date" className='rounded-full' id="expeditionDate" name="expeditionDate" value={expeditionDate} onChange={(e) => setExpeditionDate(e.target.value)} required />
                         </div>
 
-                        <div className="formulario-elemento">
-                            <label id="nombre">Nombre:</label>
-                            <input type="text" id="nombre" name="nombre" value={name} onChange={(e) => setName(e.target.value)} required />
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="nombre">Nombre:</label>
+                            <input type="text" className='rounded-full' id="nombre" name="nombre" value={name} onChange={(e) => setName(e.target.value)} required />
                         </div>
 
-                        <div className="formulario-elemento">
-                            <label id="firstSurname">Primer apellido:</label>
-                            <input type="text" id="firstSurname" name="firstSurname" value={firstSurname} onChange={(e) => setFistSurname(e.target.value)} required />
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="firstSurname">Primer apellido:</label>
+                            <input type="text" className='rounded-full' id="firstSurname" name="firstSurname" value={firstSurname} onChange={(e) => setFistSurname(e.target.value)} required />
                         </div>
 
-                        <div className="formulario-elemento">
-                            <label id="secondSurname">Segundo apellido:</label>
-                            <input type="text" id="secondSurname" name="secondSurname" value={secondSurname} onChange={(e) => setSecondSurname(e.target.value)} required />
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="secondSurname">Segundo apellido:</label>
+                            <input type="text" className='rounded-full' id="secondSurname" name="secondSurname" value={secondSurname} onChange={(e) => setSecondSurname(e.target.value)} required />
                         </div>
 
 
-                        <div className="formulario-elemento">
-                            <label id="gender">Genero:</label>
-                            <select id="selectorGender" onChange={e => { setGender(e.target.value); }} value={gender} name="gender">
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="gender">Genero:</label>
+                            <select id="selectorGender" className='rounded-full' onChange={e => { setGender(e.target.value); }} value={gender} name="gender">
                                 <option value="">--Selecciona una opción--</option>
                                 <option value="M">Masculino</option>
                                 <option value="F">Femenino</option>
                             </select>
                         </div>
 
-                        <div className="formulario-elemento">
-                            <label id="birthdate">Fecha de nacimiento:</label>
-                            <input type="date" id="birthdate" name="birthdate" value={birthdate} onChange={(e) => setBirthdate(e.target.value)} required />
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="birthdate">Fecha de nacimiento:</label>
+                            <input type="date" className='rounded-full' id="birthdate" name="birthdate" value={birthdate} onChange={(e) => setBirthdate(e.target.value)} required />
                         </div>
-
-                        <div className="formulario-elemento" id="boton-enviar">
-                            <button type="submit">Registro cliente</button>
-                        </div>
+                    </div>
+                    <div className="mt-10" id="boton-enviar">
+                        <button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75'  type="submit"><label className='text-gray-dark text-opacity-75' >Registro cliente</label></button>
                     </div>
                 </form>
             </div>

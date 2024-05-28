@@ -67,8 +67,10 @@ export default function NewBooking() {
         <>
             <Navbar></Navbar>
             <div>
-                <div><h1 className='relative left-5 text-xl text-green text-opacity-75 font-semibold'>Nueva Reserva</h1></div>
-                <div id="registroReservas">
+                <div className="grid grid-cols-1">
+                    <h1 className='relative left-5 text-xl text-green text-opacity-75 font-semibold'>Nueva Reserva</h1>
+                </div>
+                <div className="mt-10 ml-10" id="registroReservas">
                     <form id="mi-formulario" onSubmit={handleSubmit}>
                         <div id="datos-reserva" className='grid grid-cols-3 gap-3'>
                             <div className="grid grid-cols-1">
@@ -120,7 +122,7 @@ export default function NewBooking() {
                             </div>
                         </div>
 
-                        <div id="datos-habitacion">
+                        <div className="mt-3 grid grid-cols-3" id="datos-habitacion">
                             <div className="grid grid-cols-1">
                                 <label className='text-gray-dark text-opacity-75' id="selectorhabitacion">Selecciona una habitación</label>
                                 <select className='rounded-full text-gray-dark text-opacity-75' id="selectorhabitacion" onChange={e => {setSelectedRoom(e.target.value);}} value={selectedRoom} name="habitacion">
@@ -131,31 +133,34 @@ export default function NewBooking() {
                                     <option value="O Faiado">O Faiado</option>
                                 </select>
                             </div>
-
+                        </div>
                             {selectedRoom!==""&&selectedRoom!==undefined?(
-                                <div>
+                                <div className="mt-3 grid grid-cols-3 gap-3">
                                     <div className="grid grid-cols-1" id="precio">
                                         <label className='text-gray-dark text-opacity-75' id="precio">Precio</label>
                                         <input className='rounded-full text-gray-dark text-opacity-75' type="text" id="preciohab" name="precio" value={priceRoom} onChange={e => setPriceRoom(parseInt(e.target.value))} />
                                     </div>
-
                                     <div className="grid grid-cols-1" id="supletoria" >
                                         <label className='text-gray-dark text-opacity-75' id="numerosupl">Número de supletorias</label>
                                         <input className='rounded-full text-gray-dark text-opacity-75' type="number" id="numerosupl" name="numsupletoria" value={numExtraBed} onChange={e => setNumExtraBed(parseInt(e.target.value))}/>
+                                    </div>
+                                    <div className="grid grid-cols-1" id="supletoria" >
                                         <label className='text-gray-dark text-opacity-75' id="preciosupl">Precio de cada supletoria</label>
                                         <input className='rounded-full text-gray-dark text-opacity-75' type="text" id="preciosupl" name="preciosupletoria" value={priceExtraBed} onChange={e => setPriceExtraBed(parseInt(e.target.value))}/>
-                                        <div className="grid grid-cols-1" id="boton-hatitacion">
-                                            <button className="rounded-full bg-green bg-opacity-50" type="button" onClick={agregarHabitacion}><p className="text-black text-opacity-75 font-semibold"> Añadir habitación </p></button>
-                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1" id="boton-hatitacion">
+                                        <button className="w-12 h-12 rounded-full bg-green bg-opacity-50" type="button" onClick={agregarHabitacion}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                            </svg>
+                                        </button>
                                     </div>
                                 </div>
                             ):(
                                 <div></div>
                             )}
-
-                        </div>
                         {rooms !== undefined&&rooms.length>0?(
-                            <div>
+                            <div className="mt-3">
                             <label className='text-gray-dark text-opacity-75'>Lista habitaciones</label>
                             <ul id="lista-habitaciones">
                                 {rooms.map(room => (
@@ -163,8 +168,8 @@ export default function NewBooking() {
                                 ))}
                             </ul>
                             </div>
-                        ):(<div><label className='text-gray-dark text-opacity-75'>Sin habitaciones añadidas</label></div>)}
-                        <div className="grid grid-cols-1" id="boton-enviar">
+                        ):(<div className="mt-3"><label className='text-gray-dark text-opacity-75'>Sin habitaciones añadidas</label></div>)}
+                        <div className="mt-10 grid grid-cols-9" id="boton-enviar">
                             <button type="submit" className="rounded-full bg-green bg-opacity-50"><p className="text-black text-opacity-75 font-semibold">Registro reserva</p></button>
                         </div>
                     </form>
