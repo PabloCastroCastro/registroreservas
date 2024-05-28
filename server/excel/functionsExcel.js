@@ -1,8 +1,9 @@
-const ExcelJS = require('exceljs');
+import ExcelJS from 'exceljs';
+
 const workbook = new ExcelJS.Workbook();
 
 
-function readFileExcel(numeroFactura,fechaFactura) {
+export default function readFileExcel(numeroFactura,fechaFactura) {
   workbook.xlsx.readFile('Plantilla202xxxxx.xlsx')
   .then(function() {
     const worksheet = workbook.getWorksheet('Factura');
@@ -25,5 +26,3 @@ function changeCellValue(worksheet, cellIndex, value){
   worksheet.getCell(cellIndex).value = value;
 
 }
-
-module.exports = readFileExcel;

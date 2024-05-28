@@ -1,8 +1,7 @@
-const mysql = require("mysql2");
-const util = require("util"); 
+import mysql from "mysql2";
+import util from "util"; 
+import readProperty from '../configuration/readConfiguration.js';
 
-
-const readProperty = require('../configuration/readConfiguration');
 const pass = readProperty("sql.password");
 const user = readProperty("sql.user");
 const server = readProperty("sql.server");
@@ -17,7 +16,7 @@ var config = {
     database: database
 };
 
-connection = mysql.createConnection(config);
+let connection = mysql.createConnection(config);
 connection.query = util.promisify(connection.query).bind(connection);
 
 connection.connect(function(err){
@@ -37,6 +36,4 @@ const executeQuery = async (query, params) => {
     })
 }
 
-module.exports = {
-    executeQuery: executeQuery
-}
+export default executeQuery;
