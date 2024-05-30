@@ -20,7 +20,7 @@ export default function NewClient() {
     const [birthdate, setBirthdate] = useState("");
     const [bookingId, setBookingId] = useState(query !== undefined && query.booking_id !== undefined && typeof(query.booking_id) === "string"?query.booking_id:"");
 
-    const [clientStatus, setClientStatus] = useState(200);
+    const [client, setClient] = useState<Client>();
 
     const validData = (client: Client) => {
         return true;
@@ -52,7 +52,9 @@ export default function NewClient() {
         }
 
         console.log(JSON.stringify(client), 'Reserva Id: ', query.booking_id);
-        APIClient.createClient(client).then(setClientStatus).catch(console.log);
+        APIClient.createClient(client).then(res => {
+            return setClient(res)
+        }).catch(console.log);
 
     }
 

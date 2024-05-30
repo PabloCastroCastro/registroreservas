@@ -50,7 +50,7 @@ export default function Bookings() {
                         </thead>
                         <tbody id="tBodyBookings">
                             {bookings?.map((item) => (
-                                <BookingComponent key={item.booking_id} booking={item} />
+                                <BookingComponent key={item} booking={item} />
                             ))}
                         </tbody>
                     </table>
