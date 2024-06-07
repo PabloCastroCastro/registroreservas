@@ -1,3 +1,4 @@
+import "@/app/globals.css";
 import Navbar from '../../components/navbar/navbar'
 import RoomComponent from '@/components/rooms/roomComponent';
 import { useRouter } from 'next/router'
