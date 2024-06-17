@@ -2,7 +2,7 @@
     "mail.reservas.user": "reservas@casademiranda.com",
     "mail.facturacion.user": "facturacion@casademiranda.com",
     "sql.user": "root",
-    "sql.server": "localhost",
+    "sql.server": "db",
     "sql.port": 3306,
     "sql.database": "casademiranda"
 }

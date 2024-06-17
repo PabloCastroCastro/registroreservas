@@ -1,3 +1,6 @@
+'use client';
+
+import "@/app/globals.css";
 import Navbar from "@/components/navbar/navbar";
 import { Client } from "@/interfaces/client"
 import * as APIClient from '@/services/clients';

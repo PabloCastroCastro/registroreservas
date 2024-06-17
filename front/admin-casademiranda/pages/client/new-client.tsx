@@ -1,3 +1,7 @@
+'use client';
+
+import "@/app/globals.css";
+
 import { useState } from 'react';
 import Navbar from '@/components/navbar/navbar';
 import * as APIClient from '@/services/clients';

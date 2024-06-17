@@ -1,4 +1,3 @@
-version: '3'
 services:
   db:
     image: mysql
@@ -9,38 +8,37 @@ services:
       - 3306:3306
     volumes:
       - ./bbdd/data:/var/lib/mysql
+    networks: 
+      - node-network
   
-  back-end:
+  backend:
     build: 
       context: ../server
-    container_name: back-end
-    working_dir: /usr/src/app
     networks: 
       - node-network
     volumes: 
-      - ./node:/usr/src/app/back
-      - /usr/src/app/back/node_modules
+      - /project/node_modules
+      - ./certs:/infrastructure/certs
     tty: true
     ports: 
-      - "3001:3001"
+      - "3003:3003"
     command: npm run start
     depends_on:
        - db
 
-  front-end:
-    build: 
+  frontend:
+    build:
       context: ../front/admin-casademiranda
-    container_name: front-end
-    working_dir: /usr/src/app
-    networks: 
+    ports:
+      - 3000:3000
+    volumes:
+      - /project/node_modules
+    networks:
       - node-network
-    volumes: 
-      - ./react:/usr/src/app/front
-      - /usr/src/app/front/node_modules
-    tty: true
-    ports: 
-      - "3000:3000"
-    command: npm run dev
+    command: npm run start
+    depends_on:
+      - backend
+
 
   nginx:
     build: 
@@ -53,8 +51,8 @@ services:
     networks: 
       - node-network
     depends_on:
-       - back-end
-       - front-end
+       - backend
+       - frontend
        
 networks:
   node-network:

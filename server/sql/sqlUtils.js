@@ -1,6 +1,7 @@
-import mysql from "mysql2";
-import util from "util"; 
+import mysql from 'mysql2/promise';
+import util from "util";
 import readProperty from '../configuration/readConfiguration.js';
+import { resolve } from 'path';
 
 const pass = readProperty("sql.password");
 const user = readProperty("sql.user");
@@ -11,29 +12,21 @@ const database = readProperty("sql.database");
 var config = {
     user: user,
     password: pass,
-    server: server,
+    host: server,
     port: port,
     database: database
 };
 
-let connection = mysql.createConnection(config);
-connection.query = util.promisify(connection.query).bind(connection);
 
-connection.connect(function(err){
-    if (err) {
-        console.log("error connecting: " + err.stack);
-        return;
-    };
-    console.log("connected as... " + connection.threadId);
-});
 
 const executeQuery = async (query, params) => {
-    return new Promise((resolve, reject) => {
-        connection.query(query, params, function (error, results, fields) {
-            if (error) reject(error);
-            resolve(results);
-        })
-    })
+    try {
+        const connection = await mysql.createConnection(config);
+        const [rows, fields] = await connection.query(query, params);
+        return rows;
+    } catch (err) {
+        console.log(err);
+    }
 }
 
 export default executeQuery;
