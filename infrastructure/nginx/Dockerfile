@@ -1,2 +1,8 @@
-FROM nginx
-COPY ./default.conf /etc/nginx/conf.d/default.conf
+FROM nginx:latest as prod
+
+COPY --from=infrastructure-frontend front/out /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/nginx.conf
+
+EXPOSE 80/tcp
+
+CMD ["/usr/sbin/nginx", "-g", "daemon off;"]
