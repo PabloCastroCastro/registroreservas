@@ -50,6 +50,8 @@ services:
       - "80:80"
     networks: 
       - node-network
+    volumes: 
+      - ./certs:/etc/nginx/infrastructure/certs
     depends_on:
        - backend
        - frontend
