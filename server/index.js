@@ -249,8 +249,8 @@ app.listen(3003, function () {
 });
 
 const options = {
-    key: fs.readFileSync('../infrastructure/certs/key.pem', 'utf8'),
-    cert: fs.readFileSync('../infrastructure/certs/server.crt', 'utf8'),
+    key: fs.readFileSync('../infrastructure/certs/casademiranda.key', 'utf8'),
+    cert: fs.readFileSync('../infrastructure/certs/casademiranda.crt', 'utf8'),
   };
 
 // Create an HTTPS service identical to the HTTP service.
