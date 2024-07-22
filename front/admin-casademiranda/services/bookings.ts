@@ -1,6 +1,6 @@
 import { Booking, RequestBooking } from "@/interfaces/booking";
 
-const API_URL = 'http://localhost:3003/reserva';
+const API_URL = 'http://192.168.1.150/reserva';
 
 export async function createBooking(booking:RequestBooking) {
   try {

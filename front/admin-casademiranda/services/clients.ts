@@ -1,6 +1,6 @@
 import type { Client, ClientDTO } from "@/interfaces/client";
 
-const API_URL = 'http://localhost:3003/cliente';
+const API_URL = 'http://192.168.1.150/cliente';
 
 
 export async function createClient(client: Client) {
