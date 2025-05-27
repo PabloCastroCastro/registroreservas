@@ -16,11 +16,11 @@ export default function CheckInPage() {
 
     const [booking, setBooking] = useState<Booking>();
     const [clients, setClients] = useState<Client[]>();
+    const { query } = useRouter();
 
-    const { query } = useRouter()
 
     useEffect(() => {
-        APIBooking.getBookingById(query.id).then(setBooking).catch(console.log);
+        query.id !== undefined && typeof query.id === "string" ? APIBooking.getBookingById(query.id).then(setBooking).catch(console.log):setBooking;
         query.id !== undefined && typeof query.id === "string" ? APIClient.getClientsByBookingId(query.id).then(setClients).catch(console.log) : setClients([]);
     }, []);
 
@@ -56,7 +56,7 @@ export default function CheckInPage() {
                             </div>
                             <div className="grid grid-cols-1"></div>
                             <div className="grid grid-cols-1"></div>
-                            {clients ? clients.map(client => (<ClientComponent client={{ ...client, booking_id: booking.booking_id }}></ClientComponent>)) : <></>}
+                            {clients ? clients.map(client => (<div key={client.client_id}><ClientComponent client={{ ...client, booking_id: booking.booking_id }}></ClientComponent></div>)) : <></>}
                         </div>
                     </div>
                     <div id="botones" className='mt-5 ml-5 grid grid-cols-6 gap-3'>

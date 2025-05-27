@@ -5,8 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "set PORT=5173 && next start",
-    "lint": "next lint"
+    "start": "next start",
+    "lint": "next lint",
+    "serve": "npx serve out"
   },
   "dependencies": {
     "@types/node": "20.4.1",

@@ -15,7 +15,7 @@ export default function BookingComponent({ booking }: BookingProps) {
             <td>
                 <table>
                     {booking.rooms?.map((room) => (
-                        <tbody>
+                        <tbody key={room.name}>
                             <tr>
                                 <td><p className='text-gray-dark text-opacity-75'>{room.name}</p></td>
                                 <td><p className='text-gray-dark text-opacity-75'>{room.extra_beds}</p></td>

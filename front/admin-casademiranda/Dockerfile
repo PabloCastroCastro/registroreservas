@@ -1,9 +1,15 @@
-FROM node:alpine
+FROM node:lts-alpine as build
 
-WORKDIR /usr/src/app/front
+WORKDIR /front
 
-COPY . .
+COPY package.json /front/package.json
+COPY package-lock.json /front/package-lock.json
+RUN npm ci
 
-RUN npm install
+COPY . /front
+
+RUN npm run build
 
 EXPOSE 3000
+
+CMD [ "npm", "run", "dev", "build" ]

@@ -1,6 +1,6 @@
-import type { Client } from "@/interfaces/client";
+import type { Client, ClientDTO } from "@/interfaces/client";
 
-const API_URL = 'http://localhost:3003/cliente';
+const API_URL = 'http://192.168.1.141/cliente';
 
 
 export async function createClient(client: Client) {
@@ -16,8 +16,7 @@ export async function createClient(client: Client) {
 
     const response = await fetch(`${API_URL}`, requestOptions);
     const data = await response.json();
-    console.log(JSON.stringify(data));
-    return processResultList(data);
+    return processResult(data);
   } catch (error) {
     console.error(error);
   }
@@ -82,7 +81,7 @@ export async function getClientsByBookingId(booking_id: string) {
   }
 }
 
-async function processResultList(data) {
+async function processResultList(data:ClientDTO[]) {
   const mapToClients:Client[] = [];
   data.map(clientResult => mapToClients.push({
     client_id: clientResult.customer_id,
@@ -102,7 +101,7 @@ async function processResultList(data) {
   return mapToClients;
 }
 
-async function processResult(clientResult) {
+async function processResult(clientResult:ClientDTO) {
   const client:Client = {
     client_id: clientResult.customer_id,
     check_in: clientResult.check_in,

@@ -1,6 +1,6 @@
 import { Booking, RequestBooking } from "@/interfaces/booking";
 
-const API_URL = 'http://localhost:3003/reserva';
+const API_URL = 'http://192.168.1.141/reserva';
 
 export async function createBooking(booking:RequestBooking) {
   try {
@@ -31,7 +31,7 @@ export async function getAllBookings() {
   }
 }
 
-export async function getBookingByIdentifier(identifier) {
+export async function getBookingByIdentifier(identifier:String) {
   try {
     const response = await fetch(`${API_URL}?dni=${identifier}`);
     const data = await response.json();
@@ -41,7 +41,7 @@ export async function getBookingByIdentifier(identifier) {
   }
 }
 
-export async function getBookingById(bookingId) {
+export async function getBookingById(bookingId:String) {
   try {
     const response = await fetch(`${API_URL}/${bookingId}`);
     const data = await response.json(); 
@@ -51,44 +51,3 @@ export async function getBookingById(bookingId) {
     return { message: error};
   }
 }
-
-const getSuspender = (promise) => {
-    let status = "pending";
-    let response;
-  
-    const suspender = promise.then(
-      (res) => {
-        status = "success";
-        response = res;
-      },
-      (err) => {
-        status = "error";
-        response = err;
-      }
-    );
-  
-    const read = () => {
-      switch (status) {
-        case "pending":
-          throw suspender;
-        case "error":
-          throw response;
-        default:
-          return response;
-      }
-    };
-  
-    return { read };
-  };
-  
-  export function fetchData(identifier) {
-    let url = `${API_URL}`;
-    if(identifier !== undefined && identifier!== null){
-        url = url+`?dni=${identifier}`
-    }
-    const promise = fetch(url)
-      .then((response) => response.json())
-      .then((json) => json);
-  
-    return getSuspender(promise);
-  }

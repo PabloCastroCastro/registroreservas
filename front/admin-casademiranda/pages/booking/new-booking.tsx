@@ -164,7 +164,9 @@ export default function NewBooking() {
                             <label className='text-gray-dark text-opacity-75'>Lista habitaciones</label>
                             <ul id="lista-habitaciones">
                                 {rooms.map(room => (
-                                    <RoomItemComponent room={{name: room.habitacion, extra_beds: room.supletorias}}></RoomItemComponent>
+                                    <div key={room.habitacion}>
+                                        <RoomItemComponent room={{name: room.habitacion, price: room.precio, extra_beds: room.supletorias, price_extra_bed: room.precioSupletoria}}></RoomItemComponent>
+                                    </div>
                                 ))}
                             </ul>
                             </div>

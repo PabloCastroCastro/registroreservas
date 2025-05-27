@@ -1,4 +1,7 @@
-import express from 'express';
+import express, { response } from 'express';
+import https from 'https';
+import fs from 'fs';
+
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import generarFactura from './pdf/createPDF.js';
@@ -12,7 +15,6 @@ import { listAllCustomers, listCustomerById, listCustomerByBookingId, listCustom
 import getBookingNumber from './bookings/getBookingNumber.js';
 
 const app = express();
-
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -245,3 +247,11 @@ app.post('/factura', async function (req, res) {
 app.listen(3003, function () {
     console.log('Servidor escuchando en el puerto 3003.');
 });
+
+const options = {
+    key: fs.readFileSync('../infrastructure/certs/casademiranda.key', 'utf8'),
+    cert: fs.readFileSync('../infrastructure/certs/casademiranda.crt', 'utf8'),
+  };
+
+// Create an HTTPS service identical to the HTTP service.
+https.createServer(options, app).listen(443);

@@ -1,3 +1,4 @@
+import "@/app/globals.css";
 import Navbar from '../../components/navbar/navbar'
 import RoomComponent from '@/components/rooms/roomComponent';
 import { useRouter } from 'next/router'
@@ -21,7 +22,7 @@ export default function BookingPage() {
     const [billStatus, setBillStatus] = useState(200);
 
     useEffect(() => {
-        APIBooking.getBookingById(query.id).then(setBooking).catch(console.log);
+        query.id !== undefined && typeof query.id === "string" ? APIBooking.getBookingById(query.id).then(setBooking).catch(console.log):setBooking;
         query.id !== undefined && typeof query.id === "string" ? APIClient.getClientsByBookingId(query.id).then(setClients).catch(console.log) : setClients([]);
     }, []);
 
@@ -68,10 +69,10 @@ export default function BookingPage() {
                         <label className='text-gray-dark text-opacity-75' id="dni">Dni: {booking?.identifier}</label>
                     </div>
                     <div className="grid grid-cols-1">
-                        <DateComponent label="Fecha check_in: " date={booking?.check_in} />
+                        <DateComponent label="Fecha check_in: " date={booking?booking.check_in:new Date()} />
                     </div>
                     <div className="grid grid-cols-1">
-                        <DateComponent label="Fecha check_out: " date={booking?.check_out} />
+                        <DateComponent label="Fecha check_out: " date={booking?booking.check_out:new Date()} />
                     </div>
                     <div className="grid grid-cols-1"></div>
                 </div>
@@ -81,7 +82,7 @@ export default function BookingPage() {
                     </div>
                     <div className="grid grid-cols-1"></div>
                     <div className="grid grid-cols-1"></div>
-                    {booking?.rooms.map(r => (<div className="grid grid-cols-1"><RoomComponent room={r} /></div>))}
+                    {booking?.rooms.map(r => (<div className="grid grid-cols-1" key={r.name}><RoomComponent room={r} /></div>))}
                 </div>
                 <div id="datos-clientes" className='grid grid-cols-3 gap-3'>
                     <div className="grid grid-cols-1">
@@ -89,7 +90,9 @@ export default function BookingPage() {
                     </div>
                     <div className="grid grid-cols-1"></div>
                     <div className="grid grid-cols-1"></div>
-                    {clients && booking ? clients.map(client => (<ClientComponent client={{ ...client, booking_id: booking.booking_id }}></ClientComponent>)) : <></>}
+                    {clients && booking ? clients.map(client => (<div key={client.client_id}>
+                        <ClientComponent client={{ ...client, booking_id: booking.booking_id }}></ClientComponent>
+                        </div>)) : <></>}
                     <div className="grid grid-cols-1">
                         <Link className='w-12 h-12 rounded-full bg-green bg-opacity-50 hover:bg-gray-dark text-center text-gray-dark text-opacity-75' href={"/client/new-client?booking_id=" + booking?.booking_id}>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">

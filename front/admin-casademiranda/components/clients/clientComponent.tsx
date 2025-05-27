@@ -1,7 +1,6 @@
 import { Client } from '@/interfaces/client'
 import Link from 'next/link'
 import DateComponent from '@/components/dates/dateComponent'
-import { Button } from 'flowbite-react'
 
 type ClientProps = {
     client: Client
