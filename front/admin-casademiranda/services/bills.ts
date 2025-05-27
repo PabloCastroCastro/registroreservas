@@ -1,6 +1,6 @@
 import type {Bill} from '../interfaces/bill'
 
-const API_URL = 'http://192.168.1.150/factura';
+const API_URL = 'http://192.168.1.141/factura';
 
 
 export async function createBill(bill:Bill) {
