@@ -75,6 +75,9 @@ const processBooking = (bookings) => {
 
 const processBookings = (bookings) => {
     const processBookings = [];
+    if(bookings == null ){
+        return processBookings;
+    }
     for (let i = 0; i < bookings.length; i++) {
         let booking = processBookings.find(o => o.booking_id === bookings[i].booking_id);
         console.log("Booking: ", bookings[i]);

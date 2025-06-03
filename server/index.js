@@ -1,6 +1,8 @@
 import express, { response } from 'express';
 import https from 'https';
 import fs from 'fs';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 
 import bodyParser from 'body-parser';
 import cors from 'cors';
@@ -9,17 +11,34 @@ import readFileExcel from './excel/functionsExcel.js';
 import sendMail from './mail/sendMail.js';
 import sendConfirmationBookingMail from './confirmacion-reserva/sendMailConfirmationBooking.js';
 import saveBooking from './bookings/saveBooking.js';
-import {listAllBookings, listBookingByCustomer, listBookingById} from './bookings/listBooking.js';
-import {save, update} from './clients/saveClient.js';
-import { listAllCustomers, listCustomerById, listCustomerByBookingId, listCustomerByIdentifier} from './clients/listClient.js';
+import { listAllBookings, listBookingByCustomer, listBookingById } from './bookings/listBooking.js';
+import { save, update } from './clients/saveClient.js';
+import { listAllCustomers, listCustomerById, listCustomerByBookingId, listCustomerByIdentifier } from './clients/listClient.js';
 import getBookingNumber from './bookings/getBookingNumber.js';
+import readProperty from './configuration/readConfiguration.js';
 
 const app = express();
+const users = [{ id: 1, username: 'admin', password: bcrypt.hashSync('123456', 8) }];
+const SECRET_KEY = readProperty("server.secretKey");
+
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors());
 
+
+
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+    const user = users.find(u => u.username === username);
+
+    if (!user || !bcrypt.compareSync(password, user.password)) {
+        return res.status(401).json({ message: 'Credenciales inválidas' });
+    }
+
+    const token = jwt.sign({ id: user.id }, SECRET_KEY, { expiresIn: '1h' });
+    res.json({ token });
+});
 
 app.post('/cliente', async (req, res) => {
 
@@ -27,7 +46,7 @@ app.post('/cliente', async (req, res) => {
     const cliente = {
         cliente_id: req.body.client_id,
         nombre: req.body.name,
-        apellidos: req.body.firstSurname+" "+req.body.secondSurname,
+        apellidos: req.body.firstSurname + " " + req.body.secondSurname,
         nacionalidad: req.body.nacionality,
         tipo_documento: req.body.document_type,
         numero_documento: req.body.document_number,
@@ -39,7 +58,7 @@ app.post('/cliente', async (req, res) => {
 
     console.log('Reserva: ', reserva, 'Customer: ', JSON.stringify(cliente));
 
-    let clients =  await save(reserva, cliente);
+    let clients = await save(reserva, cliente);
 
     console.log('Client Id: ', JSON.stringify(clients));
     res.send("Cliente registrado correctamente");
@@ -51,7 +70,7 @@ app.put('/cliente', async (req, res) => {
     const cliente = {
         cliente_id: req.body.client_id,
         nombre: req.body.name,
-        apellidos: req.body.firstSurname+" "+req.body.secondSurname,
+        apellidos: req.body.firstSurname + " " + req.body.secondSurname,
         nacionalidad: req.body.nacionality,
         tipo_documento: req.body.document_type,
         numero_documento: req.body.document_number,
@@ -61,14 +80,21 @@ app.put('/cliente', async (req, res) => {
         hizo_reserva: req.body.made_booking
     };
 
-    let clients =  await update(reserva, cliente);
+    let clients = await update(reserva, cliente);
     res.send(clients);
 })
 
 app.get('/cliente', async (req, res) => {
 
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.sendStatus(401);
+
     console.log('query: ', JSON.stringify(req.query));
 
+    jwt.verify(token, SECRET_KEY, (err, user) => {
+        if (err) return res.sendStatus(403);
+    });
 
     let identifier = req.query.dni;
     let reservaId = req.query.reservaId;
@@ -99,6 +125,17 @@ app.get('/cliente/:id', async (req, res) => {
 })
 
 app.get('/reserva', async (req, res) => {
+
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.sendStatus(401);
+
+    console.log('query: ', JSON.stringify(req.query));
+
+    jwt.verify(token, SECRET_KEY, (err, user) => {
+        if (err) return res.sendStatus(403);
+    });
+
 
     let identifier = req.query.dni;
     let bookings;
@@ -251,7 +288,7 @@ app.listen(3003, function () {
 const options = {
     key: fs.readFileSync('../infrastructure/certs/casademiranda.key', 'utf8'),
     cert: fs.readFileSync('../infrastructure/certs/casademiranda.crt', 'utf8'),
-  };
+};
 
 // Create an HTTPS service identical to the HTTP service.
 https.createServer(options, app).listen(443);

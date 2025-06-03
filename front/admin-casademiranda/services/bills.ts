@@ -1,16 +1,23 @@
-import type {Bill} from '../interfaces/bill'
+import type { Bill } from '../interfaces/bill'
+import { getToken } from '../auth/auth';
 
 const API_URL = 'http://192.168.1.141/factura';
 
 
-export async function createBill(bill:Bill) {
+export async function createBill(bill: Bill) {
     try {
 
-        console.log('Bill: ', JSON.stringify(bill))
+        console.log('Bill: ', JSON.stringify(bill));
+        const token = getToken();
+
 
         const requestOptions = {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+
+            },
             body: JSON.stringify(bill)
         };
 
