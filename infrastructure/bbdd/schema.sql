@@ -67,6 +67,12 @@ CREATE TABLE IF NOT EXISTS `casademiranda`.`booking_room_extra_bed` (
    CONSTRAINT `fk_bookings_extra_beds_bookings_rooms_idx` FOREIGN KEY (`booking_room_id`) REFERENCES `casademiranda`.`booking_room` (`booking_room_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
+CREATE TABLE IF NOT EXISTS `casademiranda`.`users` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `username` VARCHAR(255) NOT NULL,
+    `password_hash` VARCHAR(255) NOT NULL
+);
+
 INSERT INTO `casademiranda`.`rooms` (
   `room_id`,
   `name`,

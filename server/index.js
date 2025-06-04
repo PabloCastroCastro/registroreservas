@@ -14,11 +14,11 @@ import saveBooking from './bookings/saveBooking.js';
 import { listAllBookings, listBookingByCustomer, listBookingById } from './bookings/listBooking.js';
 import { save, update } from './clients/saveClient.js';
 import { listAllCustomers, listCustomerById, listCustomerByBookingId, listCustomerByIdentifier } from './clients/listClient.js';
+import { getUserByUsername } from './users/getUser.js'
 import getBookingNumber from './bookings/getBookingNumber.js';
 import readProperty from './configuration/readConfiguration.js';
 
 const app = express();
-const users = [{ id: 1, username: 'admin', password: bcrypt.hashSync('123456', 8) }];
 const SECRET_KEY = readProperty("server.secretKey");
 
 
@@ -30,7 +30,7 @@ app.use(cors());
 
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
-    const user = users.find(u => u.username === username);
+    const user = getUserByUsername(username);
 
     if (!user || !bcrypt.compareSync(password, user.password)) {
         return res.status(401).json({ message: 'Credenciales inválidas' });
