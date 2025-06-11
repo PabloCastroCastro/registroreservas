@@ -15,6 +15,8 @@ import { listAllBookings, listBookingByCustomer, listBookingById } from './booki
 import { save, update } from './clients/saveClient.js';
 import { listAllCustomers, listCustomerById, listCustomerByBookingId, listCustomerByIdentifier } from './clients/listClient.js';
 import { getUserByUsername } from './users/getUser.js'
+import { createUser } from './users/saveUser.js'
+
 import getBookingNumber from './bookings/getBookingNumber.js';
 import readProperty from './configuration/readConfiguration.js';
 
@@ -27,20 +29,61 @@ app.use(bodyParser.json());
 app.use(cors());
 
 
-
-app.post('/login', (req, res) => {
+app.post('/register', async (req, res) => {
     const { username, password } = req.body;
-    const user = getUserByUsername(username);
 
-    if (!user || !bcrypt.compareSync(password, user.password)) {
+    if (!username || !password) {
+        return res.status(400).json({ message: 'Username y password requeridos' });
+    }
+
+    const existingUser = await getUserByUsername(username);
+    if (existingUser) {
+        return res.status(409).json({ message: 'El usuario ya existe' });
+    }
+
+    bcrypt.hash(password, 12, async (err, hashedPassword) => {
+        if (err) {
+            console.error('Error al hashear la contraseña:', err);
+            return res.status(500).json({ message: 'Error interno' });
+        }
+
+        const newUser = await createUser(username, hashedPassword);
+        console.log('Usuario creado:', newUser);
+
+        const token = jwt.sign({ id: newUser.id }, SECRET_KEY, { expiresIn: '1h' });
+        return res.status(201).json({ message: 'Usuario registrado con éxito', token });
+    });
+});
+
+app.post('/login', async(req, res) => {
+    const { username, password } = req.body;
+    const user = await getUserByUsername(username).then((value) => { return value });
+
+    if (!user){
+        return res.status(401).json({ message: 'Credenciales inválidas' });
+    }
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
         return res.status(401).json({ message: 'Credenciales inválidas' });
     }
 
     const token = jwt.sign({ id: user.id }, SECRET_KEY, { expiresIn: '1h' });
-    res.json({ token });
+    return res.json({ message: 'Login correcto', token });
 });
 
 app.post('/cliente', async (req, res) => {
+
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.sendStatus(401);
+
+    console.log('query: ', JSON.stringify(req.query));
+
+    jwt.verify(token, SECRET_KEY, (err, user) => {
+        if (err) return res.sendStatus(403);
+    });
+
 
     const reserva = req.body.booking_id;
     const cliente = {
@@ -65,6 +108,17 @@ app.post('/cliente', async (req, res) => {
 })
 
 app.put('/cliente', async (req, res) => {
+
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.sendStatus(401);
+
+    console.log('query: ', JSON.stringify(req.query));
+
+    jwt.verify(token, SECRET_KEY, (err, user) => {
+        if (err) return res.sendStatus(403);
+    });
+
 
     const reserva = req.body.booking_id;
     const cliente = {
@@ -114,6 +168,17 @@ app.get('/cliente', async (req, res) => {
 
 app.get('/cliente/:id', async (req, res) => {
 
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.sendStatus(401);
+
+    console.log('query: ', JSON.stringify(req.query));
+
+    jwt.verify(token, SECRET_KEY, (err, user) => {
+        if (err) return res.sendStatus(403);
+    });
+
+
     let client_id = req.params['id'];
     let clients;
     if (client_id != null && client_id != "") {
@@ -150,6 +215,17 @@ app.get('/reserva', async (req, res) => {
 
 app.get('/reserva/:id', async (req, res) => {
 
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.sendStatus(401);
+
+    console.log('query: ', JSON.stringify(req.query));
+
+    jwt.verify(token, SECRET_KEY, (err, user) => {
+        if (err) return res.sendStatus(403);
+    });
+
+
     let identifier = req.params['id'];
     let bookings;
     if (identifier != null && identifier != "") {
@@ -161,6 +237,18 @@ app.get('/reserva/:id', async (req, res) => {
 })
 
 app.post('/reserva', async (req, res) => {
+
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.sendStatus(401);
+
+    console.log('query: ', JSON.stringify(req.query));
+
+    jwt.verify(token, SECRET_KEY, (err, user) => {
+        if (err) return res.sendStatus(403);
+    });
+
+
     console.log(JSON.stringify(req.body))
 
     const nombre = req.body.nombre;
@@ -231,6 +319,17 @@ app.post('/reserva', async (req, res) => {
 })
 
 app.post('/factura', async function (req, res) {
+
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.sendStatus(401);
+
+    console.log('query: ', JSON.stringify(req.query));
+
+    jwt.verify(token, SECRET_KEY, (err, user) => {
+        if (err) return res.sendStatus(403);
+    });
+
 
     console.log('Factura: ', JSON.stringify(req.body))
     const nombre = req.body.nombre;
