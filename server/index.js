@@ -197,20 +197,24 @@ app.get('/reserva', async (req, res) => {
 
     console.log('query: ', JSON.stringify(req.query));
 
-    jwt.verify(token, SECRET_KEY, (err, user) => {
+    jwt.verify(token, SECRET_KEY, async (err, user) => {
         if (err) return res.sendStatus(403);
+
+        let identifier = req.query.dni;
+        let bookings;
+
+        try {
+            if (identifier) {
+                bookings = await listBookingByCustomer(identifier);
+            } else {
+                bookings = await listAllBookings();
+            }
+            res.send(bookings);
+        } catch (error) {
+            console.error('Error fetching bookings:', error);
+            res.sendStatus(500);
+        }
     });
-
-
-    let identifier = req.query.dni;
-    let bookings;
-    if (identifier != null && identifier != "") {
-        bookings = await listBookingByCustomer(identifier).then((value) => { return value });
-    } else {
-        bookings = await listAllBookings().then((value) => { return value });
-    }
-
-    res.send(bookings);
 })
 
 app.get('/reserva/:id', async (req, res) => {
