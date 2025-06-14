@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS `casademiranda`.`bookings` (
   `booking_id` INT NOT NULL AUTO_INCREMENT,
   `check_in` DATE NULL DEFAULT NULL,
   `check_out` DATE NULL DEFAULT NULL,
+  `confirmation_number` VARCHAR(45) NULL DEFAULT NULL, 
   PRIMARY KEY (`booking_id`))
   DEFAULT CHARACTER SET = utf8
   COLLATE = utf8_general_ci;
@@ -65,6 +66,12 @@ CREATE TABLE IF NOT EXISTS `casademiranda`.`booking_room_extra_bed` (
   PRIMARY KEY (`booking_extra_bed_id`),
   INDEX `fk_bookings_extra_beds_bookings_rooms_idx` (`booking_room_id` ASC),
    CONSTRAINT `fk_bookings_extra_beds_bookings_rooms_idx` FOREIGN KEY (`booking_room_id`) REFERENCES `casademiranda`.`booking_room` (`booking_room_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE IF NOT EXISTS `casademiranda`.`users` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `username` VARCHAR(255) NOT NULL,
+    `password_hash` VARCHAR(255) NOT NULL
 );
 
 INSERT INTO `casademiranda`.`rooms` (

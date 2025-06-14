@@ -4,6 +4,7 @@
 /server/password.txt
 /server/confmail.PNG
 /infrastructure/bbdd/data
+/infrastructure/bbdd/data_backup
 
 # Logs
 logs

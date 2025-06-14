@@ -10,10 +10,12 @@
   "author": "Pablo Castro",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "exceljs": "^4.3.0",
-    "express": "^4.19.2",
+    "express": "^4.21.2",
     "https": "^1.0.0",
+    "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.3.3",
     "nodemailer": "^6.9.2",
     "nodemon": "^3.1.0",

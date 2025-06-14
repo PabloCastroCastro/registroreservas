@@ -2,7 +2,7 @@
 
 import "@/app/globals.css";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Navbar from '@/components/navbar/navbar';
 import * as APIClient from '@/services/clients';
 import type { Client } from '@/interfaces/client';
@@ -22,7 +22,7 @@ export default function NewClient() {
     const [secondSurname, setSecondSurname] = useState("");
     const [gender, setGender] = useState("");
     const [birthdate, setBirthdate] = useState("");
-    const [bookingId, setBookingId] = useState(query !== undefined && query.booking_id !== undefined && typeof(query.booking_id) === "string"?query.booking_id:"");
+    const [bookingId, setBookingId] = useState(query !== undefined && query.booking_id !== undefined && typeof (query.booking_id) === "string" ? query.booking_id : "");
 
     const [client, setClient] = useState<Client>();
 
@@ -50,7 +50,7 @@ export default function NewClient() {
         };
 
         if (!validData(client)) {
-            
+
             alert('Los datos del cliente no son validos')
             return new Error('Invalid client data')
         }
@@ -78,7 +78,7 @@ export default function NewClient() {
 
                         <div className="grid grid-cols-1">
                             <label className='text-gray-dark text-opacity-75' id="nacionality">Nacionalidad:</label>
-                            <select id="nacionality"className='rounded-full' name="nacionality" value={nacionality} onChange={(e) => setNacionality(e.target.value)}>
+                            <select id="nacionality" className='rounded-full' name="nacionality" value={nacionality} onChange={(e) => setNacionality(e.target.value)}>
                                 <option value="">- Pais de Nacionalidad -</option>
                                 <option value="ESPAÑA">ESPAÑA</option>
                                 <option value="AFGANISTAN">AFGANISTAN</option>
@@ -301,10 +301,10 @@ export default function NewClient() {
                             <select name="documentType" id="documentType" className='rounded-full' onChange={e => { setDocumentType(e.target.value); }} value={documentType} required>
                                 <option value="">- Tipo Documento -</option>
                                 <option value="P">pasaporte</option>
-                                {nacionality && nacionality === 'ESPAÑA'?(<option value="C">permiso de conducir</option>):<></>}
-                                {nacionality && nacionality === 'ESPAÑA'?(<option value="D">documento nacional de identidad</option>):(<option value="I">documento de identidad</option>)}
-                                {nacionality && nacionality !== 'ESPAÑA'?(<option value="N">permiso residencia español</option>):<></>}
-                                {nacionality && nacionality !== 'ESPAÑA'?(<option value="X">permiso residencia extranjero</option>):<></>}
+                                {nacionality && nacionality === 'ESPAÑA' ? (<option value="C">permiso de conducir</option>) : <></>}
+                                {nacionality && nacionality === 'ESPAÑA' ? (<option value="D">documento nacional de identidad</option>) : (<option value="I">documento de identidad</option>)}
+                                {nacionality && nacionality !== 'ESPAÑA' ? (<option value="N">permiso residencia español</option>) : <></>}
+                                {nacionality && nacionality !== 'ESPAÑA' ? (<option value="X">permiso residencia extranjero</option>) : <></>}
                             </select>
                         </div>
 
@@ -349,7 +349,7 @@ export default function NewClient() {
                         </div>
                     </div>
                     <div className="mt-10" id="boton-enviar">
-                        <button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75'  type="submit"><label className='text-gray-dark text-opacity-75' >Registro cliente</label></button>
+                        <button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' type="submit"><label className='text-gray-dark text-opacity-75' >Registro cliente</label></button>
                     </div>
                 </form>
             </div>

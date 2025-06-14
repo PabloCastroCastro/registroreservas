@@ -23,8 +23,10 @@ const save = async (booking_id, customer) => {
 
 const update = async (booking_id, customer) => {
 
-
+    console.log('Cliente:', JSON.stringify(customer));
     const customers = await executeQuery('SELECT customer_id FROM casademiranda.customers WHERE customer_id=?', [customer.cliente_id]);
+    console.log('Cliente bbdd:', JSON.stringify(customers));
+
     const idBooking = await executeQuery('SELECT customer_id,booking_id FROM casademiranda.booking_customer WHERE booking_id = ? AND customer_id = ?;', [booking_id, customer.cliente_id]);
     let customerUpdate;
     if (customers.length === 1 && idBooking.length === 1 && customers[0].customer_id === idBooking[0].customer_id) {

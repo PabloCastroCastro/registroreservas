@@ -14,6 +14,7 @@ import Navbar from "../navbar/navbar";
 
 export default function Bookings() {
 
+    const [token, setToken] = useState<string | null>(null);
     const [identifier, setIdentifier] = useState("Dni...");
     const [bookings, setBookings] = useState([]);
 
@@ -22,6 +23,10 @@ export default function Bookings() {
     }
 
     useEffect(() => {
+        const tokenGuardado = localStorage.getItem('token');
+        if (tokenGuardado) {
+            setToken(tokenGuardado);
+        }
         API.getAllBookings().then(setBookings).catch(console.log);
     }, []);
     
