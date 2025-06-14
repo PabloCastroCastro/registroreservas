@@ -131,8 +131,13 @@ app.put('/cliente', async (req, res) => {
             hizo_reserva: req.body.made_booking
         };
 
-        let clients = await update(reserva, cliente);
-        res.send(clients);
+        try {
+            let clients = await update(reserva, cliente);
+            res.send(clients);
+        } catch (error) {
+            console.error('Error actualizando cliente:', error);
+            res.status(500).json({ error: 'Error al actualizar cliente' });
+        }
     });
 
 })

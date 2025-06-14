@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS `casademiranda`.`bookings` (
   `booking_id` INT NOT NULL AUTO_INCREMENT,
   `check_in` DATE NULL DEFAULT NULL,
   `check_out` DATE NULL DEFAULT NULL,
+  `confirmation_number` VARCHAR(45) NULL DEFAULT NULL, 
   PRIMARY KEY (`booking_id`))
   DEFAULT CHARACTER SET = utf8
   COLLATE = utf8_general_ci;
