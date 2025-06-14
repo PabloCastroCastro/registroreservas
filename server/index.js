@@ -55,11 +55,11 @@ app.post('/register', async (req, res) => {
     });
 });
 
-app.post('/login', async(req, res) => {
+app.post('/loginuser', async (req, res) => {
     const { username, password } = req.body;
     const user = await getUserByUsername(username).then((value) => { return value });
 
-    if (!user){
+    if (!user) {
         return res.status(401).json({ message: 'Credenciales inválidas' });
     }
 
@@ -115,27 +115,26 @@ app.put('/cliente', async (req, res) => {
 
     console.log('query: ', JSON.stringify(req.query));
 
-    jwt.verify(token, SECRET_KEY, (err, user) => {
+    jwt.verify(token, SECRET_KEY, async (err, user) => {
         if (err) return res.sendStatus(403);
+        const reserva = req.body.booking_id;
+        const cliente = {
+            cliente_id: req.body.client_id,
+            nombre: req.body.name,
+            apellidos: req.body.firstSurname + " " + req.body.secondSurname,
+            nacionalidad: req.body.nacionality,
+            tipo_documento: req.body.document_type,
+            numero_documento: req.body.document_number,
+            fecha_expedicion: req.body.expedition_date,
+            genero: req.body.gender,
+            fecha_nacimiento: req.body.birthdate,
+            hizo_reserva: req.body.made_booking
+        };
+
+        let clients = await update(reserva, cliente);
+        res.send(clients);
     });
 
-
-    const reserva = req.body.booking_id;
-    const cliente = {
-        cliente_id: req.body.client_id,
-        nombre: req.body.name,
-        apellidos: req.body.firstSurname + " " + req.body.secondSurname,
-        nacionalidad: req.body.nacionality,
-        tipo_documento: req.body.document_type,
-        numero_documento: req.body.document_number,
-        fecha_expedicion: req.body.expedition_date,
-        genero: req.body.gender,
-        fecha_nacimiento: req.body.birthdate,
-        hizo_reserva: req.body.made_booking
-    };
-
-    let clients = await update(reserva, cliente);
-    res.send(clients);
 })
 
 app.get('/cliente', async (req, res) => {
@@ -146,24 +145,24 @@ app.get('/cliente', async (req, res) => {
 
     console.log('query: ', JSON.stringify(req.query));
 
-    jwt.verify(token, SECRET_KEY, (err, user) => {
+    jwt.verify(token, SECRET_KEY, async (err, user) => {
         if (err) return res.sendStatus(403);
+        let identifier = req.query.dni;
+        let reservaId = req.query.reservaId;
+        let clients;
+        if (identifier != null && identifier != "") {
+            clients = await listCustomerByIdentifier(identifier).then((value) => { return value });
+        } else if (reservaId !== null && reservaId !== "") {
+            clients = await listCustomerByBookingId(reservaId).then((value) => { return value });
+        } else {
+            clients = await listAllCustomers().then((value) => { return value });
+        }
+        console.log('no for id Clients: ', JSON.stringify(clients));
+
+        res.send(clients);
     });
 
-    let identifier = req.query.dni;
-    let reservaId = req.query.reservaId;
-    let clients;
-    if (identifier != null && identifier != "") {
-        clients = await listCustomerByIdentifier(identifier).then((value) => { return value });
-    } else if (reservaId !== null && reservaId !== "") {
-        clients = await listCustomerByBookingId(reservaId).then((value) => { return value });
-    } else {
-        clients = await listAllCustomers().then((value) => { return value });
-    }
-    console.log('no for id Clients: ', JSON.stringify(clients));
 
-
-    res.send(clients);
 })
 
 app.get('/cliente/:id', async (req, res) => {
