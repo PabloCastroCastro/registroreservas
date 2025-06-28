@@ -93,9 +93,15 @@ app.post('/cliente', async (req, res) => {
         nacionalidad: req.body.nacionality,
         tipo_documento: req.body.document_type,
         numero_documento: req.body.document_number,
+        soporte_documento: req.body.support_document,
         fecha_expedicion: req.body.expedition_date,
         genero: req.body.gender,
         fecha_nacimiento: req.body.birthdate,
+        telefono: req.body.phone,
+        otro_telefono: req.body.other_phone,
+        correo: req.body.email,
+        parentesco: req.body.relationship,
+        direccion: req.body.address,
         hizo_reserva: req.body.made_booking
     };
 
@@ -125,9 +131,15 @@ app.put('/cliente', async (req, res) => {
             nacionalidad: req.body.nacionality,
             tipo_documento: req.body.document_type,
             numero_documento: req.body.document_number,
+            soporte_documento: req.body.support_document,
             fecha_expedicion: req.body.expedition_date,
             genero: req.body.gender,
             fecha_nacimiento: req.body.birthdate,
+            telefono: req.body.phone,
+            otro_telefono: req.body.other_phone,
+            correo: req.body.email,
+            parentesco: req.body.relationship,
+            direccion: req.body.address,
             hizo_reserva: req.body.made_booking
         };
 
@@ -319,7 +331,7 @@ app.post('/reserva', async (req, res) => {
 
     console.log('envio confirmacion reserva');
     await saveBooking(reserva, cliente);
-    if (sendConfirmationEmail != null && sendConfirmationEmail == "on") {
+    if (sendConfirmationEmail != null && (sendConfirmationEmail == "on" || sendConfirmationEmail == true)) {
         console.log('send mail');
         sendConfirmationBookingMail(numeroConfirmacion, cliente, reserva);
     }

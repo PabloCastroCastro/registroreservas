@@ -1,7 +1,7 @@
 import type { Client, ClientDTO } from "@/interfaces/client";
 import { getToken } from '../auth/auth';
 
-const API_URL = 'http://192.168.1.128/cliente';
+const API_URL = 'http://192.168.1.141/cliente';
 
 
 export async function createClient(client: Client) {
@@ -136,13 +136,19 @@ async function processResultList(data: ClientDTO[]) {
     nacionality: clientResult.nacionality,
     document_type: clientResult.document_type,
     document_number: clientResult.identifier,
+    support_document: clientResult.support_document,
     expedition_date: clientResult.expedition_date,
     name: clientResult.name,
     firstSurname: clientResult.surname !== undefined ? clientResult.surname.split(' ')[0] : "",
     secondSurname: clientResult.surname !== undefined && clientResult.surname.split(' ').length > 1 ? clientResult.surname.split(' ')[clientResult.surname.length - 1] : "",
     gender: clientResult.gender,
     birthdate: clientResult.birthdate,
+    phone: clientResult.phone,
+    other_phone: clientResult.other_phone,
+    email: clientResult.email,
+    relationship: clientResult.relationship,
     booking_id: clientResult.booking_id,
+    address: clientResult.address,
     made_booking: clientResult.made_booking
   }));
   return mapToClients;
@@ -155,13 +161,19 @@ async function processResult(clientResult: ClientDTO) {
     nacionality: clientResult.nacionality,
     document_type: clientResult.document_type,
     document_number: clientResult.identifier,
+    support_document: clientResult.support_document,
     expedition_date: clientResult.expedition_date,
     name: clientResult.name,
     firstSurname: clientResult.surname !== undefined ? clientResult.surname.split(' ')[0] : "",
     secondSurname: clientResult.surname !== undefined && clientResult.surname.split(' ').length > 1 ? clientResult.surname.split(' ')[clientResult.surname.length - 1] : "",
     gender: clientResult.gender,
     birthdate: clientResult.birthdate,
+    phone: clientResult.phone,
+    other_phone: clientResult.other_phone,
+    email: clientResult.email,
+    relationship: clientResult.relationship,
     booking_id: clientResult.booking_id,
+    address: clientResult.address,
     made_booking: clientResult.made_booking
   };
   return client;

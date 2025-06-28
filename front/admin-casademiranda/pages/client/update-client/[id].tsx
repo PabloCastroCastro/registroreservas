@@ -292,6 +292,10 @@ export default function UpdateClient() {
                                 <input className='rounded-full' type="text" id="documentNumber" name="documentNumber" value={client.document_number} onChange={(e) => setClient({ ...client, document_number: e.target.value })} required />
                             </div>
                             <div className="grid grid-cols-1">
+                                <label className='text-gray-dark text-opacity-75' id="supportDocument">Soporte documento:</label>
+                                <input className='rounded-full' type="text" id="supportDocument" name="supportDocument" value={client.support_document} onChange={(e) => setClient({ ...client, support_document: e.target.value })} required />
+                            </div>
+                            <div className="grid grid-cols-1">
                                 <label className='text-gray-dark text-opacity-75' id="expeditionDate">Fecha de expedición:</label>
                                 <input className='rounded-full' type="date" id="expeditionDate" name="expeditionDate" value={client.expedition_date ? new Date(client.expedition_date).toISOString().split('T')[0] : ""} onChange={(e) => setClient({ ...client, expedition_date: new Date(e.target.value) })} required />
                             </div>
@@ -318,6 +322,55 @@ export default function UpdateClient() {
                             <div className="grid grid-cols-1">
                                 <label className='text-gray-dark text-opacity-75' id="birthdate">Fecha de nacimiento:</label>
                                 <input className='rounded-full' type="date" id="birthdate" name="birthdate" value={client.birthdate ? new Date(client.birthdate).toISOString().split('T')[0] : ""} onChange={(e) => setClient({ ...client, birthdate: new Date(e.target.value) })} required />
+                            </div>
+                            <div className="grid grid-cols-1">
+                                <label className='text-gray-dark text-opacity-75' id="phone">Teléfono:</label>
+                                <input type="text" className='rounded-full' id="phone" name="phone" value={client.phone} onChange={(e) => setClient({ ...client, phone: e.target.value })} required />
+                            </div>
+
+                            <div className="grid grid-cols-1">
+                                <label className='text-gray-dark text-opacity-75' id="otherPhone">Otro Teléfono:</label>
+                                <input type="text" className='rounded-full' id="otherPhone" name="otherPhone" value={client.other_phone} onChange={(e) => setClient({ ...client, other_phone: e.target.value })} />
+                            </div>
+
+                            <div className="grid grid-cols-1">
+                                <label className='text-gray-dark text-opacity-75' id="email">Email:</label>
+                                <input type="text" className='rounded-full' id="email" name="email" value={client.email} onChange={(e) => setClient({ ...client, email: e.target.value })} />
+                            </div>
+
+                            <div className="grid grid-cols-1">
+                                <label className='text-gray-dark text-opacity-75' id="relationship">Parentesco:</label>
+                                <input type="text" className='rounded-full' id="relationship" name="relationship" value={client.relationship} onChange={(e) => setClient({ ...client, relationship: e.target.value })} />
+                            </div>
+
+                            <div className="grid grid-cols-1">
+                                <label className='text-gray-dark text-opacity-75' id="line">Direccion:</label>
+                                <input type="text" className='rounded-full' id="line" name="line" value={client.address.line} onChange={(e) => setClient({ ...client, address: { ...client.address, line: e.target.value } })} />
+                            </div>
+
+                            <div className="grid grid-cols-1">
+                                <label className='text-gray-dark text-opacity-75' id="line2">Direccion adicional:</label>
+                                <input type="text" className='rounded-full' id="line2" name="line2" value={client.address.line2} onChange={(e) => setClient({ ...client, address: { ...client.address, line2: e.target.value } })} />
+                            </div>
+
+                            <div className="grid grid-cols-1">
+                                <label className='text-gray-dark text-opacity-75' id="country">Pais:</label>
+                                <input type="text" className='rounded-full' id="country" name="country" value={client.address.country} onChange={(e) => setClient({ ...client, address: { ...client.address, country: e.target.value } })} />
+                            </div>
+
+                            <div className="grid grid-cols-1">
+                                <label className='text-gray-dark text-opacity-75' id="province">Provincia:</label>
+                                <input type="text" className='rounded-full' id="province" name="province" value={client.address.province} onChange={(e) => setClient({ ...client, address: { ...client.address, province: e.target.value } })} />
+                            </div>
+
+                            <div className="grid grid-cols-1">
+                                <label className='text-gray-dark text-opacity-75' id="location">Municipio:</label>
+                                <input type="text" className='rounded-full' id="location" name="location" value={client.address.location} onChange={(e) => setClient({ ...client, address: { ...client.address, location: e.target.value } })} />
+                            </div>
+
+                            <div className="grid grid-cols-1">
+                                <label className='text-gray-dark text-opacity-75' id="postalCode">Código postal:</label>
+                                <input type="number" className='rounded-full' id="postalCode" name="postalCode" value={client.address.postalCode} onChange={(e) => setClient({ ...client, address: { ...client.address, postalCode: Number(e.target.value) } })} />
                             </div>
                         </div>
                         <div className="mt-10" id="boton-enviar">

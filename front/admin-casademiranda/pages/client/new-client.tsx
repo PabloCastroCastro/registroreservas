@@ -5,7 +5,7 @@ import "@/app/globals.css";
 import { useEffect, useState } from 'react';
 import Navbar from '@/components/navbar/navbar';
 import * as APIClient from '@/services/clients';
-import type { Client } from '@/interfaces/client';
+import type { Address, Client } from '@/interfaces/client';
 import { useRouter } from 'next/router';
 
 export default function NewClient() {
@@ -22,6 +22,17 @@ export default function NewClient() {
     const [secondSurname, setSecondSurname] = useState("");
     const [gender, setGender] = useState("");
     const [birthdate, setBirthdate] = useState("");
+    const [supportDocument, setSupportDocument] = useState("");
+    const [phone, setPhone] = useState("");
+    const [otherPhone, setOtherPhone] = useState("");
+    const [email, setEmail] = useState("");
+    const [relationship, setRelationship] = useState("");
+    const [line, setLine] = useState("");
+    const [line2, setLine2] = useState("");
+    const [country, setCountry] = useState("");
+    const [province, setProvince] = useState("");
+    const [location, setLocation] = useState("");
+    const [postalCode, setPostalCode] = useState("");
     const [bookingId, setBookingId] = useState(query !== undefined && query.booking_id !== undefined && typeof (query.booking_id) === "string" ? query.booking_id : "");
 
     const [client, setClient] = useState<Client>();
@@ -32,6 +43,14 @@ export default function NewClient() {
 
     const handleSubmit = () => {
 
+        let address: Address = {
+            line: line,
+            line2: line2,
+            country: country,
+            province: province,
+            location: location,
+            postalCode: parseInt(postalCode, 10) 
+        }
 
         let client: Client = {
             client_id: "",
@@ -39,13 +58,19 @@ export default function NewClient() {
             nacionality: nacionality,
             document_type: documentType,
             document_number: documentNumber,
+            support_document: supportDocument,
             expedition_date: new Date(expeditionDate),
             name: name,
             firstSurname: firstSurname,
             secondSurname: secondSurname,
             gender: gender,
             birthdate: new Date(birthdate),
+            phone: phone,
+            other_phone: otherPhone,
+            email: email,
+            relationship: relationship,
             booking_id: bookingId,
+            address: address,
             made_booking: false
         };
 
@@ -314,6 +339,11 @@ export default function NewClient() {
                         </div>
 
                         <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="supportDocument">Soporte documento:</label>
+                            <input type="text" className='rounded-full' id="supportDocument" name="supportDocument" value={supportDocument} onChange={(e) => setSupportDocument(e.target.value)} required />
+                        </div>
+
+                        <div className="grid grid-cols-1">
                             <label className='text-gray-dark text-opacity-75' id="expeditionDate">Fecha de expedición:</label>
                             <input type="date" className='rounded-full' id="expeditionDate" name="expeditionDate" value={expeditionDate} onChange={(e) => setExpeditionDate(e.target.value)} required />
                         </div>
@@ -333,7 +363,6 @@ export default function NewClient() {
                             <input type="text" className='rounded-full' id="secondSurname" name="secondSurname" value={secondSurname} onChange={(e) => setSecondSurname(e.target.value)} required />
                         </div>
 
-
                         <div className="grid grid-cols-1">
                             <label className='text-gray-dark text-opacity-75' id="gender">Genero:</label>
                             <select id="selectorGender" className='rounded-full' onChange={e => { setGender(e.target.value); }} value={gender} name="gender">
@@ -347,6 +376,58 @@ export default function NewClient() {
                             <label className='text-gray-dark text-opacity-75' id="birthdate">Fecha de nacimiento:</label>
                             <input type="date" className='rounded-full' id="birthdate" name="birthdate" value={birthdate} onChange={(e) => setBirthdate(e.target.value)} required />
                         </div>
+
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="phone">Teléfono:</label>
+                            <input type="text" className='rounded-full' id="phone" name="phone" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+                        </div>
+
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="otherPhone">Otro Teléfono:</label>
+                            <input type="text" className='rounded-full' id="otherPhone" name="otherPhone" value={otherPhone} onChange={(e) => setOtherPhone(e.target.value)} />
+                        </div>
+
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="email">Email:</label>
+                            <input type="text" className='rounded-full' id="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                        </div>
+                        
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="relationship">Parentesco:</label>
+                            <input type="text" className='rounded-full' id="relationship" name="relationship" value={relationship} onChange={(e) => setRelationship(e.target.value)} />
+                        </div>
+
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="line">Direccion:</label>
+                            <input type="text" className='rounded-full' id="line" name="line" value={line} onChange={(e) => setLine(e.target.value)} />
+                        </div>
+
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="line2">Direccion adicional:</label>
+                            <input type="text" className='rounded-full' id="line2" name="line2" value={line2} onChange={(e) => setLine2(e.target.value)} />
+                        </div>
+
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="country">Pais:</label>
+                            <input type="text" className='rounded-full' id="country" name="country" value={country} onChange={(e) => setCountry(e.target.value)} />
+                        </div>
+                        
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="province">Provincia:</label>
+                            <input type="text" className='rounded-full' id="province" name="province" value={province} onChange={(e) => setProvince(e.target.value)} />
+                        </div>
+
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="location">Municipio:</label>
+                            <input type="text" className='rounded-full' id="location" name="location" value={location} onChange={(e) => setLocation(e.target.value)} />
+                        </div>
+
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="postalCode">Código postal:</label>
+                            <input type="number" className='rounded-full' id="postalCode" name="postalCode" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
+                        </div>
+
+                        
                     </div>
                     <div className="mt-10" id="boton-enviar">
                         <button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' type="submit"><label className='text-gray-dark text-opacity-75' >Registro cliente</label></button>

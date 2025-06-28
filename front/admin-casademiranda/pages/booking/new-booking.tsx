@@ -21,9 +21,9 @@ export default function NewBooking() {
     const [checkIn, setCheckIn] = useState("");
     const [checkOut, setCheckOut] = useState("");
 
-    const [priceRoom, setPriceRoom] = useState(0);
-    const [numExtraBed, setNumExtraBed] = useState(0);
-    const [priceExtraBed, setPriceExtraBed] = useState(0);
+    const [priceRoom, setPriceRoom] = useState("");
+    const [numExtraBed, setNumExtraBed] = useState("");
+    const [priceExtraBed, setPriceExtraBed] = useState("");
     const [rooms, setRooms] = useState<RequestRoom[]>([]);
 
 
@@ -31,9 +31,9 @@ export default function NewBooking() {
     function agregarHabitacion() {
         setRooms([...rooms, {           
             habitacion: selectedRoom,
-            precio: priceRoom,
-            supletorias: numExtraBed,
-            precioSupletoria: priceExtraBed
+            precio: parseInt(priceRoom),
+            supletorias: parseInt(numExtraBed),
+            precioSupletoria: parseInt(priceExtraBed)
         }]);
 
     }
@@ -138,15 +138,15 @@ export default function NewBooking() {
                                 <div className="mt-3 grid grid-cols-3 gap-3">
                                     <div className="grid grid-cols-1" id="precio">
                                         <label className='text-gray-dark text-opacity-75' id="precio">Precio</label>
-                                        <input className='rounded-full text-gray-dark text-opacity-75' type="text" id="preciohab" name="precio" value={priceRoom} onChange={e => setPriceRoom(parseInt(e.target.value))} />
+                                        <input className='rounded-full text-gray-dark text-opacity-75' type="number" id="preciohab" name="precio" value={priceRoom} onChange={e => setPriceRoom(e.target.value)} />
                                     </div>
                                     <div className="grid grid-cols-1" id="supletoria" >
                                         <label className='text-gray-dark text-opacity-75' id="numerosupl">Número de supletorias</label>
-                                        <input className='rounded-full text-gray-dark text-opacity-75' type="number" id="numerosupl" name="numsupletoria" value={numExtraBed} onChange={e => setNumExtraBed(parseInt(e.target.value))}/>
+                                        <input className='rounded-full text-gray-dark text-opacity-75' type="number" id="numerosupl" name="numsupletoria" value={numExtraBed} onChange={e => setNumExtraBed(e.target.value)}/>
                                     </div>
                                     <div className="grid grid-cols-1" id="supletoria" >
                                         <label className='text-gray-dark text-opacity-75' id="preciosupl">Precio de cada supletoria</label>
-                                        <input className='rounded-full text-gray-dark text-opacity-75' type="text" id="preciosupl" name="preciosupletoria" value={priceExtraBed} onChange={e => setPriceExtraBed(parseInt(e.target.value))}/>
+                                        <input className='rounded-full text-gray-dark text-opacity-75' type="number" id="preciosupl" name="preciosupletoria" value={priceExtraBed} onChange={e => setPriceExtraBed(e.target.value)}/>
                                     </div>
                                     <div className="grid grid-cols-1" id="boton-hatitacion">
                                         <button className="w-12 h-12 rounded-full bg-green bg-opacity-50" type="button" onClick={agregarHabitacion}>
