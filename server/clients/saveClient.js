@@ -8,7 +8,7 @@ const save = async (booking_id, customer) => {
     let idCustomer = 0;
     if (customers.length == 0) {
         const customerInserted = await executeQuery('INSERT INTO casademiranda.customers (name, surname, identifier, email, nacionality, document_type, support_document, expedition_date, gender, relationship, birthdate, phone, other_phone, made_booking) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0);',
-            [customer.nombre, customer.apellidos, customer.numero_documento, customer.correo, customer.nacionalidad, customer.tipo_documento, customer.soporte_documento, customer.fecha_expedicion.split("T")[0], customer.genero, customer.parentesco, customer.fecha_nacimiento.split("T")[0]], customer.telefono, customer.otro_telefono);
+            [customer.nombre, customer.apellidos, customer.numero_documento, customer.correo, customer.nacionalidad, customer.tipo_documento, customer.soporte_documento, customer.fecha_expedicion.split("T")[0], customer.genero, customer.parentesco, customer.fecha_nacimiento.split("T")[0], customer.telefono, customer.otro_telefono]);
         idCustomer = customerInserted.insertId;
     } else if (customers.length > 1) {
         throw new Error('Only one customer for identifier');
@@ -18,7 +18,7 @@ const save = async (booking_id, customer) => {
 
     const idBooking = await executeQuery('SELECT booking_id FROM casademiranda.bookings WHERE booking_id = ?;', [booking_id]);
     const idBookingCustomer = await executeQuery('INSERT INTO casademiranda.booking_customer (booking_id, customer_id) VALUES (?, ?)', [idBooking[0].booking_id, idCustomer])
-    const addressInserted = await executeQuery('INSERT INTO casademiranda.address (line, line2, country, province, location, postalCode VALUES (?, ?, ?, ?, ?, ?)',[customer.direccion.line, customer.direccion.line2, customer.direccion.country, customer.direccion.province, customer.direccion.location, customer.direccion.postalCode])
+    const addressInserted = await executeQuery('INSERT INTO casademiranda.address (line, line2, country, province, location, postalCode) VALUES (?, ?, ?, ?, ?, ?)',[customer.direccion.line, customer.direccion.line2, customer.direccion.country, customer.direccion.province, customer.direccion.location, customer.direccion.postalCode])
     const idCustomerAddress = await executeQuery('INSERT INTO casademiranda.customer_address (address_id, customer_id) VALUES (?, ?)', [addressInserted.address_id, idCustomer])
 
     return idCustomer;
@@ -40,8 +40,9 @@ const update = async (booking_id, customer) => {
         if(customers.length === 1 && idAddress.length === 1 && customers[0].customer_id === idAddress[0].customer_id){
             addressUpdate = await executeQuery('UPDATE casademiranda.address  SET line = ? , line2 = ?, country = ?, province = ?, location = ?, postalCode = ? WHERE address_id = ?;', [customer.direccion.line, customer.direccion.line2, customer.direccion.country, customer.direccion.province, customer.direccion.location, customer.direccion.postalCode, idAddress[0].address_id]);
         }else if(idAddress.length === 0){
-            const addressInserted = await executeQuery('INSERT INTO casademiranda.address (line, line2, country, province, location, postalCode VALUES (?, ?, ?, ?, ?, ?)',[customer.direccion.line, customer.direccion.line2, customer.direccion.country, customer.direccion.province, customer.direccion.location, customer.direccion.postalCode])
-            const idCustomerAddress = await executeQuery('INSERT INTO casademiranda.customer_address (address_id, customer_id) VALUES (?, ?)', [addressInserted.address_id, customer.cliente_id])
+            const addressInserted = await executeQuery('INSERT INTO casademiranda.address (line, line2, country, province, location, postalCode) VALUES (?, ?, ?, ?, ?, ?)',[customer.direccion.line, customer.direccion.line2, customer.direccion.country, customer.direccion.province, customer.direccion.location, customer.direccion.postalCode])
+            console.log('addressInserted:', JSON.stringify(addressInserted.insertId));
+            const idCustomerAddress = await executeQuery('INSERT INTO casademiranda.customer_address (address_id, customer_id) VALUES (?, ?)', [addressInserted.insertId, customer.cliente_id])
         }else {
             throw new Error('Error update address');
         }

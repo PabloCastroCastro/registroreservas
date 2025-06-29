@@ -1,7 +1,7 @@
 import type { Client, ClientDTO } from "@/interfaces/client";
 import { getToken } from '../auth/auth';
 
-const API_URL = 'http://192.168.1.141/cliente';
+const API_URL = 'http://192.168.1.36/cliente';
 
 
 export async function createClient(client: Client) {
@@ -148,7 +148,14 @@ async function processResultList(data: ClientDTO[]) {
     email: clientResult.email,
     relationship: clientResult.relationship,
     booking_id: clientResult.booking_id,
-    address: clientResult.address,
+    address: {
+      line: clientResult.line,
+      line2: clientResult.line2,
+      country: clientResult.country,
+      province: clientResult.province,
+      location: clientResult.location,
+      postalCode: clientResult.postalCode
+    },
     made_booking: clientResult.made_booking
   }));
   return mapToClients;
@@ -173,7 +180,14 @@ async function processResult(clientResult: ClientDTO) {
     email: clientResult.email,
     relationship: clientResult.relationship,
     booking_id: clientResult.booking_id,
-    address: clientResult.address,
+    address: {
+      line: clientResult.line,
+      line2: clientResult.line2,
+      country: clientResult.country,
+      province: clientResult.province,
+      location: clientResult.location,
+      postalCode: clientResult.postalCode
+    },
     made_booking: clientResult.made_booking
   };
   return client;

@@ -46,6 +46,12 @@ export type ClientDTO={
     email: string
     relationship: string
     booking_id: string
-    address: Address
+    address_id: number
+    line: string
+    line2: string
+    country: string
+    province: string
+    location: string
+    postalCode: number
     made_booking: boolean 
 }
