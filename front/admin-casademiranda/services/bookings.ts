@@ -1,7 +1,7 @@
 import { Booking, RequestBooking } from "@/interfaces/booking";
 import { getToken } from '../auth/auth';
 
-const API_URL = 'http://192.168.1.36/reserva';
+const API_URL = 'http://192.168.1.141/reserva';
 
 export async function createBooking(booking: RequestBooking) {
   try {
@@ -81,5 +81,30 @@ export async function getBookingById(bookingId: String) {
     return data;
   } catch (error) {
     return { message: error };
+  }
+}
+
+export async function postRegisterCheckIn(bookingId: String) {
+  try {
+    const token = getToken();
+
+    const requestOptions = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    };
+    const response = await fetch(`${API_URL}/${bookingId}/check-in`, requestOptions);
+    const status = response.status;
+    return {
+      status: status
+    };
+
+  } catch (error) {
+    return {
+      status: 500,
+      message: error
+    };
   }
 }

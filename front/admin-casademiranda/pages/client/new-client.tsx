@@ -8,6 +8,16 @@ import * as APIClient from '@/services/clients';
 import type { Address, Client } from '@/interfaces/client';
 import { useRouter } from 'next/router';
 
+type Country = {
+    pais: string;
+    codigo: string;
+};
+
+type Location = {
+    codigo: string;
+    municipio: string;
+};
+
 export default function NewClient() {
 
     const { query } = useRouter()
@@ -34,12 +44,25 @@ export default function NewClient() {
     const [location, setLocation] = useState("");
     const [postalCode, setPostalCode] = useState("");
     const [bookingId, setBookingId] = useState(query !== undefined && query.booking_id !== undefined && typeof (query.booking_id) === "string" ? query.booking_id : "");
-
+    const [municipios, setMunicipios] = useState<Location[]>([]);
+    const [municipioSelectedCodigo, setMunicipioSelectedCodigo] = useState("");
+    const [paises, setPaises] = useState<Country[]>([]);
+    const [countryCodeSelected, setCountryCodeSelected] = useState("");
+    const [younger, setYounger] = useState(false);
     const [client, setClient] = useState<Client>();
 
     const validData = (client: Client) => {
         return true;
     }
+
+    const isYounger = (fecha: string): boolean => {
+        if (!fecha) return false;
+        const nacimiento = new Date(fecha);
+        const hoy = new Date();
+        const edad = hoy.getFullYear() - nacimiento.getFullYear();
+        const cumpleEsteAño = hoy.getMonth() > nacimiento.getMonth() || (hoy.getMonth() === nacimiento.getMonth() && hoy.getDate() >= nacimiento.getDate());
+        return edad < 18 || (edad === 17 && cumpleEsteAño);
+    };
 
     const handleSubmit = () => {
 
@@ -49,7 +72,7 @@ export default function NewClient() {
             country: country,
             province: province,
             location: location,
-            postalCode: parseInt(postalCode, 10) 
+            postalCode: parseInt(postalCode, 10)
         }
 
         let client: Client = {
@@ -86,6 +109,17 @@ export default function NewClient() {
         }).catch(console.log);
 
     }
+
+    useEffect(() => {
+        fetch("/municipios.json")
+            .then((res) => res.json())
+            .then((data) => setMunicipios(data))
+            .catch((err) => console.error(err));
+        fetch("/paises-alpha3.json")
+            .then((res) => res.json())
+            .then((data) => setPaises(data))
+            .catch((error) => console.error("Error cargando países:", error));
+    }, []);
 
     return (
         <>
@@ -391,10 +425,15 @@ export default function NewClient() {
                             <label className='text-gray-dark text-opacity-75' id="email">Email:</label>
                             <input type="text" className='rounded-full' id="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} />
                         </div>
-                        
+
                         <div className="grid grid-cols-1">
                             <label className='text-gray-dark text-opacity-75' id="relationship">Parentesco:</label>
-                            <input type="text" className='rounded-full' id="relationship" name="relationship" value={relationship} onChange={(e) => setRelationship(e.target.value)} />
+                            {isYounger(birthdate) === true ? (
+                                <input type="text" className='rounded-full' id="relationship" name="relationship" value={relationship} onChange={(e) => setRelationship(e.target.value)} required />
+                            ) : (
+                                <input type="text" className='rounded-full' id="relationship" name="relationship" value={relationship} onChange={(e) => setRelationship(e.target.value)} />
+                            )
+                            }
                         </div>
 
                         <div className="grid grid-cols-1">
@@ -408,18 +447,43 @@ export default function NewClient() {
                         </div>
 
                         <div className="grid grid-cols-1">
-                            <label className='text-gray-dark text-opacity-75' id="country">Pais:</label>
-                            <input type="text" className='rounded-full' id="country" name="country" value={country} onChange={(e) => setCountry(e.target.value)} />
+                            <label className='rounded-full text-gray-dark text-opacity-75' id="country">Pais:</label>
+                            <select
+                                className="rounded-full"
+                                id="selector-country"
+                                value={country || ''}
+                                onChange={(e) => setCountry(e.target.value)}
+                            >
+                                <option value="">-- Elige un país --</option>
+                                {paises.map(p => (
+                                    <option key={p.codigo} value={p.codigo}>{p.pais}</option>
+                                ))}
+                            </select>
                         </div>
-                        
+                        {country === "ESP" ? (
+                            <div className="grid grid-cols-1">
+                                <label className='text-gray-dark text-opacity-75' id="location">Municipio:</label>
+                                <select
+                                    className="rounded-full"
+                                    id="selector-location"
+                                    value={location || ''}
+                                    onChange={(e) => setLocation(e.target.value)}
+                                >
+                                    <option value="">-- Elige un municipio --</option>
+                                    {municipios.map(p => (
+                                        <option key={p.codigo} value={p.codigo}>{p.municipio}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1">
+                                <label className='text-gray-dark text-opacity-75' id="location">Municipio:</label>
+                                <input type="text" className='rounded-full' id="location" name="location" value={location} onChange={(e) => setLocation(e.target.value)} />
+                            </div>
+                        )}
                         <div className="grid grid-cols-1">
                             <label className='text-gray-dark text-opacity-75' id="province">Provincia:</label>
                             <input type="text" className='rounded-full' id="province" name="province" value={province} onChange={(e) => setProvince(e.target.value)} />
-                        </div>
-
-                        <div className="grid grid-cols-1">
-                            <label className='text-gray-dark text-opacity-75' id="location">Municipio:</label>
-                            <input type="text" className='rounded-full' id="location" name="location" value={location} onChange={(e) => setLocation(e.target.value)} />
                         </div>
 
                         <div className="grid grid-cols-1">
@@ -427,7 +491,7 @@ export default function NewClient() {
                             <input type="number" className='rounded-full' id="postalCode" name="postalCode" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
                         </div>
 
-                        
+
                     </div>
                     <div className="mt-10" id="boton-enviar">
                         <button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' type="submit"><label className='text-gray-dark text-opacity-75' >Registro cliente</label></button>

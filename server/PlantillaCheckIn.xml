@@ -1,0 +1,51 @@
+<ns2:peticion xmlns:ns2="http://www.neg.hospedajes.mir.es/altaParteHospedaje">
+  <solicitud>
+    <codigoEstablecimiento>{{codigoEstablecimiento}}</codigoEstablecimiento>
+    <comunicacion>
+      <contrato>
+        <referencia>{{referencia}}</referencia>
+        <fechaContrato>{{fechaContrato}}</fechaContrato>
+        <fechaEntrada>{{fechaEntrada}}</fechaEntrada>
+        <fechaSalida>{{fechaSalida}}</fechaSalida>
+        <numPersonas>{{numPersonas}}</numPersonas>
+        <numHabitaciones>{{numHabitaciones}}</numHabitaciones>
+        <internet>true</internet>
+        <pago>
+          <!--Tipos de pago: [DESTI, EFECT, TARJT, PLATF, TRANS, MOVIL, TREG, OTRO]-->
+          <tipoPago>OTRO</tipoPago>
+        </pago>
+      </contrato>
+      <persona>
+        <rol>VI</rol>
+        <nombre>{{nombre}}</nombre>
+        <apellido1>{{apellido1}}</apellido1>
+        <apellido2>{{apellido2}}</apellido2>
+        <tipoDocumento>{{tipoDocumento}}</tipoDocumento>
+        <numeroDocumento>{{numeroDocumento}}</numeroDocumento>
+        <soporteDocumento>{{soporteDocumento}}</soporteDocumento>
+        <fechaNacimiento>{{fechaNacimiento}}</fechaNacimiento>
+        <!--País código ISO alfa-3: [ESP, ARG, ...]-->
+        <nacionalidad>{{nacionalidad}}</nacionalidad>
+        <!--Sexo: [H, M, O]-->
+        <sexo>{{sexo}}</sexo>
+        <direccion>
+          <direccion>{{direccion}}</direccion>
+          <direccionComplementaria>{{direccionComplementaria}}</direccionComplementaria>
+          <!--Código de Municipio de 5 dígitos: [07065, 07901,...]-->
+          <!--Si el país es España (ESP), el código de municipio ha de ir informado, no así el nombre del municipio-->
+          <codigoMunicipio>{{codigoMunicipio}}</codigoMunicipio>
+          <!--Si el país es distinto de España (ESP), ha de informar el nombre del municipio, no así el código de municipio-->
+          <nombreMunicipio>{{nombreMunicipio}}</nombreMunicipio>
+          <codigoPostal>{{codigoPostal}}</codigoPostal>
+          <!--País código ISO alfa-3: [ESP, ARG, ...]-->
+          <pais>{{pais}}</pais>
+        </direccion>
+        <telefono>{{telefono}}</telefono>
+        <telefono2>{{telefono2}}</telefono2>
+        <correo>{{correo}}</correo>
+        <!--Tipos de parentescos: [AB, BA, BN, CY, CD, HR, HJ, PM, NI, SB, SG, TI, YN, TU, OT]-->
+        <parentesco>{{correo}}</parentesco>
+      </persona>
+    </comunicacion>
+  </solicitud>
+</ns2:peticion>

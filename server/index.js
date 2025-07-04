@@ -16,6 +16,7 @@ import { save, update } from './clients/saveClient.js';
 import { listAllCustomers, listCustomerById, listCustomerByBookingId, listCustomerByIdentifier } from './clients/listClient.js';
 import { getUserByUsername } from './users/getUser.js'
 import { createUser } from './users/saveUser.js'
+import { saveCheckIn } from './bookings/savecheckIn.js'
 
 import getBookingNumber from './bookings/getBookingNumber.js';
 import readProperty from './configuration/readConfiguration.js';
@@ -254,6 +255,42 @@ app.get('/reserva/:id', async (req, res) => {
     console.log(bookings);
 
     res.send(bookings);
+})
+
+app.post('/reserva/:id/check-in', async (req, res) => {
+
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.sendStatus(401);
+
+    console.log('query: ', JSON.stringify(req.query));
+
+    jwt.verify(token, SECRET_KEY, (err, user) => {
+        if (err) return res.sendStatus(403);
+    });
+
+
+    let identifier = req.params['id'];
+    console.log(JSON.stringify(req.body))
+    if (identifier === null || identifier === "") {
+        return res.sendStatus(400);
+    }
+
+    const bookings = await listBookingById(identifier).then((value) => { return value });
+    console.log('Bookings:', JSON.stringify(bookings));
+    if(bookings === null){
+        return res.sendStatus(400);
+    }
+
+    const customers = await listCustomerByBookingId(bookings.booking_id);
+    console.log('Customers:', JSON.stringify(customers));
+    if(customers === null){
+        return res.sendStatus(400);
+    }
+
+    const registerCheckIn = await saveCheckIn(bookings, customers);
+
+    res.sendStatus(204);
 })
 
 app.post('/reserva', async (req, res) => {
