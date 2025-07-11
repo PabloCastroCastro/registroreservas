@@ -11,6 +11,9 @@ CREATE TABLE IF NOT EXISTS `casademiranda`.`bookings` (
   `booking_id` INT NOT NULL AUTO_INCREMENT,
   `check_in` DATE NULL DEFAULT NULL,
   `check_out` DATE NULL DEFAULT NULL,
+  `booking_date` DATE NULL DEFAULT NULL,
+  `state` VARCHAR(45) NULL DEFAULT NULL,
+  `payment_type` VARCHAR(45) NULL DEFAULT NULL,
   `confirmation_number` VARCHAR(45) NULL DEFAULT NULL, 
   PRIMARY KEY (`booking_id`))
   DEFAULT CHARACTER SET = utf8
@@ -20,6 +23,7 @@ CREATE TABLE IF NOT EXISTS `casademiranda`.`customers` (
   `customer_id` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(45) NULL DEFAULT NULL,
   `surname` VARCHAR(90) NULL DEFAULT NULL,
+  `surname2` VARCHAR(90) NULL DEFAULT NULL,
   `identifier` VARCHAR(45) NULL DEFAULT NULL,
   `email` VARCHAR(120) NULL DEFAULT NULL,
   `nacionality` VARCHAR(90) NULL DEFAULT NULL,

@@ -1,12 +1,37 @@
 import { Client } from '@/interfaces/client'
 import Link from 'next/link'
 import DateComponent from '@/components/dates/dateComponent'
+import { useEffect, useState } from "react";
 
 type ClientProps = {
     client: Client
 }
 
+type Country = {
+    pais: string;
+    codigo: string; // ISO 3166-1 alpha-3, como "ESP", "USA", etc.
+};
+
+type Location = {
+    codigo: string;
+    municipio: string;
+};
+
 export default function ClientComponent({ client }: ClientProps) {
+
+    const [municipios, setMunicipios] = useState<Location[]>([]);
+    const [paises, setPaises] = useState<Country[]>([]);
+
+    useEffect(() => {
+        fetch("/municipios.json")
+            .then((res) => res.json())
+            .then((data) => setMunicipios(data))
+            .catch((err) => console.error(err));
+        fetch("/paises-alpha3.json")
+            .then((res) => res.json())
+            .then((data) => setPaises(data))
+            .catch((error) => console.error("Error cargando países:", error));
+    }, []);
 
     return (
 

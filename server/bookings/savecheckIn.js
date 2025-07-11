@@ -15,45 +15,43 @@ const saveCheckIn = async (booking, customers) => {
     const templateContrato =
         `
         <contrato>
-                <referencia>{{referencia}}</referencia>
-                <fechaContrato>{{fechaContrato}}</fechaContrato>
-                <fechaEntrada>{{fechaEntrada}}</fechaEntrada>
-                <fechaSalida>{{fechaSalida}}</fechaSalida>
-                <numPersonas>{{numPersonas}}</numPersonas>
-                <numHabitaciones>{{numHabitaciones}}</numHabitaciones>
-                <internet>true</internet>
-                <pago>
+            <referencia>{{referencia}}</referencia>
+            <fechaContrato>{{fechaContrato}}</fechaContrato>
+            <fechaEntrada>{{fechaEntrada}}</fechaEntrada>
+            <fechaSalida>{{fechaSalida}}</fechaSalida>
+            <numPersonas>{{numPersonas}}</numPersonas>
+            <numHabitaciones>{{numHabitaciones}}</numHabitaciones>
+            <internet>true</internet>
+            <pago>
                 <!--Tipos de pago: [DESTI, EFECT, TARJT, PLATF, TRANS, MOVIL, TREG, OTRO]-->
                 <tipoPago>OTRO</tipoPago>
-                </pago>
-            </contrato>
-            `;
+            </pago>
+        </contrato>
+        `;
 
     const templatePersona = `
-            <persona>
-                <rol>VI</rol>
-                <nombre>{{nombre}}</nombre>
-                <apellido1>{{apellido1}}</apellido1>
-                <apellido2>{{apellido2}}</apellido2>
-                <tipoDocumento>{{tipoDocumento}}</tipoDocumento>
-                <numeroDocumento>{{numeroDocumento}}</numeroDocumento>
-                <soporteDocumento>{{soporteDocumento}}</soporteDocumento>
-                <fechaNacimiento>{{fechaNacimiento}}</fechaNacimiento>
-                <nacionalidad>{{nacionalidad}}</nacionalidad>
-                <sexo>{{sexo}}</sexo>
-                <direccion>
-                    <direccion>{{direccion}}</direccion>
-                    <direccionComplementaria>{{direccionComplementaria}}</direccionComplementaria>
-                    <codigoMunicipio>{{municipio}}</codigoMunicipio>
-                    <nombreMunicipio>{{municipio}}</nombreMunicipio>
-                    <codigoPostal>{{codigoPostal}}</codigoPostal>
-                    <pais>{{pais}}</pais>
-                </direccion>
-                <telefono>{{telefono}}</telefono>
-                <telefono2>{{telefono2}}</telefono2>
-                <correo>{{correo}}</correo>
-                <parentesco>{{parentesco}}</parentesco>
-            </persona>
+        <persona>
+            <rol>{{rol}}</rol>
+            <nombre>{{nombre}}</nombre>
+            <apellido1>{{apellido1}}</apellido1>
+            <apellido2>{{apellido2}}</apellido2>
+            <tipoDocumento>{{tipoDocumento}}</tipoDocumento>
+            <numeroDocumento>{{numeroDocumento}}</numeroDocumento>
+            <fechaNacimiento>{{fechaNacimiento}}</fechaNacimiento>
+            <nacionalidad>{{nacionalidad}}</nacionalidad>
+            <sexo>{{sexo}}</sexo>
+            <direccion>
+                <direccion>{{direccion}}</direccion>
+                <direccionComplementaria>{{direccionComplementaria}}</direccionComplementaria>
+                <codigoMunicipio>{{municipio}}</codigoMunicipio>
+                <nombreMunicipio>{{municipio}}</nombreMunicipio>
+                <codigoPostal>{{codigoPostal}}</codigoPostal>
+                <pais>{{pais}}</pais>
+            </direccion>
+            <telefono>{{telefono}}</telefono>
+            <telefono2>{{telefono2}}</telefono2>
+            <correo>{{correo}}</correo>
+        </persona>
         `;
 
     const datos = {
@@ -68,6 +66,7 @@ const saveCheckIn = async (booking, customers) => {
 
     const generalesXml = fillXmlTemplate(templateContrato, datos);
     const personasXml = customers.map(p => fillXmlTemplate(templatePersona, {
+        rol: p.made_booking == 0?'TI':'VI',
         nombre: p.name,
         apellido1: p.surname,
         tipoDocumento: p.document_type,
@@ -91,7 +90,9 @@ const saveCheckIn = async (booking, customers) => {
 
     const resultado = `<ns2:peticion xmlns:ns2="http://www.neg.hospedajes.mir.es/altaParteHospedaje">
         <solicitud>
-            <codigoEstablecimiento>${codigoEstablecimiento}</codigoEstablecimiento>
+            <establecimiento>
+                <codigo>${codigoEstablecimiento}</codigo>
+            </establecimiento>
             <comunicacion>
                 ${generalesXml}
                 ${personasXml}
@@ -123,7 +124,8 @@ function fillXmlTemplate(xmlTemplate, values) {
 
       for (const match of matches) {
         const key = match[1];
-        if (!values.hasOwnProperty(key) || values[key] == null) {
+        const value = values[key];
+        if (value === undefined || value === null || value === '') {
           return null;
         }
       }

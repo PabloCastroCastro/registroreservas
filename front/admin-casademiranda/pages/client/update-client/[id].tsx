@@ -55,7 +55,7 @@ export default function UpdateClient() {
     }
 
 
-    const isYounger= (fecha: Date): boolean => {
+    const isYounger = (fecha: Date): boolean => {
         if (!fecha) return false;
         const hoy = new Date();
         const edad = hoy.getFullYear() - fecha.getFullYear();
@@ -373,10 +373,44 @@ export default function UpdateClient() {
                             <div className="grid grid-cols-1">
                                 <label className='text-gray-dark text-opacity-75' id="relationship">Parentesco:</label>
                                 {isYounger(client?.birthdate) === true ? (
-                                        <input type="text" className='rounded-full' id="relationship" name="relationship" value={client.relationship} onChange={(e) => setClient({ ...client, relationship: e.target.value })} required/>
-                                    ) : (
-                                        <input type="text" className='rounded-full' id="relationship" name="relationship" value={client.relationship} onChange={(e) => setClient({ ...client, relationship: e.target.value })} />
-                                    )
+                                    <select id="relationship" className='rounded-full' value={client.relationship} onChange={(e) => setClient({ ...client, relationship: e.target.value })} required>
+                                        <option value="">--Selecciona una opción--</option>
+                                        <option value="AB">Abuelo/a</option>
+                                        <option value="BA">Bisabuelo/a</option>
+                                        <option value="BN">Bisnieto/a</option>
+                                        <option value="CD">Cuñado/a</option>
+                                        <option value="CY">Cónyuge</option>
+                                        <option value="HJ">Hijo/a</option>
+                                        <option value="HR">Hermano/a</option>
+                                        <option value="NI">Nieto/a</option>
+                                        <option value="PM">Padre o madre</option>
+                                        <option value="SB">Sobrino/a</option>
+                                        <option value="SG">Suegro/a</option>
+                                        <option value="TI">Tío/a</option>
+                                        <option value="YN">Yerno o nuera</option>
+                                        <option value="TU">Tutor/a</option>
+                                        <option value="OT">Otro</option>
+                                    </select>
+                                ) : (
+                                    <select id="relationship" className='rounded-full' value={client.relationship} onChange={(e) => setClient({ ...client, relationship: e.target.value })}>
+                                        <option value="">--Selecciona una opción--</option>
+                                        <option value="AB">Abuelo/a</option>
+                                        <option value="BA">Bisabuelo/a</option>
+                                        <option value="BN">Bisnieto/a</option>
+                                        <option value="CD">Cuñado/a</option>
+                                        <option value="CY">Cónyuge</option>
+                                        <option value="HJ">Hijo/a</option>
+                                        <option value="HR">Hermano/a</option>
+                                        <option value="NI">Nieto/a</option>
+                                        <option value="PM">Padre o madre</option>
+                                        <option value="SB">Sobrino/a</option>
+                                        <option value="SG">Suegro/a</option>
+                                        <option value="TI">Tío/a</option>
+                                        <option value="YN">Yerno o nuera</option>
+                                        <option value="TU">Tutor/a</option>
+                                        <option value="OT">Otro</option>
+                                    </select>
+                                )
                                 }
                             </div>
 
@@ -425,7 +459,6 @@ export default function UpdateClient() {
                                             <option key={p.codigo} value={p.codigo}>{p.municipio}</option>
                                         ))}
                                     </select>
-                                    <input type="text" className='rounded-full' id="location" name="location" value={client.address?.location || ''}  />
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1">
@@ -436,7 +469,7 @@ export default function UpdateClient() {
 
                             <div className="grid grid-cols-1">
                                 <label className='text-gray-dark text-opacity-75' id="postalCode">Código postal:</label>
-                                <input type="number" className='rounded-full' id="postalCode" name="postalCode" value={client.address?.postalCode || ''} onChange={(e) => setClient({ ...client, address: { ...client.address, postalCode: Number(e.target.value) } })} required/>
+                                <input type="number" className='rounded-full' id="postalCode" name="postalCode" value={client.address?.postalCode || ''} onChange={(e) => setClient({ ...client, address: { ...client.address, postalCode: Number(e.target.value) } })} required />
                             </div>
                         </div>
                         <div className="mt-10" id="boton-enviar">

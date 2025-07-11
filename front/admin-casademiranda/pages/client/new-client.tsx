@@ -425,13 +425,47 @@ export default function NewClient() {
                             <label className='text-gray-dark text-opacity-75' id="email">Email:</label>
                             <input type="text" className='rounded-full' id="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} />
                         </div>
-
+                        
                         <div className="grid grid-cols-1">
                             <label className='text-gray-dark text-opacity-75' id="relationship">Parentesco:</label>
                             {isYounger(birthdate) === true ? (
-                                <input type="text" className='rounded-full' id="relationship" name="relationship" value={relationship} onChange={(e) => setRelationship(e.target.value)} required />
+                                <select id="relationship" className='rounded-full' onChange={e => { setRelationship(e.target.value); }} value={relationship} name="relationship" required>
+                                    <option value="">--Selecciona una opción--</option>
+                                    <option value="AB">Abuelo/a</option>
+                                    <option value="BA">Bisabuelo/a</option>
+                                    <option value="BN">Bisnieto/a</option> 
+                                    <option value="CD">Cuñado/a</option> 
+                                    <option value="CY">Cónyuge</option> 
+                                    <option value="HJ">Hijo/a</option> 
+                                    <option value="HR">Hermano/a</option> 
+                                    <option value="NI">Nieto/a</option> 
+                                    <option value="PM">Padre o madre</option>
+                                    <option value="SB">Sobrino/a</option>
+                                    <option value="SG">Suegro/a</option>
+                                    <option value="TI">Tío/a</option>
+                                    <option value="YN">Yerno o nuera</option>
+                                    <option value="TU">Tutor/a</option>
+                                    <option value="OT">Otro</option>
+                                </select>
                             ) : (
-                                <input type="text" className='rounded-full' id="relationship" name="relationship" value={relationship} onChange={(e) => setRelationship(e.target.value)} />
+                                <select id="relationship" className='rounded-full' onChange={e => { setRelationship(e.target.value); }} value={relationship} name="relationship">
+                                    <option value="">--Selecciona una opción--</option>
+                                    <option value="AB">Abuelo/a</option>
+                                    <option value="BA">Bisabuelo/a</option>
+                                    <option value="BN">Bisnieto/a</option> 
+                                    <option value="CD">Cuñado/a</option> 
+                                    <option value="CY">Cónyuge</option> 
+                                    <option value="HJ">Hijo/a</option> 
+                                    <option value="HR">Hermano/a</option> 
+                                    <option value="NI">Nieto/a</option> 
+                                    <option value="PM">Padre o madre</option>
+                                    <option value="SB">Sobrino/a</option>
+                                    <option value="SG">Suegro/a</option>
+                                    <option value="TI">Tío/a</option>
+                                    <option value="YN">Yerno o nuera</option>
+                                    <option value="TU">Tutor/a</option>
+                                    <option value="OT">Otro</option>
+                                </select>
                             )
                             }
                         </div>
