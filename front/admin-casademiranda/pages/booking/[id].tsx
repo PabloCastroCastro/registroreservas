@@ -31,7 +31,7 @@ export default function BookingPage() {
     function createBill() {
 
         let bill: Bill = {
-            numeroFactura: "",
+            numeroFactura: booking? booking.confirmation_number: "",
             nombre: booking ? booking.name : "",
             apellidos: booking ? booking.surname : "",
             dni: booking ? booking.identifier : "",
@@ -74,7 +74,7 @@ export default function BookingPage() {
         <>
             <Navbar />
             <div id="titulo" className='ml-5'>
-                <h1 className='relative text-xl text-green text-opacity-75 font-semibold'>Reserva:</h1>
+                <h1 className='relative text-xl text-green text-opacity-75 font-semibold'>Reserva: {booking?.confirmation_number}</h1>
             </div>
             <div id="datos-reserva" className='mt-5 ml-10 grid grid-cols-1 gap-2'>
                 <div id="datos-comunes" className='grid grid-cols-3 gap-3'>

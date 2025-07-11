@@ -1,7 +1,8 @@
 import { Booking, RequestBooking } from "@/interfaces/booking";
 import { getToken } from '../auth/auth';
 
-const API_URL = 'http://192.168.1.40/reserva';
+const API_HOST = 'http://192.168.1.40'
+const API_URL = `${API_HOST}/reserva`;
 
 export async function createBooking(booking: RequestBooking) {
   try {
@@ -106,5 +107,28 @@ export async function postRegisterCheckIn(bookingId: String) {
       status: 500,
       message: error
     };
+  }
+}
+
+export async function loadBookingBatch(file: File) {
+  const token = getToken();
+  const formData = new FormData();
+  formData.append("excelFile", file);
+
+  try {
+    const requestOptions = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData,
+    };
+
+    const res = await fetch(`${API_HOST}/upload-booking`, requestOptions);
+    console.error(res);
+    return `Procesado: ${res}`;
+  } catch (err) {
+    console.error(err);
+    return "Error al subir el archivo";
   }
 }
