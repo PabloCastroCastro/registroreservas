@@ -24,14 +24,14 @@ const saveCheckIn = async (booking, customers) => {
             <internet>true</internet>
             <pago>
                 <!--Tipos de pago: [DESTI, EFECT, TARJT, PLATF, TRANS, MOVIL, TREG, OTRO]-->
-                <tipoPago>OTRO</tipoPago>
+                <tipoPago>{{tipoPago}}</tipoPago>
             </pago>
         </contrato>
         `;
 
     const templatePersona = `
         <persona>
-            <rol>{{rol}}</rol>
+            <rol>VI</rol>
             <nombre>{{nombre}}</nombre>
             <apellido1>{{apellido1}}</apellido1>
             <apellido2>{{apellido2}}</apellido2>
@@ -56,31 +56,32 @@ const saveCheckIn = async (booking, customers) => {
 
     const datos = {
         referencia: booking.confirmation_number,
-        fechaContrato: toIsoDatetimeString(booking.check_out),
-        fechaEntrada: toIsoDatetimeString(booking.check_in),
-        fechaSalida: toIsoDatetimeString(booking.check_out),
+        fechaContrato: toIsoDatetimeString(booking.check_out), //YYYY-MM-DD
+        fechaEntrada: toIsoDatetimeString(booking.check_in), //YYYY-MM-DDThh:mm:ss
+        fechaSalida: toIsoDatetimeString(booking.check_out), //YYYY-MM-DDThh:mm:ss
         numPersonas: customers.length,
-        numHabitaciones: booking.rooms.length
+        numHabitaciones: booking.rooms.length,
+        tipoPago: booking.payment_type
+
     };
 
 
     const generalesXml = fillXmlTemplate(templateContrato, datos);
     const personasXml = customers.map(p => fillXmlTemplate(templatePersona, {
-        rol: p.made_booking == 0?'TI':'VI',
         nombre: p.name,
         apellido1: p.surname,
         tipoDocumento: p.document_type,
         numeroDocumento: p.identifier,
         soporteDocumento: p.support_document,
-        fechaNacimiento: toIsoDatetimeString(p.birthdate),
-        nacionalidad: p.nacionality,
+        fechaNacimiento: toIsoDatetimeString(p.birthdate), //YYYY-MM-DD
+        nacionalidad: p.nacionality, //ISO ALpha-3
         sexo: p.gender,
         direccion: p.line,
         direccionComplementaria: p.line2,
         municipio: p.location,
         codigoPostal: p.postalCode,
         pais: p.country,
-        telefono: p.phone,
+        telefono: p.phone, //o telefono o correo 
         telefono2: p.other_phone,
         correo: p.email,
         parentesco: p.relationship
