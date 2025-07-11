@@ -305,7 +305,7 @@ export default function UpdateClient() {
                             </div>
                             <div className="grid grid-cols-1">
                                 <label className='text-gray-dark text-opacity-75' id="secondSurname">Segundo apellido:</label>
-                                <input className='rounded-full' type="text" id="secondSurname" name="secondSurname" value={client.secondSurname} onChange={(e) => setClient({ ...client, secondSurname: e.target.value })} required />
+                                <input className='rounded-full' type="text" id="secondSurname" name="secondSurname" value={client.secondSurname} onChange={(e) => setClient({ ...client, secondSurname: e.target.value })} />
                             </div>
                             <div className="grid grid-cols-1">
                                 <label className='text-gray-dark text-opacity-75' id="gender">Genero:</label>

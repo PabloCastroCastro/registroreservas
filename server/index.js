@@ -1,10 +1,10 @@
 import express, { response } from 'express';
+import multer from "multer";
+import XLSX from "xlsx";
 import https from 'https';
 import fs from 'fs';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-
-import bodyParser from 'body-parser';
 import cors from 'cors';
 import generarFactura from './pdf/createPDF.js';
 import readFileExcel from './excel/functionsExcel.js';
@@ -19,15 +19,149 @@ import { createUser } from './users/saveUser.js'
 
 import getBookingNumber from './bookings/getBookingNumber.js';
 import readProperty from './configuration/readConfiguration.js';
+import e from 'express';
 
 const app = express();
 const SECRET_KEY = readProperty("server.secretKey");
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
-
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
 app.use(cors());
 
+const parseFloatFromText = (str) => typeof str === "string" ? parseFloat(str.replace(/[^\d.-]/g, '')) : str;
+
+const getRoomName = (rowName) => {
+    let roomName = '';
+    if (rowName === 'Habitación Carpinteiro') {
+        roomName = 'O Carpinteiro'
+    } else if (rowName === 'Habitación A Fonte') {
+        roomName = 'A Fonte'
+    } else if (rowName === 'O cuberto') {
+        roomName = 'O cuberto'
+    }
+    return roomName;
+}
+
+function formatDateToMySQL(dateStr) {
+    const date = new Date(dateStr);
+    if (isNaN(date)) return null;
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function buildHabitaciones(row) {
+    const tipoUnidad = row['Tipo de unidad'];
+    const numHabitaciones = parseInt(row['Habitaciones']) || 0;
+    const dias = parseInt(row['Duración (noches)']) || 1;
+    const precioTotal = parseFloatFromText(row['Precio']);
+
+    if (numHabitaciones === 0) return [];
+
+    if (numHabitaciones === 1) {
+        return [
+            {
+                habitacion: getRoomName(tipoUnidad),
+                precio: precioTotal / dias
+            }
+        ];
+    }
+
+    const tipos = tipoUnidad.split(',').map(t => t.trim());
+    if (tipos.length !== numHabitaciones) {
+        throw new Error('Datos inválidos: el número de tipos de unidad no coincide con el número de habitaciones');
+    }
+
+    const precioUnitario = precioTotal / (numHabitaciones * dias);
+
+    return tipos.map(tipo => ({
+        habitacion: getRoomName(tipo),
+        precio: precioUnitario
+    }));
+}
+
+app.post('/upload-booking', upload.single("excelFile"), async function (req, res) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.sendStatus(401);
+
+    jwt.verify(token, SECRET_KEY, (err) => {
+        if (err) return res.sendStatus(403);
+    });
+
+    if (!req.file) {
+        return res.status(400).json({ message: "Archivo no encontrado" });
+    }
+
+    try {
+        const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const data = XLSX.utils.sheet_to_json(sheet);
+
+        console.log("Datos procesados:", data);
+
+        let reservasCreadas = 0;
+
+        for (const row of data) {
+            try {
+                // Separar apellidos y nombre del campo "Reservado por"
+                const [apellidos, nombre] = row['Reservado por']
+                    ? row['Reservado por'].split(',').map((s) => s.trim())
+                    : ["", ""];
+
+                const dateReserva = new Date(row['Fecha de reserva']);
+                const fechaFormateada = dateReserva.toISOString().split("T")[0].replace(/-/g, "");
+                const numeroAleatorio = Math.floor(Math.random() * 1000) + 1;
+                const numeroFormateado = numeroAleatorio.toString().padStart(3, '0');
+                const numeroConfirmacion = fechaFormateada + numeroFormateado;
+
+
+                const dias = parseInt(row['Duración (noches)']) || 1;
+
+                const habitaciones = buildHabitaciones(row);
+
+                const reserva = {
+                    numeroConfirmacion,
+                    bookingDate: formatDateToMySQL(row['Fecha de reserva']),
+                    checkInDate: formatDateToMySQL(row['Entrada']),
+                    checkOutDate: formatDateToMySQL(row['Salida']),
+                    dias,
+                    habitaciones,
+                    tipo_pago: '',
+                    referenciaOtraPlataforma: row['Número de reserva'],
+                    estado: row['Estado']
+                };
+                console.error("Reserva convertida", reserva);
+
+                const cliente = {
+                    nombre: nombre,
+                    apellidos: apellidos,
+                    dni: "",
+                    email: "",
+                };
+                console.error("cliente convertido", cliente);
+
+                await saveBooking(reserva, cliente);
+                reservasCreadas++;
+            } catch (err) {
+                console.error("Error procesando fila:", row, err);
+            }
+        }
+
+        res.json({
+            message: "Archivo procesado correctamente",
+            reservasCreadas,
+        });
+    } catch (err) {
+        console.error("Error al procesar Excel:", err);
+        res.status(500).json({ message: "Error al procesar archivo" });
+    }
+});
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
@@ -341,6 +475,7 @@ app.post('/factura', async function (req, res) {
 
     console.log('Factura: ', JSON.stringify(req.body))
     const nombre = req.body.nombre;
+    const numeroFactura = req.body.numeroFactura;
     const apellidos = req.body.apellidos;
     const dni = req.body.dni;
     const email = req.body.email;
@@ -354,7 +489,7 @@ app.post('/factura', async function (req, res) {
     const milisegundosEnUnDia = 1000 * 60 * 60 * 24;
     const dias = Math.floor(diferenciaEnMilisegundos / milisegundosEnUnDia);
     const fechaFormateada = dateNow.toISOString().split("T")[0].replace(/-/g, "");
-    let numeroFactura = await getBookingNumber(fechaFormateada.toString()).then(value => { return value });
+    //let numeroFactura = await getBookingNumber(fechaFormateada.toString()).then(value => { return value });
     let habitaciones;
     try {
         habitaciones = JSON.parse(req.body.habitaciones);
@@ -365,7 +500,7 @@ app.post('/factura', async function (req, res) {
 
     const reserva = {
         numeroFactura: numeroFactura,
-        fechaReserva: fechaFactura,
+        fechaReserva: checkOutDate,
         fechaCheckIn: checkInDate,
         fechaCheckOut: checkOutDate,
         dias: dias,
@@ -387,6 +522,7 @@ app.post('/factura', async function (req, res) {
     sendMail(numeroFactura, nombre, apellidos, email);
     res.send('Datos recibidos correctamente.');
 });
+
 
 app.listen(3003, function () {
     console.log('Servidor escuchando en el puerto 3003.');
