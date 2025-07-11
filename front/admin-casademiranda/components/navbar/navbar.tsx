@@ -32,6 +32,7 @@ export default function DefaultNavbar() {
             </Navbar.Brand>
             <Navbar.Toggle />
             <Navbar.Collapse>
+                <Link href="/booking/load-booking"><p className='text-gray text-opacity-75 font-semibold'>Cargar Reservas</p></Link>
                 <Link href="/booking/new-booking"><p className='text-gray text-opacity-75 font-semibold'>Crear Reserva</p></Link>
                 <Link href="/"><p className='text-gray text-opacity-75 font-semibold'>Home</p></Link>
                 <Link href="/logout"><p className='text-gray text-opacity-75 font-semibold'>Cerrar Session</p></Link>
