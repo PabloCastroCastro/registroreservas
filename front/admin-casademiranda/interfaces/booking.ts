@@ -21,6 +21,8 @@ export type Booking = {
     fechaCheckOut: Date
     email: string
     envioConfirmacion: boolean
+    estado: string
+    tipo_pago: string
     habitaciones: RequestRoom[]
   }
 

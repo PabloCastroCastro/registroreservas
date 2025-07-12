@@ -56,9 +56,9 @@ const saveCheckIn = async (booking, customers) => {
 
     const datos = {
         referencia: booking.confirmation_number,
-        fechaContrato: toIsoDatetimeString(booking.check_out), //YYYY-MM-DD
-        fechaEntrada: toIsoDatetimeString(booking.check_in), //YYYY-MM-DDThh:mm:ss
-        fechaSalida: toIsoDatetimeString(booking.check_out), //YYYY-MM-DDThh:mm:ss
+        fechaContrato: toIsoDateString(booking.check_out),
+        fechaEntrada: toIsoDatetimeString(booking.check_in),
+        fechaSalida: toIsoDatetimeString(booking.check_out),
         numPersonas: customers.length,
         numHabitaciones: booking.rooms.length,
         tipoPago: booking.payment_type
@@ -70,18 +70,19 @@ const saveCheckIn = async (booking, customers) => {
     const personasXml = customers.map(p => fillXmlTemplate(templatePersona, {
         nombre: p.name,
         apellido1: p.surname,
+        apellido2: p.surname2,
         tipoDocumento: p.document_type,
         numeroDocumento: p.identifier,
         soporteDocumento: p.support_document,
-        fechaNacimiento: toIsoDatetimeString(p.birthdate), //YYYY-MM-DD
-        nacionalidad: p.nacionality, //ISO ALpha-3
+        fechaNacimiento: toIsoDateString(p.birthdate),
+        nacionalidad: p.nacionality, 
         sexo: p.gender,
         direccion: p.line,
         direccionComplementaria: p.line2,
         municipio: p.location,
         codigoPostal: p.postalCode,
         pais: p.country,
-        telefono: p.phone, //o telefono o correo 
+        telefono: p.phone, 
         telefono2: p.other_phone,
         correo: p.email,
         parentesco: p.relationship
@@ -104,6 +105,14 @@ const saveCheckIn = async (booking, customers) => {
     console.log(resultado);
     saveXmlToFile(resultado, booking.confirmation_number)
     return resultado;
+}
+
+function toIsoDateString(date) {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 function toIsoDatetimeString(date) {

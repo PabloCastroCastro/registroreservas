@@ -1,6 +1,6 @@
 import "@/app/globals.css";
 import { useState, useEffect } from 'react';
-import  Navbar from '@/components/navbar/navbar';
+import Navbar from '@/components/navbar/navbar';
 import type { RequestBooking } from '@/interfaces/booking';
 import type { RequestRoom, Room } from '@/interfaces/room';
 import RoomItemComponent from '@/components/rooms/roomItemComponent';
@@ -29,7 +29,7 @@ export default function NewBooking() {
 
 
     function agregarHabitacion() {
-        setRooms([...rooms, {           
+        setRooms([...rooms, {
             habitacion: selectedRoom,
             precio: parseInt(priceRoom),
             supletorias: parseInt(numExtraBed),
@@ -40,7 +40,7 @@ export default function NewBooking() {
 
     const handleSubmit = () => {
 
-        if(email !== confirmedEmail){
+        if (email !== confirmedEmail) {
             alert('Los correos no son iguales')
             return new Error('Mails are distincts')
         }
@@ -53,15 +53,22 @@ export default function NewBooking() {
             fechaCheckOut: new Date(checkOut),
             envioConfirmacion: sendEmail,
             email: email,
-            habitaciones: rooms
+            habitaciones: rooms,
+            estado: 'ok',
+            tipo_pago: 'OTRO'
         };
 
         console.log(JSON.stringify(booking));
         //Check response, if is 200 ok router if is not print the error
-        APIBooking.createBooking(booking).then(res => router.push("/")).catch(console.log);
+        APIBooking.createBooking(booking)
+            .then(res => {
+                console.log('Respuesta del backend:', res);
+                router.push(`/booking/${res.id}`);
+            })
+            .catch(console.log);
 
     }
-    
+
 
     return (
         <>
@@ -83,13 +90,13 @@ export default function NewBooking() {
                             <div className="grid grid-cols-1">
                                 <label className='text-gray-dark text-opacity-75' id="apellidos">Apellidos </label>
                                 <div className='flex flex-row'>
-                                    <input className='rounded-full' type="text" id="apellidos" name="apellidos" value={surname} onChange={(e) => setSurname(e.target.value)} required  />
+                                    <input className='rounded-full' type="text" id="apellidos" name="apellidos" value={surname} onChange={(e) => setSurname(e.target.value)} required />
                                 </div>
                             </div>
                             <div className="grid grid-cols-1">
                                 <label className='text-gray-dark text-opacity-75' id="dni">DNI</label>
                                 <div className="flex flex-row">
-                                    <input className='rounded-full' type="text" id="dni" name="dni"  value={identifier} onChange={(e) => setIdentifier(e.target.value)} required />
+                                    <input className='rounded-full' type="text" id="dni" name="dni" value={identifier} onChange={(e) => setIdentifier(e.target.value)} required />
                                 </div>
                             </div>
 
@@ -125,8 +132,8 @@ export default function NewBooking() {
                         <div className="mt-3 grid grid-cols-3" id="datos-habitacion">
                             <div className="grid grid-cols-1">
                                 <label className='text-gray-dark text-opacity-75' id="selectorhabitacion">Selecciona una habitación</label>
-                                <select className='rounded-full text-gray-dark text-opacity-75' id="selectorhabitacion" onChange={e => {setSelectedRoom(e.target.value);}} value={selectedRoom} name="habitacion">
-                                    <option  value="">--Selecciona una opción--</option>
+                                <select className='rounded-full text-gray-dark text-opacity-75' id="selectorhabitacion" onChange={e => { setSelectedRoom(e.target.value); }} value={selectedRoom} name="habitacion">
+                                    <option value="">--Selecciona una opción--</option>
                                     <option value="A Fonte">A Fonte</option>
                                     <option value="O Carpinteiro">O Carpinteiro</option>
                                     <option value="O Cuberto">O Cuberto</option>
@@ -134,43 +141,43 @@ export default function NewBooking() {
                                 </select>
                             </div>
                         </div>
-                            {selectedRoom!==""&&selectedRoom!==undefined?(
-                                <div className="mt-3 grid grid-cols-3 gap-3">
-                                    <div className="grid grid-cols-1" id="precio">
-                                        <label className='text-gray-dark text-opacity-75' id="precio">Precio</label>
-                                        <input className='rounded-full text-gray-dark text-opacity-75' type="number" id="preciohab" name="precio" value={priceRoom} onChange={e => setPriceRoom(e.target.value)} />
-                                    </div>
-                                    <div className="grid grid-cols-1" id="supletoria" >
-                                        <label className='text-gray-dark text-opacity-75' id="numerosupl">Número de supletorias</label>
-                                        <input className='rounded-full text-gray-dark text-opacity-75' type="number" id="numerosupl" name="numsupletoria" value={numExtraBed} onChange={e => setNumExtraBed(e.target.value)}/>
-                                    </div>
-                                    <div className="grid grid-cols-1" id="supletoria" >
-                                        <label className='text-gray-dark text-opacity-75' id="preciosupl">Precio de cada supletoria</label>
-                                        <input className='rounded-full text-gray-dark text-opacity-75' type="number" id="preciosupl" name="preciosupletoria" value={priceExtraBed} onChange={e => setPriceExtraBed(e.target.value)}/>
-                                    </div>
-                                    <div className="grid grid-cols-1" id="boton-hatitacion">
-                                        <button className="w-12 h-12 rounded-full bg-green bg-opacity-50" type="button" onClick={agregarHabitacion}>
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                            </svg>
-                                        </button>
-                                    </div>
+                        {selectedRoom !== "" && selectedRoom !== undefined ? (
+                            <div className="mt-3 grid grid-cols-3 gap-3">
+                                <div className="grid grid-cols-1" id="precio">
+                                    <label className='text-gray-dark text-opacity-75' id="precio">Precio</label>
+                                    <input className='rounded-full text-gray-dark text-opacity-75' type="number" id="preciohab" name="precio" value={priceRoom} onChange={e => setPriceRoom(e.target.value)} />
                                 </div>
-                            ):(
-                                <div></div>
-                            )}
-                        {rooms !== undefined&&rooms.length>0?(
-                            <div className="mt-3">
-                            <label className='text-gray-dark text-opacity-75'>Lista habitaciones</label>
-                            <ul id="lista-habitaciones">
-                                {rooms.map(room => (
-                                    <div key={room.habitacion}>
-                                        <RoomItemComponent room={{name: room.habitacion, price: room.precio, extra_beds: room.supletorias, price_extra_bed: room.precioSupletoria}}></RoomItemComponent>
-                                    </div>
-                                ))}
-                            </ul>
+                                <div className="grid grid-cols-1" id="supletoria" >
+                                    <label className='text-gray-dark text-opacity-75' id="numerosupl">Número de supletorias</label>
+                                    <input className='rounded-full text-gray-dark text-opacity-75' type="number" id="numerosupl" name="numsupletoria" value={numExtraBed} onChange={e => setNumExtraBed(e.target.value)} />
+                                </div>
+                                <div className="grid grid-cols-1" id="supletoria" >
+                                    <label className='text-gray-dark text-opacity-75' id="preciosupl">Precio de cada supletoria</label>
+                                    <input className='rounded-full text-gray-dark text-opacity-75' type="number" id="preciosupl" name="preciosupletoria" value={priceExtraBed} onChange={e => setPriceExtraBed(e.target.value)} />
+                                </div>
+                                <div className="grid grid-cols-1" id="boton-hatitacion">
+                                    <button className="w-12 h-12 rounded-full bg-green bg-opacity-50" type="button" onClick={agregarHabitacion}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
-                        ):(<div className="mt-3"><label className='text-gray-dark text-opacity-75'>Sin habitaciones añadidas</label></div>)}
+                        ) : (
+                            <div></div>
+                        )}
+                        {rooms !== undefined && rooms.length > 0 ? (
+                            <div className="mt-3">
+                                <label className='text-gray-dark text-opacity-75'>Lista habitaciones</label>
+                                <ul id="lista-habitaciones">
+                                    {rooms.map(room => (
+                                        <div key={room.habitacion}>
+                                            <RoomItemComponent room={{ name: room.habitacion, price: room.precio, extra_beds: room.supletorias, price_extra_bed: room.precioSupletoria }}></RoomItemComponent>
+                                        </div>
+                                    ))}
+                                </ul>
+                            </div>
+                        ) : (<div className="mt-3"><label className='text-gray-dark text-opacity-75'>Sin habitaciones añadidas</label></div>)}
                         <div className="mt-10 grid grid-cols-9" id="boton-enviar">
                             <button type="submit" className="rounded-full bg-green bg-opacity-50"><p className="text-black text-opacity-75 font-semibold">Registro reserva</p></button>
                         </div>

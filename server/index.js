@@ -427,6 +427,14 @@ app.post('/reserva/:id/check-in', async (req, res) => {
     res.sendStatus(204);
 })
 
+function toIsoDateString(date) {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 app.post('/reserva', async (req, res) => {
 
     const authHeader = req.headers['authorization'];
@@ -485,10 +493,13 @@ app.post('/reserva', async (req, res) => {
     const reserva = {
         numeroConfirmacion: numeroConfirmacion,
         fechaReserva: fechaFactura,
+        bookingDate: toIsoDateString(fechaFactura),
         fechaCheckIn: checkInDate,
         fechaCheckOut: checkOutDate,
         checkInDate: req.body.fechaCheckIn,
         checkOutDate: req.body.fechaCheckOut,
+        estado: req.body.estado,
+        tipo_pago: req.body.tipo_pago,
         dias: dias,
         habitaciones: habitaciones,
     };
@@ -501,12 +512,13 @@ app.post('/reserva', async (req, res) => {
     };
 
     console.log('envio confirmacion reserva');
-    await saveBooking(reserva, cliente);
+    const saved = await saveBooking(reserva, cliente);
     if (sendConfirmationEmail != null && (sendConfirmationEmail == "on" || sendConfirmationEmail == true)) {
         console.log('send mail');
         sendConfirmationBookingMail(numeroConfirmacion, cliente, reserva);
     }
-    res.send('Reserva generada correctamente.');
+    console.log('Id: ', saved);
+    res.json({ id: saved }); 
 })
 
 app.post('/factura', async function (req, res) {

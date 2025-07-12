@@ -31,6 +31,7 @@ const saveBooking = async (booking, idCustomer) => {
     const bookingInserted = await executeQuery('INSERT INTO casademiranda.bookings (booking_date, check_in, check_out, state, payment_type, confirmation_number, other_platform_reference) VALUES (?, ?, ?, ?, ?, ?, ?);', [booking.bookingDate.split("T")[0], booking.checkInDate.split("T")[0], booking.checkOutDate.split("T")[0], booking.estado, booking.tipo_pago, booking.numeroConfirmacion, booking.referenciaOtraPlataforma]);
     const idBookingCustomer = await executeQuery('INSERT INTO casademiranda.booking_customer (booking_id, customer_id) VALUES (?, ?)', [bookingInserted.insertId, idCustomer])
     await saveRoom(booking.habitaciones, bookingInserted.insertId);
+    return bookingInserted;
 }
 
 const updateBooking = async (booking, idCustomer) => { }
