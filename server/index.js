@@ -429,6 +429,9 @@ app.post('/reserva/:id/check-in', async (req, res) => {
 
 function toIsoDateString(date) {
     const d = new Date(date);
+    if (isNaN(d)) {
+        throw new Error('Invalid date passed to toIsoDateString');
+    }
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
@@ -455,6 +458,7 @@ app.post('/reserva', async (req, res) => {
     const dni = req.body.dni;
     const email = req.body.email;
     const dateNow = new Date(Date.now());
+    const bookingDate = toIsoDateString(dateNow);
     const fechaFactura = dateNow.toLocaleDateString('es-ES');
     let checkInDate;
     try {
@@ -493,7 +497,7 @@ app.post('/reserva', async (req, res) => {
     const reserva = {
         numeroConfirmacion: numeroConfirmacion,
         fechaReserva: fechaFactura,
-        bookingDate: toIsoDateString(fechaFactura),
+        bookingDate: bookingDate,
         fechaCheckIn: checkInDate,
         fechaCheckOut: checkOutDate,
         checkInDate: req.body.fechaCheckIn,
@@ -540,16 +544,16 @@ app.post('/factura', async function (req, res) {
     const apellidos = req.body.apellidos;
     const dni = req.body.dni;
     const email = req.body.email;
-    const dateNow = new Date(Date.now());
-    const fechaFactura = dateNow.toLocaleDateString('es-ES');
     const checkInDate = new Date(req.body.fechaCheckIn).toLocaleDateString('es-ES');
     const checkOutDate = new Date(req.body.fechaCheckOut).toLocaleDateString('es-ES');
-    const sendConfirmationEmail = req.body.envioConfirmacion;
 
     const diferenciaEnMilisegundos = new Date(req.body.fechaCheckOut) - new Date(req.body.fechaCheckIn);
     const milisegundosEnUnDia = 1000 * 60 * 60 * 24;
     const dias = Math.floor(diferenciaEnMilisegundos / milisegundosEnUnDia);
-    const fechaFormateada = dateNow.toISOString().split("T")[0].replace(/-/g, "");
+    //const dateNow = new Date(req.body.fechaCheckOut);
+    //const fechaFactura = dateNow.toLocaleDateString('es-ES');
+    //const sendConfirmationEmail = req.body.envioConfirmacion;
+    //const fechaFormateada = dateNow.toISOString().split("T")[0].replace(/-/g, "");
     //let numeroFactura = await getBookingNumber(fechaFormateada.toString()).then(value => { return value });
     let habitaciones;
     try {
@@ -578,7 +582,7 @@ app.post('/factura', async function (req, res) {
     console.log(reserva);
     console.log(dias);
 
-    readFileExcel(numeroFactura, fechaFactura);
+    //readFileExcel(numeroFactura, fechaFactura);
     generarFactura(reserva, cliente);
     sendMail(numeroFactura, nombre, apellidos, email);
     res.send('Datos recibidos correctamente.');
