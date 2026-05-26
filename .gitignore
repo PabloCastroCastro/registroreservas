@@ -5,6 +5,7 @@
 /server/confmail.PNG
 /infrastructure/bbdd/data
 /infrastructure/bbdd/data_backup
+/infrastructure/check-in/*
 
 # Logs
 logs

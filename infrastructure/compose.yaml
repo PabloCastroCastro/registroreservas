@@ -19,6 +19,7 @@ services:
     volumes: 
       - /project/node_modules
       - ./certs:/infrastructure/certs
+      - ./check-in:/server/check-in
     tty: true
     ports: 
       - "3003:3003"

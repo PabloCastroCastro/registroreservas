@@ -5,8 +5,18 @@ import "@/app/globals.css";
 import { useEffect, useState } from 'react';
 import Navbar from '@/components/navbar/navbar';
 import * as APIClient from '@/services/clients';
-import type { Client } from '@/interfaces/client';
+import type { Address, Client } from '@/interfaces/client';
 import { useRouter } from 'next/router';
+
+type Country = {
+    pais: string;
+    codigo: string;
+};
+
+type Location = {
+    codigo: string;
+    municipio: string;
+};
 
 export default function NewClient() {
 
@@ -22,16 +32,48 @@ export default function NewClient() {
     const [secondSurname, setSecondSurname] = useState("");
     const [gender, setGender] = useState("");
     const [birthdate, setBirthdate] = useState("");
+    const [supportDocument, setSupportDocument] = useState("");
+    const [phone, setPhone] = useState("");
+    const [otherPhone, setOtherPhone] = useState("");
+    const [email, setEmail] = useState("");
+    const [relationship, setRelationship] = useState("");
+    const [line, setLine] = useState("");
+    const [line2, setLine2] = useState("");
+    const [country, setCountry] = useState("");
+    const [province, setProvince] = useState("");
+    const [location, setLocation] = useState("");
+    const [postalCode, setPostalCode] = useState("");
     const [bookingId, setBookingId] = useState(query !== undefined && query.booking_id !== undefined && typeof (query.booking_id) === "string" ? query.booking_id : "");
-
+    const [municipios, setMunicipios] = useState<Location[]>([]);
+    const [municipioSelectedCodigo, setMunicipioSelectedCodigo] = useState("");
+    const [paises, setPaises] = useState<Country[]>([]);
+    const [countryCodeSelected, setCountryCodeSelected] = useState("");
+    const [younger, setYounger] = useState(false);
     const [client, setClient] = useState<Client>();
 
     const validData = (client: Client) => {
         return true;
     }
 
+    const isYounger = (fecha: string): boolean => {
+        if (!fecha) return false;
+        const nacimiento = new Date(fecha);
+        const hoy = new Date();
+        const edad = hoy.getFullYear() - nacimiento.getFullYear();
+        const cumpleEsteAño = hoy.getMonth() > nacimiento.getMonth() || (hoy.getMonth() === nacimiento.getMonth() && hoy.getDate() >= nacimiento.getDate());
+        return edad < 18 || (edad === 17 && cumpleEsteAño);
+    };
+
     const handleSubmit = () => {
 
+        let address: Address = {
+            line: line,
+            line2: line2,
+            country: country,
+            province: province,
+            location: location,
+            postalCode: parseInt(postalCode, 10)
+        }
 
         let client: Client = {
             client_id: "",
@@ -39,13 +81,19 @@ export default function NewClient() {
             nacionality: nacionality,
             document_type: documentType,
             document_number: documentNumber,
+            support_document: supportDocument,
             expedition_date: new Date(expeditionDate),
             name: name,
             firstSurname: firstSurname,
             secondSurname: secondSurname,
             gender: gender,
             birthdate: new Date(birthdate),
+            phone: phone,
+            other_phone: otherPhone,
+            email: email,
+            relationship: relationship,
             booking_id: bookingId,
+            address: address,
             made_booking: false
         };
 
@@ -62,6 +110,17 @@ export default function NewClient() {
 
     }
 
+    useEffect(() => {
+        fetch("/municipios.json")
+            .then((res) => res.json())
+            .then((data) => setMunicipios(data))
+            .catch((err) => console.error(err));
+        fetch("/paises-alpha3.json")
+            .then((res) => res.json())
+            .then((data) => setPaises(data))
+            .catch((error) => console.error("Error cargando países:", error));
+    }, []);
+
     return (
         <>
             <Navbar></Navbar>
@@ -75,242 +134,39 @@ export default function NewClient() {
                             <label className='text-gray-dark text-opacity-75' id="fecha-checkin">Fecha de check-in:</label>
                             <input type="date" className='rounded-full' id="fecha-checkin" name="fechaCheckIn" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} required />
                         </div>
-
                         <div className="grid grid-cols-1">
-                            <label className='text-gray-dark text-opacity-75' id="nacionality">Nacionalidad:</label>
-                            <select id="nacionality" className='rounded-full' name="nacionality" value={nacionality} onChange={(e) => setNacionality(e.target.value)}>
-                                <option value="">- Pais de Nacionalidad -</option>
-                                <option value="ESPAÑA">ESPAÑA</option>
-                                <option value="AFGANISTAN">AFGANISTAN</option>
-                                <option value="ALBANIA">ALBANIA</option>
-                                <option value="ALEMANIA">ALEMANIA</option>
-                                <option value="ANDORRA">ANDORRA</option>
-                                <option value="ANGOLA">ANGOLA</option>
-                                <option value="ANGUILA">ANGUILA</option>
-                                <option value="ANTARTIDA">ANTARTIDA</option>
-                                <option value="ANTIGUA Y BARBUDA">ANTIGUA Y BARBUDA</option>
-                                <option value="ARABIA SAUDITA">ARABIA SAUDITA</option>
-                                <option value="ARGELIA">ARGELIA</option>
-                                <option value="ARGENTINA">ARGENTINA</option>
-                                <option value="ARMENIA">ARMENIA</option>
-                                <option value="ARUBA">ARUBA</option>
-                                <option value="AUSTRALIA">AUSTRALIA</option>
-                                <option value="AUSTRIA">AUSTRIA</option>
-                                <option value="AZERBAYAN">AZERBAYAN</option>
-                                <option value="BAHAMAS">BAHAMAS</option>
-                                <option value="BAHREIN">BAHREIN</option>
-                                <option value="BANGLADESH">BANGLADESH</option>
-                                <option value="BARBADOS">BARBADOS</option>
-                                <option value="BELGICA">BELGICA</option>
-                                <option value="BELICE">BELICE</option>
-                                <option value="BENIN">BENIN</option>
-                                <option value="BIELORUSIA">BIELORUSIA</option>
-                                <option value="BOLIVIA">BOLIVIA</option>
-                                <option value="BOSNIA HERZEGOVINA">BOSNIA HERZEGOVINA</option>
-                                <option value="BOTSWANA">BOTSWANA</option>
-                                <option value="BRASIL">BRASIL</option>
-                                <option value="BRUNEI">BRUNEI</option>
-                                <option value="BULGARIA">BULGARIA</option>
-                                <option value="BURKINA FASO">BURKINA FASO</option>
-                                <option value="BURUNDI">BURUNDI</option>
-                                <option value="BUTAN">BUTAN</option>
-                                <option value="CABO VERDE">CABO VERDE</option>
-                                <option value="CAMBOYA">CAMBOYA</option>
-                                <option value="CAMERUN">CAMERUN</option>
-                                <option value="CANADA">CANADA</option>
-                                <option value="CHAD">CHAD</option>
-                                <option value="CHECOSLOVAQUIA">CHECOSLOVAQUIA</option>
-                                <option value="CHILE">CHILE</option>
-                                <option value="CHINA">CHINA</option>
-                                <option value="CHIPRE">CHIPRE</option>
-                                <option value="CISKEY">CISKEY</option>
-                                <option value="COLOMBIA">COLOMBIA</option>
-                                <option value="COMORAS">COMORAS</option>
-                                <option value="CONGO">CONGO</option>
-                                <option value="COREA DEL NORTE">COREA DEL NORTE</option>
-                                <option value="COREA DEL SUR">COREA DEL SUR</option>
-                                <option value="COSTA DE MARFIL">COSTA DE MARFIL</option>
-                                <option value="COSTA RICA">COSTA RICA</option>
-                                <option value="CROACIA">CROACIA</option>
-                                <option value="CUBA">CUBA</option>
-                                <option value="DINAMARCA">DINAMARCA</option>
-                                <option value="DJIBUTI">DJIBUTI</option>
-                                <option value="DOMINICA">DOMINICA</option>
-                                <option value="ECUADOR">ECUADOR</option>
-                                <option value="EGIPTO">EGIPTO</option>
-                                <option value="EL SALVADOR">EL SALVADOR</option>
-                                <option value="EMIRATOS ARABES">EMIRATOS ARABES</option>
-                                <option value="ERITREA">ERITREA</option>
-                                <option value="ESLOVAQUIA">ESLOVAQUIA</option>
-                                <option value="ESLOVENIA">ESLOVENIA</option>
-                                <option value="ESPAÑA">ESPAÑA</option>
-                                <option value="ESTADOS UNIDOS">ESTADOS UNIDOS</option>
-                                <option value="ESTONIA">ESTONIA</option>
-                                <option value="ETIOPIA">ETIOPIA</option>
-                                <option value="FIDJI(ISLAS)">FIDJI(ISLAS)</option>
-                                <option value="FILIPINAS">FILIPINAS</option>
-                                <option value="FINLANDIA">FINLANDIA</option>
-                                <option value="FRANCIA">FRANCIA</option>
-                                <option value="GABON">GABON</option>
-                                <option value="GAMBIA">GAMBIA</option>
-                                <option value="GEORGIA">GEORGIA</option>
-                                <option value="GHANA">GHANA</option>
-                                <option value="GRANADA">GRANADA</option>
-                                <option value="GRECIA">GRECIA</option>
-                                <option value="GUATEMALA">GUATEMALA</option>
-                                <option value="GUINEA">GUINEA</option>
-                                <option value="GUINEA BISAU">GUINEA BISAU</option>
-                                <option value="GUINEA ECUATORIAL">GUINEA ECUATORIAL</option>
-                                <option value="GUYANA">GUYANA</option>
-                                <option value="HAITI">HAITI</option>
-                                <option value="HOLANDA">HOLANDA</option>
-                                <option value="HONDURAS">HONDURAS</option>
-                                <option value="HONG KONG (CHINA)">HONG KONG (CHINA)</option>
-                                <option value="HONG KONG (GB)">HONG KONG (GB)</option>
-                                <option value="HUNGRIA">HUNGRIA</option>
-                                <option value="INDIA">INDIA</option>
-                                <option value="INDONESIA">INDONESIA</option>
-                                <option value="IRAK">IRAK</option>
-                                <option value="IRAN">IRAN</option>
-                                <option value="IRLANDA">IRLANDA</option>
-                                <option value="ISLANDIA">ISLANDIA</option>
-                                <option value="ISRAEL">ISRAEL</option>
-                                <option value="ITALIA">ITALIA</option>
-                                <option value="JAMAICA">JAMAICA</option>
-                                <option value="JAPON">JAPON</option>
-                                <option value="JORDANIA">JORDANIA</option>
-                                <option value="KAZAJISTAN">KAZAJISTAN</option>
-                                <option value="KENIA">KENIA</option>
-                                <option value="KIRIBATI">KIRIBATI</option>
-                                <option value="KIRJISTAN">KIRJISTAN</option>
-                                <option value="KUWAIT">KUWAIT</option>
-                                <option value="LAOS">LAOS</option>
-                                <option value="LESOTO">LESOTO</option>
-                                <option value="LETONIA">LETONIA</option>
-                                <option value="LIBANO">LIBANO</option>
-                                <option value="LIBERIA">LIBERIA</option>
-                                <option value="LIBIA">LIBIA</option>
-                                <option value="LIECHTENSTEIN">LIECHTENSTEIN</option>
-                                <option value="LITUANIA">LITUANIA</option>
-                                <option value="LUXEMBURGO">LUXEMBURGO</option>
-                                <option value="MACAO">MACAO</option>
-                                <option value="MADAGASCAR">MADAGASCAR</option>
-                                <option value="MALASIA">MALASIA</option>
-                                <option value="MALAUI">MALAUI</option>
-                                <option value="MALDIVAS">MALDIVAS</option>
-                                <option value="MALI">MALI</option>
-                                <option value="MALTA">MALTA</option>
-                                <option value="MARIANAS DEL NORTE">MARIANAS DEL NORTE</option>
-                                <option value="MARRUECOS">MARRUECOS</option>
-                                <option value="MARSHALL">MARSHALL</option>
-                                <option value="MAURICIO">MAURICIO</option>
-                                <option value="MAURITANIA">MAURITANIA</option>
-                                <option value="MEXICO">MEXICO</option>
-                                <option value="MICRONESIA">MICRONESIA</option>
-                                <option value="MOLDAVIA">MOLDAVIA</option>
-                                <option value="MONACO">MONACO</option>
-                                <option value="MONGOLIA">MONGOLIA</option>
-                                <option value="MOZAMBIQUE">MOZAMBIQUE</option>
-                                <option value="MYANMAR(BIRMANIA)">MYANMAR(BIRMANIA)</option>
-                                <option value="NAMIBIA">NAMIBIA</option>
-                                <option value="NAURU">NAURU</option>
-                                <option value="NEPAL">NEPAL</option>
-                                <option value="NICARAGUA">NICARAGUA</option>
-                                <option value="NIGER">NIGER</option>
-                                <option value="NIGERIA">NIGERIA</option>
-                                <option value="NORUEGA">NORUEGA</option>
-                                <option value="NUEVA ZELANDA">NUEVA ZELANDA</option>
-                                <option value="OMAN">OMAN</option>
-                                <option value="ONU">ONU</option>
-                                <option value="PAKISTAN">PAKISTAN</option>
-                                <option value="PALAOS">PALAOS</option>
-                                <option value="PALESTINA">PALESTINA</option>
-                                <option value="PANAMA">PANAMA</option>
-                                <option value="PAPUA NUEVA GUINEA">PAPUA NUEVA GUINEA</option>
-                                <option value="PARAGUAY">PARAGUAY</option>
-                                <option value="PERU">PERU</option>
-                                <option value="POLONIA">POLONIA</option>
-                                <option value="PORTUGAL">PORTUGAL</option>
-                                <option value="QATAR">QATAR</option>
-                                <option value="REFUGIADO">REFUGIADO</option>
-                                <option value="REINO UNIDO">REINO UNIDO</option>
-                                <option value="REP. CENTROAFRICANA">REP. CENTROAFRICANA</option>
-                                <option value="REP. CHECA">REP. CHECA</option>
-                                <option value="REP. DOMINICANA">REP. DOMINICANA</option>
-                                <option value="REP. MACEDONIA">REP. MACEDONIA</option>
-                                <option value="RUANDA">RUANDA</option>
-                                <option value="RUMANIA">RUMANIA</option>
-                                <option value="RUSIA">RUSIA</option>
-                                <option value="SAHARA OCCIDENTAL">SAHARA OCCIDENTAL</option>
-                                <option value="SAMOA OCCIDENTAL">SAMOA OCCIDENTAL</option>
-                                <option value="SAN CRISTOBAL NEVIS">SAN CRISTOBAL NEVIS</option>
-                                <option value="SAN MARINO">SAN MARINO</option>
-                                <option value="SANTA LUCIA">SANTA LUCIA</option>
-                                <option value="SANTO TOME PRINCIPE">SANTO TOME PRINCIPE</option>
-                                <option value="SENEGAL">SENEGAL</option>
-                                <option value="SERBIA">SERBIA</option>
-                                <option value="SERBIA MONTENEGRO">SERBIA MONTENEGRO</option>
-                                <option value="SEYCHELLES">SEYCHELLES</option>
-                                <option value="SIERRA LEONA">SIERRA LEONA</option>
-                                <option value="SIN ESTADO">SIN ESTADO</option>
-                                <option value="SINGAPUR">SINGAPUR</option>
-                                <option value="SIRIA">SIRIA</option>
-                                <option value="SOMALIA">SOMALIA</option>
-                                <option value="SRI LANKA">SRI LANKA</option>
-                                <option value="SUAZILANDIA">SUAZILANDIA</option>
-                                <option value="SUDAFRICA">SUDAFRICA</option>
-                                <option value="SUDAN">SUDAN</option>
-                                <option value="SUECIA">SUECIA</option>
-                                <option value="SUIZA">SUIZA</option>
-                                <option value="SURINAM">SURINAM</option>
-                                <option value="S.VICENTE Y GRANAD.">S.VICENTE Y GRANAD.</option>
-                                <option value="TAIWAN">TAIWAN</option>
-                                <option value="TANZANIA">TANZANIA</option>
-                                <option value="TAYIKISTAN">TAYIKISTAN</option>
-                                <option value="THAILANDIA">THAILANDIA</option>
-                                <option value="TIMOR">TIMOR</option>
-                                <option value="TOGO">TOGO</option>
-                                <option value="TONGA">TONGA</option>
-                                <option value="TRANSKEY">TRANSKEY</option>
-                                <option value="TRINIDAD Y TOBAGO">TRINIDAD Y TOBAGO</option>
-                                <option value="TUNEZ">TUNEZ</option>
-                                <option value="TURKMENISTAN">TURKMENISTAN</option>
-                                <option value="TURQUIA">TURQUIA</option>
-                                <option value="TUVALU">TUVALU</option>
-                                <option value="UCRANIA">UCRANIA</option>
-                                <option value="UGANDA">UGANDA</option>
-                                <option value="URSS">URSS</option>
-                                <option value="URUGUAY">URUGUAY</option>
-                                <option value="UZBEKISTAN">UZBEKISTAN</option>
-                                <option value="VANUATU">VANUATU</option>
-                                <option value="VATICANO">VATICANO</option>
-                                <option value="VENDA">VENDA</option>
-                                <option value="VENEZUELA">VENEZUELA</option>
-                                <option value="VIETNAM">VIETNAM</option>
-                                <option value="YEMEN">YEMEN</option>
-                                <option value="YUGOSLAVIA">YUGOSLAVIA</option>
-                                <option value="ZAIRE">ZAIRE</option>
-                                <option value="ZAMBIA">ZAMBIA</option>
-                                <option value="ZIMBABUE">ZIMBABUE</option>
-                                <option value="ZONA NEUTRAL">ZONA NEUTRAL</option>
+                            <label className='rounded-full text-gray-dark text-opacity-75' id="nacionality">Nacionalidad:</label>
+                            <select
+                                className="rounded-full"
+                                id="selector-nacionality"
+                                value={nacionality || ''}
+                                onChange={(e) => setNacionality(e.target.value)}
+                            >
+                                <option value="">-- Elige un país --</option>
+                                {paises.map(p => (
+                                    <option key={p.codigo} value={p.codigo}>{p.pais}</option>
+                                ))}
                             </select>
                         </div>
 
                         <div className="grid grid-cols-1">
                             <label className='text-gray-dark text-opacity-75' id="documentType">Tipo documento:</label>
                             <select name="documentType" id="documentType" className='rounded-full' onChange={e => { setDocumentType(e.target.value); }} value={documentType} required>
-                                <option value="">- Tipo Documento -</option>
-                                <option value="P">pasaporte</option>
-                                {nacionality && nacionality === 'ESPAÑA' ? (<option value="C">permiso de conducir</option>) : <></>}
-                                {nacionality && nacionality === 'ESPAÑA' ? (<option value="D">documento nacional de identidad</option>) : (<option value="I">documento de identidad</option>)}
-                                {nacionality && nacionality !== 'ESPAÑA' ? (<option value="N">permiso residencia español</option>) : <></>}
-                                {nacionality && nacionality !== 'ESPAÑA' ? (<option value="X">permiso residencia extranjero</option>) : <></>}
+                                <option value="NIF">NIF - Número de Identificación Fiscal</option>
+                                <option value="NIE">NIE - Número de Identidad de Extranjero</option>
+                                <option value="PAS">PAS - Número de pasaporte</option>
+                                <option value="OTRO">Otro</option>
                             </select>
                         </div>
-
+                        
                         <div className="grid grid-cols-1">
                             <label className='text-gray-dark text-opacity-75' id="documentNumber">Número documento:</label>
                             <input type="text" className='rounded-full' id="documentNumber" name="documentNumber" value={documentNumber} onChange={(e) => setDocumentNumber(e.target.value)} required />
+                        </div>
+
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="supportDocument">Soporte documento:</label>
+                            <input type="text" className='rounded-full' id="supportDocument" name="supportDocument" value={supportDocument} onChange={(e) => setSupportDocument(e.target.value)} />
                         </div>
 
                         <div className="grid grid-cols-1">
@@ -333,7 +189,6 @@ export default function NewClient() {
                             <input type="text" className='rounded-full' id="secondSurname" name="secondSurname" value={secondSurname} onChange={(e) => setSecondSurname(e.target.value)} required />
                         </div>
 
-
                         <div className="grid grid-cols-1">
                             <label className='text-gray-dark text-opacity-75' id="gender">Genero:</label>
                             <select id="selectorGender" className='rounded-full' onChange={e => { setGender(e.target.value); }} value={gender} name="gender">
@@ -347,6 +202,122 @@ export default function NewClient() {
                             <label className='text-gray-dark text-opacity-75' id="birthdate">Fecha de nacimiento:</label>
                             <input type="date" className='rounded-full' id="birthdate" name="birthdate" value={birthdate} onChange={(e) => setBirthdate(e.target.value)} required />
                         </div>
+
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="phone">Teléfono:</label>
+                            <input type="text" className='rounded-full' id="phone" name="phone" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+                        </div>
+
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="otherPhone">Otro Teléfono:</label>
+                            <input type="text" className='rounded-full' id="otherPhone" name="otherPhone" value={otherPhone} onChange={(e) => setOtherPhone(e.target.value)} />
+                        </div>
+
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="email">Email:</label>
+                            <input type="text" className='rounded-full' id="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                        </div>
+                        
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="relationship">Parentesco:</label>
+                            {isYounger(birthdate) === true ? (
+                                <select id="relationship" className='rounded-full' onChange={e => { setRelationship(e.target.value); }} value={relationship} name="relationship" required>
+                                    <option value="">--Selecciona una opción--</option>
+                                    <option value="AB">Abuelo/a</option>
+                                    <option value="BA">Bisabuelo/a</option>
+                                    <option value="BN">Bisnieto/a</option> 
+                                    <option value="CD">Cuñado/a</option> 
+                                    <option value="CY">Cónyuge</option> 
+                                    <option value="HJ">Hijo/a</option> 
+                                    <option value="HR">Hermano/a</option> 
+                                    <option value="NI">Nieto/a</option> 
+                                    <option value="PM">Padre o madre</option>
+                                    <option value="SB">Sobrino/a</option>
+                                    <option value="SG">Suegro/a</option>
+                                    <option value="TI">Tío/a</option>
+                                    <option value="YN">Yerno o nuera</option>
+                                    <option value="TU">Tutor/a</option>
+                                    <option value="OT">Otro</option>
+                                </select>
+                            ) : (
+                                <select id="relationship" className='rounded-full' onChange={e => { setRelationship(e.target.value); }} value={relationship} name="relationship">
+                                    <option value="">--Selecciona una opción--</option>
+                                    <option value="AB">Abuelo/a</option>
+                                    <option value="BA">Bisabuelo/a</option>
+                                    <option value="BN">Bisnieto/a</option> 
+                                    <option value="CD">Cuñado/a</option> 
+                                    <option value="CY">Cónyuge</option> 
+                                    <option value="HJ">Hijo/a</option> 
+                                    <option value="HR">Hermano/a</option> 
+                                    <option value="NI">Nieto/a</option> 
+                                    <option value="PM">Padre o madre</option>
+                                    <option value="SB">Sobrino/a</option>
+                                    <option value="SG">Suegro/a</option>
+                                    <option value="TI">Tío/a</option>
+                                    <option value="YN">Yerno o nuera</option>
+                                    <option value="TU">Tutor/a</option>
+                                    <option value="OT">Otro</option>
+                                </select>
+                            )
+                            }
+                        </div>
+
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="line">Direccion:</label>
+                            <input type="text" className='rounded-full' id="line" name="line" value={line} onChange={(e) => setLine(e.target.value)} />
+                        </div>
+
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="line2">Direccion adicional:</label>
+                            <input type="text" className='rounded-full' id="line2" name="line2" value={line2} onChange={(e) => setLine2(e.target.value)} />
+                        </div>
+
+                        <div className="grid grid-cols-1">
+                            <label className='rounded-full text-gray-dark text-opacity-75' id="country">Pais:</label>
+                            <select
+                                className="rounded-full"
+                                id="selector-country"
+                                value={country || ''}
+                                onChange={(e) => setCountry(e.target.value)}
+                            >
+                                <option value="">-- Elige un país --</option>
+                                {paises.map(p => (
+                                    <option key={p.codigo} value={p.codigo}>{p.pais}</option>
+                                ))}
+                            </select>
+                        </div>
+                        {country === "ESP" ? (
+                            <div className="grid grid-cols-1">
+                                <label className='text-gray-dark text-opacity-75' id="location">Municipio:</label>
+                                <select
+                                    className="rounded-full"
+                                    id="selector-location"
+                                    value={location || ''}
+                                    onChange={(e) => setLocation(e.target.value)}
+                                >
+                                    <option value="">-- Elige un municipio --</option>
+                                    {municipios.map(p => (
+                                        <option key={p.codigo} value={p.codigo}>{p.municipio}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1">
+                                <label className='text-gray-dark text-opacity-75' id="location">Municipio:</label>
+                                <input type="text" className='rounded-full' id="location" name="location" value={location} onChange={(e) => setLocation(e.target.value)} />
+                            </div>
+                        )}
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="province">Provincia:</label>
+                            <input type="text" className='rounded-full' id="province" name="province" value={province} onChange={(e) => setProvince(e.target.value)} />
+                        </div>
+
+                        <div className="grid grid-cols-1">
+                            <label className='text-gray-dark text-opacity-75' id="postalCode">Código postal:</label>
+                            <input type="number" className='rounded-full' id="postalCode" name="postalCode" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
+                        </div>
+
+
                     </div>
                     <div className="mt-10" id="boton-enviar">
                         <button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' type="submit"><label className='text-gray-dark text-opacity-75' >Registro cliente</label></button>

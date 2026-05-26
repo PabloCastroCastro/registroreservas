@@ -1,7 +1,7 @@
 import { Booking, RequestBooking } from "@/interfaces/booking";
 import { getToken } from '../auth/auth';
 
-const API_HOST = 'http://192.168.1.141'
+const API_HOST = 'http://192.168.1.171'
 const API_URL = `${API_HOST}/reserva`;
 
 export async function createBooking(booking: RequestBooking) {
@@ -85,6 +85,31 @@ export async function getBookingById(bookingId: String) {
   }
 }
 
+export async function postRegisterCheckIn(bookingId: String) {
+  try {
+    const token = getToken();
+
+    const requestOptions = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    };
+    const response = await fetch(`${API_URL}/${bookingId}/check-in`, requestOptions);
+    const status = response.status;
+    return {
+      status: status
+    };
+
+  } catch (error) {
+    return {
+      status: 500,
+      message: error
+    };
+  }
+}
+
 export async function loadBookingBatch(file: File) {
   const token = getToken();
   const formData = new FormData();
@@ -104,6 +129,6 @@ export async function loadBookingBatch(file: File) {
     return `Procesado: ${res}`;
   } catch (err) {
     console.error(err);
-    return"Error al subir el archivo";
+    return "Error al subir el archivo";
   }
 }

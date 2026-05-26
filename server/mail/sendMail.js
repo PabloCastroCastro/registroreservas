@@ -16,6 +16,9 @@ const sendMail = (idBooking, name, surname, email) => {
         auth: {
             user: user,
             pass: pass,
+        },
+        tls: {
+            rejectUnauthorized: false
         }
     });
 

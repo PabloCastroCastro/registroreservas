@@ -50,6 +50,7 @@ const processBooking = (bookings) => {
                 name: bookings[i].name,
                 surname: bookings[i].surname,
                 identifier: bookings[i].identifier,
+                confirmation_number: bookings[i].confirmation_number,
                 rooms: [{
                     name: bookings[i].room,
                     price: bookings[i].price,
@@ -96,6 +97,7 @@ const processBookings = (bookings) => {
                 name: bookings[i].name,
                 surname: bookings[i].surname,
                 identifier: bookings[i].identifier,
+                confirmation_number: bookings[i].confirmation_number,
                 rooms: [{
                     name: bookings[i].room,
                     price: bookings[i].price,

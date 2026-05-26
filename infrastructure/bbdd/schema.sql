@@ -24,19 +24,48 @@ CREATE TABLE IF NOT EXISTS `casademiranda`.`customers` (
   `customer_id` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(45) NULL DEFAULT NULL,
   `surname` VARCHAR(90) NULL DEFAULT NULL,
+  `surname2` VARCHAR(90) NULL DEFAULT NULL,
   `identifier` VARCHAR(45) NULL DEFAULT NULL,
   `email` VARCHAR(120) NULL DEFAULT NULL,
   `nacionality` VARCHAR(90) NULL DEFAULT NULL,
   `document_type` VARCHAR(45) NULL DEFAULT NULL,
+  `support_document` VARCHAR(45) NULL DEFAULT NULL,
   `expedition_date` DATE NULL DEFAULT NULL,
   `gender` VARCHAR(45) NULL DEFAULT NULL,
+  `relationship` VARCHAR(45) NULL DEFAULT NULL,
   `birthdate` DATE NULL DEFAULT NULL,
+  `phone` VARCHAR(20) NULL DEFAULT NULL,
+  `other_phone` VARCHAR(20) NULL DEFAULT NULL,
   `made_booking` BIT DEFAULT 0,
   PRIMARY KEY (`customer_id`),
   INDEX `fk_customers_identifier_idx` (`identifier` ASC),
   INDEX `fk_customers_email_idx` (`email` ASC))
   DEFAULT CHARACTER SET = utf8
-  COLLATE = utf8_general_ci;
+  COLLATE = utf8_general_ci; 
+
+CREATE TABLE IF NOT EXISTS `casademiranda`.`address` (
+  `address_id` INT NOT NULL AUTO_INCREMENT,
+  `line` VARCHAR(120) NULL DEFAULT NULL,
+  `line2` VARCHAR(120) NULL DEFAULT NULL,
+  `country` VARCHAR(40) NULL DEFAULT NULL,
+  `province` VARCHAR(40) NULL DEFAULT NULL,
+  `location` VARCHAR(40) NULL DEFAULT NULL,
+  `postalCode` INT NOT NULL,
+  PRIMARY KEY (`address_id`),
+  INDEX `fk_address_idx` (`address_id` ASC))
+  DEFAULT CHARACTER SET = utf8
+  COLLATE = utf8_general_ci; 
+
+CREATE TABLE IF NOT EXISTS `casademiranda`.`customer_address` (
+  `customer_address_id` INT NOT NULL AUTO_INCREMENT,
+  `address_id` INT NOT NULL,
+  `customer_id` INT NOT NULL,
+  PRIMARY KEY (`customer_address_id`),
+  INDEX `fk_customers_address_address_idx` (`address_id` ASC),
+  CONSTRAINT `fk_customers_address_address_idx` FOREIGN KEY (`address_id`) REFERENCES `casademiranda`.`address` (`address_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  INDEX `fk_customers_address_customers_idx` (`customer_id` ASC),
+  CONSTRAINT `fk_customers_address_customers_idx` FOREIGN KEY (`customer_id`) REFERENCES `casademiranda`.`customers` (`customer_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
 
 CREATE TABLE IF NOT EXISTS `casademiranda`.`booking_room` (
   `booking_room_id` INT NOT NULL AUTO_INCREMENT,
@@ -77,6 +106,12 @@ CREATE TABLE IF NOT EXISTS `casademiranda`.`users` (
     `username` VARCHAR(255) NOT NULL,
     `password_hash` VARCHAR(255) NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS `casademiranda`.`invoice_sequence` (
+  `date` CHAR(8) NOT NULL,
+  `last_number` INT NOT NULL DEFAULT 1,
+  PRIMARY KEY (`date`)
+) DEFAULT CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 INSERT INTO `casademiranda`.`rooms` (
   `room_id`,

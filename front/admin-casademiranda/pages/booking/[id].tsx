@@ -20,9 +20,11 @@ export default function BookingPage() {
     const [booking, setBooking] = useState<Booking>();
     const [clients, setClients] = useState<Client[]>();
     const [billStatus, setBillStatus] = useState(200);
+    const [checkInStatus, setCheckInStatus] = useState(0);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     useEffect(() => {
-        query.id !== undefined && typeof query.id === "string" ? APIBooking.getBookingById(query.id).then(setBooking).catch(console.log):setBooking;
+        query.id !== undefined && typeof query.id === "string" ? APIBooking.getBookingById(query.id).then(setBooking).catch(console.log) : setBooking;
         query.id !== undefined && typeof query.id === "string" ? APIClient.getClientsByBookingId(query.id).then(setClients).catch(console.log) : setClients([]);
     }, []);
 
@@ -51,6 +53,23 @@ export default function BookingPage() {
         APIBilling.createBill(bill).then(setBillStatus).catch(console.log);
     }
 
+    function registerCheckIn() {
+        if (query.id !== undefined && typeof query.id === "string") {
+            APIBooking.postRegisterCheckIn(query.id).then(
+                res => {
+                    console.log('Response status:', res.status);
+                    setCheckInStatus(res.status);
+                    setShowSuccessModal(true);
+                }
+            ).catch(console.log)
+
+        } else {
+            setCheckInStatus(0);
+            setShowSuccessModal(false);
+        }
+    }
+
+
     return (
         <>
             <Navbar />
@@ -69,10 +88,10 @@ export default function BookingPage() {
                         <label className='text-gray-dark text-opacity-75' id="dni">Dni: {booking?.identifier}</label>
                     </div>
                     <div className="grid grid-cols-1">
-                        <DateComponent label="Fecha check_in: " date={booking?booking.check_in:new Date()} />
+                        <DateComponent label="Fecha check_in: " date={booking ? booking.check_in : new Date()} />
                     </div>
                     <div className="grid grid-cols-1">
-                        <DateComponent label="Fecha check_out: " date={booking?booking.check_out:new Date()} />
+                        <DateComponent label="Fecha check_out: " date={booking ? booking.check_out : new Date()} />
                     </div>
                     <div className="grid grid-cols-1"></div>
                 </div>
@@ -92,7 +111,7 @@ export default function BookingPage() {
                     <div className="grid grid-cols-1"></div>
                     {clients && booking ? clients.map(client => (<div key={client.client_id}>
                         <ClientComponent client={{ ...client, booking_id: booking.booking_id }}></ClientComponent>
-                        </div>)) : <></>}
+                    </div>)) : <></>}
                     <div className="grid grid-cols-1">
                         <Link className='w-12 h-12 rounded-full bg-green bg-opacity-50 hover:bg-gray-dark text-center text-gray-dark text-opacity-75' href={"/client/new-client?booking_id=" + booking?.booking_id}>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -103,10 +122,31 @@ export default function BookingPage() {
                 </div>
             </div>
             <div id="botones" className='mt-5 ml-5 grid grid-cols-6 gap-3'>
-                    <div className="grid grid-cols-1">
-                        <Button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' onClick={createBill}>Generar Factura</Button>
-                    </div>
+                <div className="grid grid-cols-1">
+                    <Button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' onClick={registerCheckIn}>Registrar CheckIn</Button>
+                </div>
+                <div className="grid grid-cols-1">
+                    <Button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' onClick={createBill}>Generar Factura</Button>
+                </div>
             </div>
+            {/* Modal de éxito */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                    <div className="bg-white p-6 rounded-xl shadow-lg text-center">
+                        {checkInStatus === 204 ? (
+                            <>
+                                <h2 className="text-xl font-semibold mb-4 text-green-600">Check-In realizado correctamente</h2>
+                            </>
+                        ) : (
+                            <>
+                                <h2 className="text-xl font-semibold mb-4 text-red-600">Error en el Check-In</h2>
+                            </>
+                        )}
+                        <Button onClick={() => setShowSuccessModal(false)}>Cerrar</Button>
+                    </div>
+                </div>
+            )}
+
         </>
     )
 }
