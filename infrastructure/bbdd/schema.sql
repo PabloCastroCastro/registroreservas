@@ -107,6 +107,12 @@ CREATE TABLE IF NOT EXISTS `casademiranda`.`users` (
     `password_hash` VARCHAR(255) NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS `casademiranda`.`invoice_sequence` (
+  `date` CHAR(8) NOT NULL,
+  `last_number` INT NOT NULL DEFAULT 1,
+  PRIMARY KEY (`date`)
+) DEFAULT CHARACTER SET = utf8 COLLATE = utf8_general_ci;
+
 INSERT INTO `casademiranda`.`rooms` (
   `room_id`,
   `name`,

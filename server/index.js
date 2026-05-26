@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import cors from 'cors';
 import generarFactura from './pdf/createPDF.js';
+import getInvoiceNumber from './invoices/getInvoiceNumber.js';
 import readFileExcel from './excel/functionsExcel.js';
 import sendMail from './mail/sendMail.js';
 import sendConfirmationBookingMail from './confirmacion-reserva/sendMailConfirmationBooking.js';
@@ -112,11 +113,7 @@ app.post('/upload-booking', upload.single("excelFile"), async function (req, res
                     ? row['Reservado por'].split(',').map((s) => s.trim())
                     : ["", ""];
 
-                const dateReserva = new Date(row['Fecha de reserva']);
-                const fechaFormateada = dateReserva.toISOString().split("T")[0].replace(/-/g, "");
-                const numeroAleatorio = Math.floor(Math.random() * 1000) + 1;
-                const numeroFormateado = numeroAleatorio.toString().padStart(3, '0');
-                const numeroConfirmacion = fechaFormateada + numeroFormateado;
+                const numeroConfirmacion = await getInvoiceNumber(row['Salida']);
 
 
                 const dias = parseInt(row['Duración (noches)']) || 1;
@@ -479,12 +476,7 @@ app.post('/reserva', async (req, res) => {
     const diferenciaEnMilisegundos = new Date(req.body.fechaCheckOut) - new Date(req.body.fechaCheckIn);
     const milisegundosEnUnDia = 1000 * 60 * 60 * 24;
     const dias = Math.floor(diferenciaEnMilisegundos / milisegundosEnUnDia);
-    const fechaFormateada = dateNow.toISOString().split("T")[0].replace(/-/g, "");
-    const min = 1;
-    const max = 1000;
-    const numeroAleatorio = Math.floor(Math.random() * (max - min + 1)) + min;
-    const numeroFormateado = numeroAleatorio.toString().padStart(3, '0');
-    const numeroConfirmacion = fechaFormateada.toString() + numeroFormateado;
+    const numeroConfirmacion = await getInvoiceNumber(req.body.fechaCheckOut);
     let habitaciones;
 
     try {

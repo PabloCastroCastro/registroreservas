@@ -1,7 +1,7 @@
 import { Booking, RequestBooking } from "@/interfaces/booking";
 import { getToken } from '../auth/auth';
 
-const API_HOST = 'http://192.168.1.141'
+const API_HOST = 'http://192.168.1.171'
 const API_URL = `${API_HOST}/reserva`;
 
 export async function createBooking(booking: RequestBooking) {
