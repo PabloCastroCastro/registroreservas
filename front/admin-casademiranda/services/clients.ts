@@ -1,7 +1,7 @@
 import type { Client, ClientDTO } from "@/interfaces/client";
 import { getToken } from '../auth/auth';
 
-const API_URL = 'http://192.168.1.171/cliente';
+const API_URL = 'https://192.168.1.171/cliente';
 
 
 export async function createClient(client: Client) {
