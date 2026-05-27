@@ -21,6 +21,7 @@ import { saveCheckIn } from './bookings/savecheckIn.js'
 
 import getBookingNumber from './bookings/getBookingNumber.js';
 import readProperty from './configuration/readConfiguration.js';
+import executeQuery from './sql/sqlUtils.js';
 import e from 'express';
 
 const app = express();
@@ -423,6 +424,34 @@ app.post('/reserva/:id/check-in', async (req, res) => {
 
     res.sendStatus(204);
 })
+
+app.patch('/reserva/:id/cancel', async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.sendStatus(401);
+    jwt.verify(token, SECRET_KEY, (err) => { if (err) return res.sendStatus(403); });
+
+    const id = req.params['id'];
+    await executeQuery('UPDATE casademiranda.bookings SET state = ? WHERE booking_id = ?', ['cancelada', id]);
+    res.sendStatus(204);
+});
+
+app.delete('/reserva/:id', async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.sendStatus(401);
+    jwt.verify(token, SECRET_KEY, (err) => { if (err) return res.sendStatus(403); });
+
+    const id = req.params['id'];
+    const rooms = await executeQuery('SELECT booking_room_id FROM casademiranda.booking_room WHERE booking_id = ?', [id]);
+    for (const room of rooms) {
+        await executeQuery('DELETE FROM casademiranda.booking_room_extra_bed WHERE booking_room_id = ?', [room.booking_room_id]);
+    }
+    await executeQuery('DELETE FROM casademiranda.booking_room WHERE booking_id = ?', [id]);
+    await executeQuery('DELETE FROM casademiranda.booking_customer WHERE booking_id = ?', [id]);
+    await executeQuery('DELETE FROM casademiranda.bookings WHERE booking_id = ?', [id]);
+    res.sendStatus(204);
+});
 
 function toIsoDateString(date) {
     const d = new Date(date);

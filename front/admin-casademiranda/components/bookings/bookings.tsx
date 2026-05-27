@@ -18,51 +18,39 @@ export default function Bookings() {
     const [identifier, setIdentifier] = useState("Dni...");
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [filterDate, setFilterDate] = useState<string>(new Date().toISOString().split('T')[0]);
+    const [showCancelled, setShowCancelled] = useState(false);
 
 
+
+    function filterBookings(data: Booking[], fromToday: boolean) {
+        return data
+            .filter(booking => {
+                const checkIn = new Date(booking.check_in);
+                const baseDate = new Date(filterDate);
+                const dateOk = fromToday ? checkIn > baseDate : checkIn >= baseDate;
+                return dateOk && (showCancelled ? booking.state === 'cancelada' : booking.state === 'ok');
+            })
+            .sort((a, b) => new Date(a.check_in).getTime() - new Date(b.check_in).getTime());
+    }
 
     function find() {
         API.getBookingByIdentifier(identifier)
-            .then((data: Booking[]) => {
-                const filteredAndSorted = data
-                    .filter(booking => {
-                        const checkIn = new Date(booking.check_in);
-                        const baseDate = new Date(filterDate);
-                        return checkIn >= baseDate && booking.state === 'ok';
-                    })
-                    .sort((a, b) =>
-                        new Date(a.check_in).getTime() - new Date(b.check_in).getTime()
-                    );
-                setBookings(filteredAndSorted);
-            })
+            .then((data: Booking[]) => setBookings(filterBookings(data, false)))
             .catch(console.log);
     }
 
     useEffect(() => {
         const tokenGuardado = localStorage.getItem('token');
-        if (tokenGuardado) {
-            setToken(tokenGuardado);
-        }
+        if (tokenGuardado) setToken(tokenGuardado);
 
         API.getAllBookings()
-            .then((data: Booking[]) => {
-                const filteredAndSorted = data
-                    .filter(booking => {
-                        const checkIn = new Date(booking.check_in);
-                        const baseDate = new Date(filterDate);
-                        return checkIn > baseDate && booking.state === 'ok';
-                    })
-                    .sort((a, b) =>
-                        new Date(a.check_in).getTime() - new Date(b.check_in).getTime()
-                    );
-                setBookings(filteredAndSorted);
-            })
+            .then((data: Booking[]) => setBookings(filterBookings(data, true)))
             .catch(console.log);
-    }, [filterDate]);
+    }, [filterDate, showCancelled]);
 
     return (
         <>
-            <div className="mt-5 ml-10 grid grid-cols-7 gap-3">
+            <div className="mt-5 ml-10 grid grid-cols-7 gap-3 items-center">
                 <TextInput className="col-span-1" type="text" name="identifier" value={identifier} onChange={identifier => setIdentifier(identifier.target.value)}></TextInput>
                 <div className="col-span-1 grid grid-cols-3">
                     <button className="col-start-1 col-span-1 rounded-full bg-green bg-opacity-50" onClick={find}>
@@ -75,6 +63,15 @@ export default function Bookings() {
                     onChange={(e) => setFilterDate(e.target.value)}
                     className="col-span-1"
                 />
+                <label className="col-span-1 flex items-center gap-2 text-gray-dark text-opacity-75 cursor-pointer">
+                    <input
+                        type="checkbox"
+                        checked={showCancelled}
+                        onChange={(e) => setShowCancelled(e.target.checked)}
+                        className="w-4 h-4"
+                    />
+                    Ver canceladas
+                </label>
             </div>
             <div id="divTable">
                 <Suspense fallback={<div>Loading...</div>}>
