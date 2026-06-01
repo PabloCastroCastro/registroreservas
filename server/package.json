@@ -1,0 +1,29 @@
+{
+  "name": "casademirandaserver",
+  "version": "1.0.0",
+  "description": "Servidor para recibir datos de un front",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Pablo Castro",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "exceljs": "^4.3.0",
+    "express": "^4.21.2",
+    "https": "^1.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.1",
+    "mysql2": "^3.3.3",
+    "nodemailer": "^6.9.2",
+    "nodemon": "^3.1.0",
+    "pdfkit": "^0.13.0",
+    "pdfmake": "^0.2.7",
+    "socket.io": "^4.7.5",
+    "xlsx": "^0.18.5"
+  },
+  "type": "module"
+}

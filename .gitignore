@@ -1,3 +1,12 @@
+/server/facturas-cliente
+/server/node_modules
+/server/configuration/password.json
+/server/password.txt
+/server/confmail.PNG
+/infrastructure/bbdd/data
+/infrastructure/bbdd/data_backup
+/infrastructure/check-in/*
+
 # Logs
 logs
 *.log

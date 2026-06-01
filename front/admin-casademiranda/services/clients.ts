@@ -1,0 +1,194 @@
+import type { Client, ClientDTO } from "@/interfaces/client";
+import { getToken } from '../auth/auth';
+
+const API_URL = 'https://192.168.1.171/cliente';
+
+
+export async function createClient(client: Client) {
+  try {
+
+    console.log('client: ', JSON.stringify(client))
+    const token = getToken();
+
+    const requestOptions = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(client)
+    };
+
+
+
+    const response = await fetch(`${API_URL}`, requestOptions);
+    const data = await response.json();
+    return processResult(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function updateClient(client: Client) {
+  try {
+    const token = getToken();
+
+    const requestOptions = {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(client)
+    };
+
+    const response = await fetch(`${API_URL}`, requestOptions);
+    const data = await response.json();
+    return processResult(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function getAllClients() {
+  try {
+    const token = getToken();
+
+    const requestOptions = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    };
+    const response = await fetch(`${API_URL}`, requestOptions);
+    const data = await response.json();
+
+    return processResultList(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+
+export async function getClientById(clientId: string) {
+  try {
+    const token = getToken();
+
+    const requestOptions = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    };
+    console.log('Client Id: ', clientId);
+    const response = await fetch(`${API_URL}/${clientId}`, requestOptions);
+    const data = await response.json();
+    return processResult(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function getClientByIdentifier(identifier: string) {
+  try {
+    const token = getToken();
+
+    const requestOptions = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    };
+    const response = await fetch(`${API_URL}?dni=${identifier}`, requestOptions);
+    const data = await response.json();
+    return processResultList(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function getClientsByBookingId(booking_id: string) {
+  try {
+    const token = getToken();
+    const requestOptions = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    };
+    const response = await fetch(`${API_URL}?reservaId=${booking_id}`, requestOptions);
+    const data = await response.json();
+    return processResultList(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function processResultList(data: ClientDTO[]) {
+  const mapToClients: Client[] = [];
+  data.map(clientResult => mapToClients.push({
+    client_id: clientResult.customer_id,
+    check_in: clientResult.check_in,
+    nacionality: clientResult.nacionality,
+    document_type: clientResult.document_type,
+    document_number: clientResult.identifier,
+    support_document: clientResult.support_document,
+    expedition_date: clientResult.expedition_date,
+    name: clientResult.name,
+    firstSurname: clientResult.surname !== undefined ? clientResult.surname.split(' ')[0] : "",
+    secondSurname: clientResult.surname !== undefined && clientResult.surname.split(' ').length > 1 ? clientResult.surname.split(' ')[clientResult.surname.length - 1] : "",
+    gender: clientResult.gender,
+    birthdate: clientResult.birthdate,
+    phone: clientResult.phone,
+    other_phone: clientResult.other_phone,
+    email: clientResult.email,
+    relationship: clientResult.relationship,
+    booking_id: clientResult.booking_id,
+    address: {
+      line: clientResult.line,
+      line2: clientResult.line2,
+      country: clientResult.country,
+      province: clientResult.province,
+      location: clientResult.location,
+      postalCode: clientResult.postalCode
+    },
+    made_booking: clientResult.made_booking
+  }));
+  return mapToClients;
+}
+
+async function processResult(clientResult: ClientDTO) {
+  const client: Client = {
+    client_id: clientResult.customer_id,
+    check_in: clientResult.check_in,
+    nacionality: clientResult.nacionality,
+    document_type: clientResult.document_type,
+    document_number: clientResult.identifier,
+    support_document: clientResult.support_document,
+    expedition_date: clientResult.expedition_date,
+    name: clientResult.name,
+    firstSurname: clientResult.surname !== undefined ? clientResult.surname.split(' ')[0] : "",
+    secondSurname: clientResult.surname !== undefined && clientResult.surname.split(' ').length > 1 ? clientResult.surname.split(' ')[clientResult.surname.length - 1] : "",
+    gender: clientResult.gender,
+    birthdate: clientResult.birthdate,
+    phone: clientResult.phone,
+    other_phone: clientResult.other_phone,
+    email: clientResult.email,
+    relationship: clientResult.relationship,
+    booking_id: clientResult.booking_id,
+    address: {
+      line: clientResult.line,
+      line2: clientResult.line2,
+      country: clientResult.country,
+      province: clientResult.province,
+      location: clientResult.location,
+      postalCode: clientResult.postalCode
+    },
+    made_booking: clientResult.made_booking
+  };
+  return client;
+}
