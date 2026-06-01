@@ -110,6 +110,24 @@ export async function postRegisterCheckIn(bookingId: String) {
   }
 }
 
+export async function cancelBooking(bookingId: string) {
+  const token = getToken();
+  const response = await fetch(`${API_URL}/${bookingId}/cancel`, {
+    method: 'PATCH',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  return response.status;
+}
+
+export async function deleteBooking(bookingId: string) {
+  const token = getToken();
+  const response = await fetch(`${API_URL}/${bookingId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  return response.status;
+}
+
 export async function loadBookingBatch(file: File) {
   const token = getToken();
   const formData = new FormData();

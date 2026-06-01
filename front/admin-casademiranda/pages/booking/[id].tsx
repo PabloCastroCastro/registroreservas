@@ -16,12 +16,14 @@ import ClientComponent from '@/components/clients/clientComponent';
 import DateComponent from '@/components/dates/dateComponent';
 
 export default function BookingPage() {
-    const { query } = useRouter()
+    const router = useRouter()
+    const { query } = router
     const [booking, setBooking] = useState<Booking>();
     const [clients, setClients] = useState<Client[]>();
     const [billStatus, setBillStatus] = useState(200);
     const [checkInStatus, setCheckInStatus] = useState(0);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState<'cancel' | 'delete' | null>(null);
 
     useEffect(() => {
         query.id !== undefined && typeof query.id === "string" ? APIBooking.getBookingById(query.id).then(setBooking).catch(console.log) : setBooking;
@@ -69,6 +71,20 @@ export default function BookingPage() {
         }
     }
 
+
+    async function handleCancel() {
+        if (query.id && typeof query.id === "string") {
+            await APIBooking.cancelBooking(query.id);
+            router.push('/');
+        }
+    }
+
+    async function handleDelete() {
+        if (query.id && typeof query.id === "string") {
+            await APIBooking.deleteBooking(query.id);
+            router.push('/');
+        }
+    }
 
     return (
         <>
@@ -128,6 +144,12 @@ export default function BookingPage() {
                 <div className="grid grid-cols-1">
                     <Button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' onClick={createBill}>Generar Factura</Button>
                 </div>
+                <div className="grid grid-cols-1">
+                    <Button className='rounded-full bg-yellow bg-opacity-50 text-gray-dark text-opacity-75' onClick={() => setShowConfirmModal('cancel')}>Cancelar Reserva</Button>
+                </div>
+                <div className="grid grid-cols-1">
+                    <Button className='rounded-full bg-orange bg-opacity-50 text-gray-dark text-opacity-75' onClick={() => setShowConfirmModal('delete')}>Eliminar Reserva</Button>
+                </div>
             </div>
             {/* Modal de éxito */}
             {showSuccessModal && (
@@ -147,6 +169,24 @@ export default function BookingPage() {
                 </div>
             )}
 
+            {showConfirmModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                    <div className="bg-white p-6 rounded-xl shadow-lg text-center">
+                        {showConfirmModal === 'cancel' ? (
+                            <h2 className="text-xl font-semibold mb-4">¿Cancelar la reserva {booking?.confirmation_number}?</h2>
+                        ) : (
+                            <h2 className="text-xl font-semibold mb-4">¿Eliminar la reserva {booking?.confirmation_number}? Esta acción no se puede deshacer.</h2>
+                        )}
+                        <div className="flex justify-center gap-4">
+                            <Button className='bg-gray bg-opacity-50 text-gray-dark text-opacity-75' onClick={() => setShowConfirmModal(null)}>Volver</Button>
+                            <Button className={`bg-opacity-50 text-gray-dark text-opacity-75 ${showConfirmModal === 'cancel' ? 'bg-yellow' : 'bg-orange'}`}
+                                onClick={() => { setShowConfirmModal(null); showConfirmModal === 'cancel' ? handleCancel() : handleDelete(); }}>
+                                {showConfirmModal === 'cancel' ? 'Cancelar reserva' : 'Eliminar reserva'}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     )
 }
