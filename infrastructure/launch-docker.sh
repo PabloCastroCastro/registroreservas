@@ -11,10 +11,7 @@ if ! docker info &> /dev/null; then
 fi
 
 echo "Iniciando servicios..."
-<<<<<<< HEAD
 docker compose build frontend
-=======
->>>>>>> develop
 docker compose up -d --build
 echo "Servicios iniciados."
 
