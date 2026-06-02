@@ -9,6 +9,7 @@ import Link from 'next/link';
 
 import * as API from "../../services/bookings";
 import BookingComponent from "./bookingComponent";
+import BookingCalendar from "./bookingCalendar";
 import Navbar from "../navbar/navbar";
 
 
@@ -16,9 +17,17 @@ export default function Bookings() {
 
     const [token, setToken] = useState<string | null>(null);
     const [identifier, setIdentifier] = useState("Dni...");
+    const [allBookings, setAllBookings] = useState<Booking[]>([]);
     const [bookings, setBookings] = useState<Booking[]>([]);
-    const [filterDate, setFilterDate] = useState<string>(new Date().toISOString().split('T')[0]);
-    const [showCancelled, setShowCancelled] = useState(false);
+    const [filterDate, setFilterDate] = useState<string>(
+        () => localStorage.getItem('bookings_filterDate') ?? new Date().toISOString().split('T')[0]
+    );
+    const [showCancelled, setShowCancelled] = useState<boolean>(
+        () => localStorage.getItem('bookings_showCancelled') === 'true'
+    );
+    const [viewMode, setViewMode] = useState<'list' | 'calendar'>(
+        () => (localStorage.getItem('bookings_viewMode') as 'list' | 'calendar') ?? 'list'
+    );
 
 
 
@@ -44,7 +53,10 @@ export default function Bookings() {
         if (tokenGuardado) setToken(tokenGuardado);
 
         API.getAllBookings()
-            .then((data: Booking[]) => setBookings(filterBookings(data, true)))
+            .then((data: Booking[]) => {
+                setAllBookings(data);
+                setBookings(filterBookings(data, true));
+            })
             .catch(console.log);
     }, [filterDate, showCancelled]);
 
@@ -60,20 +72,43 @@ export default function Bookings() {
                 <TextInput
                     type="date"
                     value={filterDate}
-                    onChange={(e) => setFilterDate(e.target.value)}
+                    onChange={(e) => {
+                        setFilterDate(e.target.value);
+                        localStorage.setItem('bookings_filterDate', e.target.value);
+                    }}
                     className="col-span-1"
                 />
                 <label className="col-span-1 flex items-center gap-2 text-gray-dark text-opacity-75 cursor-pointer">
                     <input
                         type="checkbox"
                         checked={showCancelled}
-                        onChange={(e) => setShowCancelled(e.target.checked)}
+                        onChange={(e) => {
+                            setShowCancelled(e.target.checked);
+                            localStorage.setItem('bookings_showCancelled', String(e.target.checked));
+                        }}
                         className="w-4 h-4"
                     />
                     Ver canceladas
                 </label>
+                <div className="col-span-1 flex gap-2">
+                    <button
+                        onClick={() => { setViewMode('list'); localStorage.setItem('bookings_viewMode', 'list'); }}
+                        className={`rounded-full px-3 py-1 font-semibold text-sm ${viewMode === 'list' ? 'bg-green bg-opacity-50' : 'bg-gray-light'}`}
+                    >
+                        Lista
+                    </button>
+                    <button
+                        onClick={() => { setViewMode('calendar'); localStorage.setItem('bookings_viewMode', 'calendar'); }}
+                        className={`rounded-full px-3 py-1 font-semibold text-sm ${viewMode === 'calendar' ? 'bg-green bg-opacity-50' : 'bg-gray-light'}`}
+                    >
+                        Calendario
+                    </button>
+                </div>
             </div>
-            <div id="divTable">
+            {viewMode === 'calendar' && (
+                <BookingCalendar bookings={allBookings} showCancelled={showCancelled} />
+            )}
+            <div id="divTable" style={{ display: viewMode === 'list' ? 'block' : 'none' }}>
                 <Suspense fallback={<div>Loading...</div>}>
                     <table className="m-10" id="bookingTable">
                         <thead>

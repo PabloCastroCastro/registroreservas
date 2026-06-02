@@ -1,6 +1,7 @@
 import type { User } from '../interfaces/user'
+import { API_HOST } from './config';
 
-const API_URL = 'https://192.168.1.182/loginuser';
+const API_URL = `${API_HOST}/loginuser`;
 
 
 export async function login(user: User) {
