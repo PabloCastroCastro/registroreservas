@@ -1,7 +1,8 @@
 import type { Bill } from '../interfaces/bill'
 import { getToken } from '../auth/auth';
+import { API_HOST } from './config';
 
-const API_URL = 'https://192.168.1.182/factura';
+const API_URL = `${API_HOST}/factura`;
 
 
 export async function createBill(bill: Bill) {

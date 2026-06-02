@@ -13,6 +13,7 @@ import sendMail from './mail/sendMail.js';
 import sendConfirmationBookingMail from './confirmacion-reserva/sendMailConfirmationBooking.js';
 import saveBooking from './bookings/saveBooking.js';
 import { listAllBookings, listBookingByCustomer, listBookingById } from './bookings/listBooking.js';
+import updateBookingById from './bookings/updateBooking.js';
 import { save, update } from './clients/saveClient.js';
 import { listAllCustomers, listCustomerById, listCustomerByBookingId, listCustomerByIdentifier } from './clients/listClient.js';
 import { getUserByUsername } from './users/getUser.js'
@@ -329,13 +330,17 @@ app.get('/cliente/:id', async (req, res) => {
 
 
     let client_id = req.params['id'];
-    let clients;
     if (client_id != null && client_id != "") {
-        clients = await listCustomerById(client_id).then((value) => { return value });
+        try {
+            const client = await listCustomerById(client_id);
+            console.log('Clients: ', JSON.stringify(client));
+            return res.send(client);
+        } catch (err) {
+            console.error('Error fetching client:', err);
+            return res.sendStatus(500);
+        }
     }
-    console.log('Clients: ', JSON.stringify(clients));
-
-    res.send(clients);
+    res.sendStatus(400);
 })
 
 app.get('/reserva', async (req, res) => {
@@ -463,6 +468,25 @@ function toIsoDateString(date) {
     const day = String(d.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
 }
+
+app.put('/reserva/:id', async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.sendStatus(401);
+
+    jwt.verify(token, SECRET_KEY, (err, user) => {
+        if (err) return res.sendStatus(403);
+    });
+
+    const bookingId = req.params['id'];
+    try {
+        await updateBookingById(bookingId, req.body);
+        res.sendStatus(200);
+    } catch (err) {
+        console.error('Error updating booking:', err);
+        res.sendStatus(500);
+    }
+});
 
 app.post('/reserva', async (req, res) => {
 

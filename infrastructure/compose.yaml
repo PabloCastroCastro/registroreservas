@@ -30,6 +30,8 @@ services:
   frontend:
     build:
       context: ../front/admin-casademiranda
+      args:
+        - NEXT_PUBLIC_API_HOST=${API_HOST}
     ports:
       - 3000:3000
     volumes:
@@ -42,11 +44,13 @@ services:
 
 
   nginx:
-    build: 
+    build:
       context: nginx
     container_name: nginx
     restart: always
     tty: true
+    environment:
+      - API_HOST=${API_HOST}
     ports:
       - "80:80"
       - "443:443"
