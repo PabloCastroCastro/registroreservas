@@ -45,7 +45,7 @@ export default function BookingCalendar({ bookings, showCancelled }: Props) {
     }
 
     return (
-        <div className="m-10">
+        <div className="m-2 md:m-10">
             <div className="flex items-center gap-4 mb-4">
                 <button
                     onClick={prevMonth}
@@ -53,7 +53,7 @@ export default function BookingCalendar({ bookings, showCancelled }: Props) {
                 >
                     ‹
                 </button>
-                <h2 className="text-gray-dark font-semibold text-xl w-52 text-center">
+                <h2 className="text-gray-dark font-semibold text-lg md:text-xl w-32 md:w-52 text-center">
                     {MONTH_NAMES[month]} {year}
                 </h2>
                 <button
