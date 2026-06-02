@@ -1,4 +1,4 @@
-import { Booking, RequestBooking } from "@/interfaces/booking";
+import { Booking, RequestBooking, RequestUpdateBooking } from "@/interfaces/booking";
 import { getToken } from '../auth/auth';
 import { API_HOST } from './config';
 
@@ -108,6 +108,19 @@ export async function postRegisterCheckIn(bookingId: String) {
       message: error
     };
   }
+}
+
+export async function updateBooking(bookingId: string, booking: RequestUpdateBooking) {
+  const token = getToken();
+  const response = await fetch(`${API_URL}/${bookingId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(booking)
+  });
+  return response.status;
 }
 
 export async function cancelBooking(bookingId: string) {

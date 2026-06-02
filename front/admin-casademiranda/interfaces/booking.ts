@@ -9,8 +9,19 @@ export type Booking = {
     check_in: Date
     check_out: Date
     state: string
+    payment_type: string
     other_platform_reference: string
     rooms: Room[]
+  }
+
+  export type RequestUpdateBooking = {
+    nombre: string
+    apellidos: string
+    dni: string
+    checkInDate: string
+    checkOutDate: string
+    tipo_pago: string
+    referenciaOtraPlataforma: string
   }
   
   export type RequestBooking = {
