@@ -329,13 +329,17 @@ app.get('/cliente/:id', async (req, res) => {
 
 
     let client_id = req.params['id'];
-    let clients;
     if (client_id != null && client_id != "") {
-        clients = await listCustomerById(client_id).then((value) => { return value });
+        try {
+            const client = await listCustomerById(client_id);
+            console.log('Clients: ', JSON.stringify(client));
+            return res.send(client);
+        } catch (err) {
+            console.error('Error fetching client:', err);
+            return res.sendStatus(500);
+        }
     }
-    console.log('Clients: ', JSON.stringify(clients));
-
-    res.send(clients);
+    res.sendStatus(400);
 })
 
 app.get('/reserva', async (req, res) => {
