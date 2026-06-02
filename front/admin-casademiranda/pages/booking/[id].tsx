@@ -2,7 +2,7 @@ import "@/app/globals.css";
 import Navbar from '../../components/navbar/navbar'
 import RoomComponent from '@/components/rooms/roomComponent';
 import { useRouter } from 'next/router'
-import type { Booking, ResponseError } from '../../interfaces/booking'
+import type { Booking, ResponseError, RequestUpdateBooking } from '../../interfaces/booking'
 import type { Bill } from '@/interfaces/bill'
 import * as APIBooking from "../../services/bookings";
 import * as APIBilling from "../../services/bills";
@@ -24,6 +24,14 @@ export default function BookingPage() {
     const [checkInStatus, setCheckInStatus] = useState(0);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState<'cancel' | 'delete' | null>(null);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editName, setEditName] = useState('');
+    const [editSurname, setEditSurname] = useState('');
+    const [editIdentifier, setEditIdentifier] = useState('');
+    const [editCheckIn, setEditCheckIn] = useState('');
+    const [editCheckOut, setEditCheckOut] = useState('');
+    const [editPaymentType, setEditPaymentType] = useState('');
+    const [editPlatformRef, setEditPlatformRef] = useState('');
 
     useEffect(() => {
         query.id !== undefined && typeof query.id === "string" ? APIBooking.getBookingById(query.id).then(setBooking).catch(console.log) : setBooking;
@@ -71,6 +79,37 @@ export default function BookingPage() {
         }
     }
 
+
+    function openEditModal() {
+        if (!booking) return;
+        setEditName(booking.name);
+        setEditSurname(booking.surname);
+        setEditIdentifier(booking.identifier);
+        setEditCheckIn(new Date(booking.check_in).toISOString().split('T')[0]);
+        setEditCheckOut(new Date(booking.check_out).toISOString().split('T')[0]);
+        setEditPaymentType(booking.payment_type ?? 'OTRO');
+        setEditPlatformRef(booking.other_platform_reference ?? '');
+        setShowEditModal(true);
+    }
+
+    async function handleUpdate() {
+        if (!query.id || typeof query.id !== 'string') return;
+        const update: RequestUpdateBooking = {
+            nombre: editName,
+            apellidos: editSurname,
+            dni: editIdentifier,
+            checkInDate: editCheckIn,
+            checkOutDate: editCheckOut,
+            tipo_pago: editPaymentType,
+            referenciaOtraPlataforma: editPlatformRef
+        };
+        const status = await APIBooking.updateBooking(query.id, update);
+        if (status === 200) {
+            const updated = await APIBooking.getBookingById(query.id);
+            setBooking(updated);
+        }
+        setShowEditModal(false);
+    }
 
     async function handleCancel() {
         if (query.id && typeof query.id === "string") {
@@ -145,12 +184,64 @@ export default function BookingPage() {
                     <Button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' onClick={createBill}>Generar Factura</Button>
                 </div>
                 <div className="grid grid-cols-1">
+                    <Button className='rounded-full bg-blue bg-opacity-50 text-gray-dark text-opacity-75' onClick={openEditModal}>Editar Reserva</Button>
+                </div>
+                <div className="grid grid-cols-1">
                     <Button className='rounded-full bg-yellow bg-opacity-50 text-gray-dark text-opacity-75' onClick={() => setShowConfirmModal('cancel')}>Cancelar Reserva</Button>
                 </div>
                 <div className="grid grid-cols-1">
                     <Button className='rounded-full bg-orange bg-opacity-50 text-gray-dark text-opacity-75' onClick={() => setShowConfirmModal('delete')}>Eliminar Reserva</Button>
                 </div>
             </div>
+            {/* Modal de edición */}
+            {showEditModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                    <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-lg">
+                        <h2 className="text-xl font-semibold mb-4 text-gray-dark">Editar Reserva</h2>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="text-gray-dark text-sm">Nombre</label>
+                                <input className="rounded w-full border border-gray-light p-1 text-sm" value={editName} onChange={e => setEditName(e.target.value)} />
+                            </div>
+                            <div>
+                                <label className="text-gray-dark text-sm">Apellidos</label>
+                                <input className="rounded w-full border border-gray-light p-1 text-sm" value={editSurname} onChange={e => setEditSurname(e.target.value)} />
+                            </div>
+                            <div>
+                                <label className="text-gray-dark text-sm">DNI</label>
+                                <input className="rounded w-full border border-gray-light p-1 text-sm" value={editIdentifier} onChange={e => setEditIdentifier(e.target.value)} />
+                            </div>
+                            <div>
+                                <label className="text-gray-dark text-sm">Tipo de pago</label>
+                                <select className="rounded w-full border border-gray-light p-1 text-sm" value={editPaymentType} onChange={e => setEditPaymentType(e.target.value)}>
+                                    <option value="EFECTIVO">Efectivo</option>
+                                    <option value="TARJETA">Tarjeta</option>
+                                    <option value="BIZUM">Bizum</option>
+                                    <option value="TRANSFERENCIA">Transferencia</option>
+                                    <option value="OTRO">Otro</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-gray-dark text-sm">Fecha check-in</label>
+                                <input className="rounded w-full border border-gray-light p-1 text-sm" type="date" value={editCheckIn} onChange={e => setEditCheckIn(e.target.value)} />
+                            </div>
+                            <div>
+                                <label className="text-gray-dark text-sm">Fecha check-out</label>
+                                <input className="rounded w-full border border-gray-light p-1 text-sm" type="date" value={editCheckOut} onChange={e => setEditCheckOut(e.target.value)} />
+                            </div>
+                            <div className="col-span-2">
+                                <label className="text-gray-dark text-sm">Código otra plataforma</label>
+                                <input className="rounded w-full border border-gray-light p-1 text-sm" value={editPlatformRef} onChange={e => setEditPlatformRef(e.target.value)} />
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-3 mt-5">
+                            <Button className='bg-gray-light text-gray-dark text-opacity-75' onClick={() => setShowEditModal(false)}>Cancelar</Button>
+                            <Button className='bg-green bg-opacity-50 text-gray-dark text-opacity-75' onClick={handleUpdate}>Guardar</Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Modal de éxito */}
             {showSuccessModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
