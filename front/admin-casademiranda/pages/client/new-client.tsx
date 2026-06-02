@@ -124,12 +124,12 @@ export default function NewClient() {
     return (
         <>
             <Navbar></Navbar>
-            <div id="titulo" className='ml-5'>
+            <div id="titulo" className='px-4 md:px-5'>
                 <h1 className='relative text-xl text-green text-opacity-75 font-semibold'>Nuevo Cliente:</h1>
             </div>
-            <div id="datos-cliente" className='mt-5 ml-10 grid grid-cols-1 gap-2'>
+            <div id="datos-cliente" className='mt-5 px-4 md:px-10 grid grid-cols-1 gap-2'>
                 <form id="mi-formulario" onSubmit={handleSubmit}>
-                    <div className='grid grid-cols-3 gap-3'>
+                    <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>
                         <div className="grid grid-cols-1">
                             <label className='text-gray-dark text-opacity-75' id="fecha-checkin">Fecha de check-in:</label>
                             <input type="date" className='rounded-full' id="fecha-checkin" name="fechaCheckIn" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} required />
