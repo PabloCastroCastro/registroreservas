@@ -13,7 +13,8 @@ export default function NewBooking() {
 
     const [selectedRoom, setSelectedRoom] = useState("");
     const [name, setName] = useState("");
-    const [surname, setSurname] = useState("");
+    const [surname1, setSurname1] = useState("");
+    const [surname2, setSurname2] = useState("");
     const [identifier, setIdentifier] = useState("");
     const [email, setEmail] = useState("");
     const [confirmedEmail, setConfirmedEmail] = useState("");
@@ -47,7 +48,8 @@ export default function NewBooking() {
 
         let booking: RequestBooking = {
             nombre: name,
-            apellidos: surname,
+            apellido1: surname1,
+            apellido2: surname2 || null,
             dni: identifier,
             fechaCheckIn: new Date(checkIn),
             fechaCheckOut: new Date(checkOut),
@@ -88,9 +90,15 @@ export default function NewBooking() {
                             </div>
 
                             <div className="grid grid-cols-1">
-                                <label className='text-gray-dark text-opacity-75' id="apellidos">Apellidos </label>
+                                <label className='text-gray-dark text-opacity-75' id="apellido1">Primer apellido </label>
                                 <div className='flex flex-row'>
-                                    <input className='rounded-full' type="text" id="apellidos" name="apellidos" value={surname} onChange={(e) => setSurname(e.target.value)} required />
+                                    <input className='rounded-full' type="text" id="apellido1" name="apellido1" value={surname1} onChange={(e) => setSurname1(e.target.value)} required />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1">
+                                <label className='text-gray-dark text-opacity-75' id="apellido2">Segundo apellido </label>
+                                <div className='flex flex-row'>
+                                    <input className='rounded-full' type="text" id="apellido2" name="apellido2" value={surname2} onChange={(e) => setSurname2(e.target.value)} />
                                 </div>
                             </div>
                             <div className="grid grid-cols-1">
