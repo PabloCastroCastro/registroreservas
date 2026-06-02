@@ -62,13 +62,11 @@ export default function Bookings() {
 
     return (
         <>
-            <div className="mt-5 ml-10 grid grid-cols-7 gap-3 items-center">
-                <TextInput className="col-span-1" type="text" name="identifier" value={identifier} onChange={identifier => setIdentifier(identifier.target.value)}></TextInput>
-                <div className="col-span-1 grid grid-cols-3">
-                    <button className="col-start-1 col-span-1 rounded-full bg-green bg-opacity-50" onClick={find}>
-                        <p className="text-black text-opacity-75 font-semibold">Buscar</p>
-                    </button>
-                </div>
+            <div className="mt-5 px-4 md:px-10 flex flex-col md:flex-row md:flex-wrap gap-3 items-stretch md:items-center">
+                <TextInput className="w-full md:w-48" type="text" name="identifier" value={identifier} onChange={identifier => setIdentifier(identifier.target.value)} />
+                <button className="w-full md:w-auto rounded-full bg-green bg-opacity-50 py-2 px-5" onClick={find}>
+                    <p className="text-black text-opacity-75 font-semibold">Buscar</p>
+                </button>
                 <TextInput
                     type="date"
                     value={filterDate}
@@ -76,9 +74,9 @@ export default function Bookings() {
                         setFilterDate(e.target.value);
                         localStorage.setItem('bookings_filterDate', e.target.value);
                     }}
-                    className="col-span-1"
+                    className="w-full md:w-auto"
                 />
-                <label className="col-span-1 flex items-center gap-2 text-gray-dark text-opacity-75 cursor-pointer">
+                <label className="flex items-center gap-2 text-gray-dark text-opacity-75 cursor-pointer py-2">
                     <input
                         type="checkbox"
                         checked={showCancelled}
@@ -90,16 +88,16 @@ export default function Bookings() {
                     />
                     Ver canceladas
                 </label>
-                <div className="col-span-1 flex gap-2">
+                <div className="flex gap-2">
                     <button
                         onClick={() => { setViewMode('list'); localStorage.setItem('bookings_viewMode', 'list'); }}
-                        className={`rounded-full px-3 py-1 font-semibold text-sm ${viewMode === 'list' ? 'bg-green bg-opacity-50' : 'bg-gray-light'}`}
+                        className={`flex-1 md:flex-none rounded-full px-4 py-2 font-semibold text-sm ${viewMode === 'list' ? 'bg-green bg-opacity-50' : 'bg-gray-light'}`}
                     >
                         Lista
                     </button>
                     <button
                         onClick={() => { setViewMode('calendar'); localStorage.setItem('bookings_viewMode', 'calendar'); }}
-                        className={`rounded-full px-3 py-1 font-semibold text-sm ${viewMode === 'calendar' ? 'bg-green bg-opacity-50' : 'bg-gray-light'}`}
+                        className={`flex-1 md:flex-none rounded-full px-4 py-2 font-semibold text-sm ${viewMode === 'calendar' ? 'bg-green bg-opacity-50' : 'bg-gray-light'}`}
                     >
                         Calendario
                     </button>
@@ -108,18 +106,18 @@ export default function Bookings() {
             {viewMode === 'calendar' && (
                 <BookingCalendar bookings={allBookings} showCancelled={showCancelled} />
             )}
-            <div id="divTable" style={{ display: viewMode === 'list' ? 'block' : 'none' }}>
+            <div id="divTable" className="overflow-x-auto" style={{ display: viewMode === 'list' ? 'block' : 'none' }}>
                 <Suspense fallback={<div>Loading...</div>}>
                     <table className="m-10" id="bookingTable">
                         <thead>
                             <tr>
                                 <th><p className="text-black text-opacity-75 font-semibold">Reserva</p></th>
                                 <th><p className="text-black text-opacity-75 font-semibold">Check-in</p></th>
-                                <th><p className="text-black text-opacity-75 font-semibold">Estado</p></th>
+                                <th className="hidden md:table-cell"><p className="text-black text-opacity-75 font-semibold">Estado</p></th>
                                 <th><p className="text-black text-opacity-75 font-semibold">Nombre</p></th>
-                                <th><p className="text-black text-opacity-75 font-semibold">Apellidos</p></th>
-                                <th><p className="text-black text-opacity-75 font-semibold">Habitaciones</p></th>
-                                <th><p className="text-black text-opacity-75 font-semibold">Código Booking</p></th>
+                                <th className="hidden md:table-cell"><p className="text-black text-opacity-75 font-semibold">Apellidos</p></th>
+                                <th className="hidden md:table-cell"><p className="text-black text-opacity-75 font-semibold">Habitaciones</p></th>
+                                <th className="hidden md:table-cell"><p className="text-black text-opacity-75 font-semibold">Código Booking</p></th>
                             </tr>
                         </thead>
                         <tbody id="tBodyBookings">

@@ -128,11 +128,11 @@ export default function BookingPage() {
     return (
         <>
             <Navbar />
-            <div id="titulo" className='ml-5'>
+            <div id="titulo" className='px-4 md:px-5'>
                 <h1 className='relative text-xl text-green text-opacity-75 font-semibold'>Reserva: {booking?.confirmation_number}</h1>
             </div>
-            <div id="datos-reserva" className='mt-5 ml-10 grid grid-cols-1 gap-2'>
-                <div id="datos-comunes" className='grid grid-cols-3 gap-3'>
+            <div id="datos-reserva" className='mt-5 px-4 md:px-10 grid grid-cols-1 gap-2'>
+                <div id="datos-comunes" className='grid grid-cols-1 md:grid-cols-3 gap-3'>
                     <div className="grid grid-cols-1">
                         <label className='text-gray-dark text-opacity-75' id="nombre">Nombre: {booking?.name}</label>
                     </div>
@@ -150,7 +150,7 @@ export default function BookingPage() {
                     </div>
                     <div className="grid grid-cols-1"></div>
                 </div>
-                <div id="datos-habitaciones" className='grid grid-cols-3 gap-3'>
+                <div id="datos-habitaciones" className='grid grid-cols-1 md:grid-cols-3 gap-3'>
                     <div className="grid grid-cols-1">
                         <label className='text-gray-dark text-opacity-75' id="habitaciones">Habitaciones:</label>
                     </div>
@@ -158,7 +158,7 @@ export default function BookingPage() {
                     <div className="grid grid-cols-1"></div>
                     {booking?.rooms.map(r => (<div className="grid grid-cols-1" key={r.name}><RoomComponent room={r} /></div>))}
                 </div>
-                <div id="datos-clientes" className='grid grid-cols-3 gap-3'>
+                <div id="datos-clientes" className='grid grid-cols-1 md:grid-cols-3 gap-3'>
                     <div className="grid grid-cols-1">
                         <label className='text-gray-dark text-opacity-75' id="clientes">Huespedes:</label>
                     </div>
@@ -170,35 +170,25 @@ export default function BookingPage() {
                     <div className="grid grid-cols-1">
                         <Link className='w-12 h-12 rounded-full bg-green bg-opacity-50 hover:bg-gray-dark text-center text-gray-dark text-opacity-75' href={"/client/new-client?booking_id=" + booking?.booking_id}>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                             </svg>
                         </Link>
                     </div>
                 </div>
             </div>
-            <div id="botones" className='mt-5 ml-5 grid grid-cols-6 gap-3'>
-                <div className="grid grid-cols-1">
-                    <Button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' onClick={registerCheckIn}>Registrar CheckIn</Button>
-                </div>
-                <div className="grid grid-cols-1">
-                    <Button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' onClick={createBill}>Generar Factura</Button>
-                </div>
-                <div className="grid grid-cols-1">
-                    <Button className='rounded-full bg-blue bg-opacity-50 text-gray-dark text-opacity-75' onClick={openEditModal}>Editar Reserva</Button>
-                </div>
-                <div className="grid grid-cols-1">
-                    <Button className='rounded-full bg-yellow bg-opacity-50 text-gray-dark text-opacity-75' onClick={() => setShowConfirmModal('cancel')}>Cancelar Reserva</Button>
-                </div>
-                <div className="grid grid-cols-1">
-                    <Button className='rounded-full bg-orange bg-opacity-50 text-gray-dark text-opacity-75' onClick={() => setShowConfirmModal('delete')}>Eliminar Reserva</Button>
-                </div>
+            <div id="botones" className='mt-5 px-4 md:px-5 flex flex-wrap gap-3'>
+                <Button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' onClick={registerCheckIn}>Registrar CheckIn</Button>
+                <Button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' onClick={createBill}>Generar Factura</Button>
+                <Button className='rounded-full bg-blue bg-opacity-50 text-gray-dark text-opacity-75' onClick={openEditModal}>Editar Reserva</Button>
+                <Button className='rounded-full bg-yellow bg-opacity-50 text-gray-dark text-opacity-75' onClick={() => setShowConfirmModal('cancel')}>Cancelar Reserva</Button>
+                <Button className='rounded-full bg-orange bg-opacity-50 text-gray-dark text-opacity-75' onClick={() => setShowConfirmModal('delete')}>Eliminar Reserva</Button>
             </div>
             {/* Modal de edición */}
             {showEditModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
                     <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-lg">
                         <h2 className="text-xl font-semibold mb-4 text-gray-dark">Editar Reserva</h2>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label className="text-gray-dark text-sm">Nombre</label>
                                 <input className="rounded w-full border border-gray-light p-1 text-sm" value={editName} onChange={e => setEditName(e.target.value)} />
@@ -248,11 +238,11 @@ export default function BookingPage() {
                     <div className="bg-white p-6 rounded-xl shadow-lg text-center">
                         {checkInStatus === 204 ? (
                             <>
-                                <h2 className="text-xl font-semibold mb-4 text-green-600">Check-In realizado correctamente</h2>
+                                <h2 className="text-xl font-semibold mb-4 text-green">Check-In realizado correctamente</h2>
                             </>
                         ) : (
                             <>
-                                <h2 className="text-xl font-semibold mb-4 text-red-600">Error en el Check-In</h2>
+                                <h2 className="text-xl font-semibold mb-4 text-orange">Error en el Check-In</h2>
                             </>
                         )}
                         <Button onClick={() => setShowSuccessModal(false)}>Cerrar</Button>
