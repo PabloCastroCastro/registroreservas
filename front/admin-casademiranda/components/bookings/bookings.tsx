@@ -34,10 +34,11 @@ export default function Bookings() {
     function filterBookings(data: Booking[], fromToday: boolean) {
         return data
             .filter(booking => {
+                if (booking.state === 'cancelada') return showCancelled;
                 const checkIn = new Date(booking.check_in);
                 const baseDate = new Date(filterDate);
                 const dateOk = fromToday ? checkIn > baseDate : checkIn >= baseDate;
-                return dateOk && (showCancelled ? booking.state === 'cancelada' : booking.state === 'ok');
+                return dateOk;
             })
             .sort((a, b) => new Date(a.check_in).getTime() - new Date(b.check_in).getTime());
     }
