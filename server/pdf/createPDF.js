@@ -69,7 +69,7 @@ const generarFactura = (reserva, cliente) => {
 
     doc.font('Times-Roman')
         .fontSize(12)
-        .fillColor('grey').text(cliente.nombre + ' ' + cliente.apellidos, 75, 224);
+        .fillColor('grey').text(cliente.nombre + ' ' + (cliente.apellido1 ?? cliente.apellidos ?? '') + (cliente.apellido2 ? ' ' + cliente.apellido2 : ''), 75, 224);
     doc.font('Times-Roman')
         .fontSize(12)
         .fillColor('grey').text(cliente.dni, 250, 224);

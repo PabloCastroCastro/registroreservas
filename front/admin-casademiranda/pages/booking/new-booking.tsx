@@ -14,7 +14,8 @@ export default function NewBooking() {
     const router = useRouter();
 
     const [name, setName] = useState("");
-    const [surname, setSurname] = useState("");
+    const [surname1, setSurname1] = useState("");
+    const [surname2, setSurname2] = useState("");
     const [identifier, setIdentifier] = useState("");
     const [email, setEmail] = useState("");
     const [confirmedEmail, setConfirmedEmail] = useState("");
@@ -57,7 +58,8 @@ export default function NewBooking() {
 
         const booking: RequestBooking = {
             nombre: name,
-            apellidos: surname,
+            apellido1: surname1,
+            apellido2: surname2 || null,
             dni: identifier,
             fechaCheckIn: new Date(checkIn),
             fechaCheckOut: new Date(checkOut),
@@ -90,8 +92,12 @@ export default function NewBooking() {
                                 <input className={inputClass} type="text" value={name} onChange={e => setName(e.target.value)} required />
                             </div>
                             <div>
-                                <label className={labelClass}>Apellidos</label>
-                                <input className={inputClass} type="text" value={surname} onChange={e => setSurname(e.target.value)} required />
+                                <label className={labelClass}>Primer apellido</label>
+                                <input className={inputClass} type="text" value={surname1} onChange={e => setSurname1(e.target.value)} required />
+                            </div>
+                            <div>
+                                <label className={labelClass}>Segundo apellido</label>
+                                <input className={inputClass} type="text" value={surname2} onChange={e => setSurname2(e.target.value)} />
                             </div>
                             <div>
                                 <label className={labelClass}>DNI</label>

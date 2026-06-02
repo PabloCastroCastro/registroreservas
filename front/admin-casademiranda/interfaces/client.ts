@@ -39,6 +39,7 @@ export type ClientDTO={
     expedition_date: Date
     name: string
     surname: string
+    surname2: string | null
     gender: string
     birthdate: Date
     phone: string
