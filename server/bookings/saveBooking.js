@@ -9,7 +9,7 @@ const save = async (booking, customer) => {
     }
     let idCustomer = 0;
     if (customers.length == 0) {
-        const customerInserted = await executeQuery('INSERT INTO casademiranda.customers (name, surname,identifier,email,made_booking) VALUES (?, ?, ?, ?, 1);', [customer.nombre, customer.apellidos, customer.dni, customer.email]);
+        const customerInserted = await executeQuery('INSERT INTO casademiranda.customers (name, surname, surname2, identifier, email, made_booking) VALUES (?, ?, ?, ?, ?, 1);', [customer.nombre, customer.apellido1 ?? customer.apellidos ?? "", customer.apellido2 ?? null, customer.dni, customer.email]);
         idCustomer = customerInserted.insertId;
     } else if (customers.length > 1) {
         throw new Error('Only one customer for identifier');

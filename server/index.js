@@ -111,9 +111,12 @@ app.post('/upload-booking', upload.single("excelFile"), async function (req, res
         for (const row of data) {
             try {
                 // Separar apellidos y nombre del campo "Reservado por"
-                const [apellidos, nombre] = row['Reservado por']
+                const [apellidosFull, nombre] = row['Reservado por']
                     ? row['Reservado por'].split(',').map((s) => s.trim())
                     : ["", ""];
+                const apellidosParts = apellidosFull.split(' ').filter(Boolean);
+                const apellido1 = apellidosParts[0] ?? "";
+                const apellido2 = apellidosParts.length > 1 ? apellidosParts.slice(1).join(' ') : null;
 
                 const numeroConfirmacion = await getInvoiceNumber(row['Salida']);
 
@@ -137,7 +140,8 @@ app.post('/upload-booking', upload.single("excelFile"), async function (req, res
 
                 const cliente = {
                     nombre: nombre,
-                    apellidos: apellidos,
+                    apellido1: apellido1,
+                    apellido2: apellido2,
                     dni: "",
                     email: "",
                 };
@@ -223,7 +227,8 @@ app.post('/cliente', async (req, res) => {
     const cliente = {
         cliente_id: req.body.client_id,
         nombre: req.body.name,
-        apellidos: req.body.firstSurname + " " + req.body.secondSurname,
+        apellido1: req.body.firstSurname,
+        apellido2: req.body.secondSurname ?? null,
         nacionalidad: req.body.nacionality,
         tipo_documento: req.body.document_type,
         numero_documento: req.body.document_number,
@@ -261,7 +266,8 @@ app.put('/cliente', async (req, res) => {
         const cliente = {
             cliente_id: req.body.client_id,
             nombre: req.body.name,
-            apellidos: req.body.firstSurname + " " + req.body.secondSurname,
+            apellido1: req.body.firstSurname,
+        apellido2: req.body.secondSurname ?? null,
             nacionalidad: req.body.nacionality,
             tipo_documento: req.body.document_type,
             numero_documento: req.body.document_number,
@@ -504,7 +510,8 @@ app.post('/reserva', async (req, res) => {
     console.log(JSON.stringify(req.body))
 
     const nombre = req.body.nombre;
-    const apellidos = req.body.apellidos;
+    const apellido1 = req.body.apellido1 ?? req.body.apellidos ?? "";
+    const apellido2 = req.body.apellido2 ?? null;
     const dni = req.body.dni;
     const email = req.body.email;
     const dateNow = new Date(Date.now());
@@ -555,7 +562,8 @@ app.post('/reserva', async (req, res) => {
 
     const cliente = {
         nombre: nombre,
-        apellidos: apellidos,
+        apellido1: apellido1,
+        apellido2: apellido2,
         dni: dni,
         email: email,
     };

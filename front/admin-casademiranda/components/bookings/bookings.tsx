@@ -18,7 +18,7 @@ export default function Bookings() {
     const [token, setToken] = useState<string | null>(null);
     const [identifier, setIdentifier] = useState("Dni...");
     const [allBookings, setAllBookings] = useState<Booking[]>([]);
-    const [bookings, setBookings] = useState<Booking[]>([]);
+    const [searchResults, setSearchResults] = useState<Booking[] | null>(null);
     const [filterDate, setFilterDate] = useState<string>(
         () => localStorage.getItem('bookings_filterDate') ?? new Date().toISOString().split('T')[0]
     );
@@ -29,36 +29,30 @@ export default function Bookings() {
         () => (localStorage.getItem('bookings_viewMode') as 'list' | 'calendar') ?? 'list'
     );
 
-
-
-    function filterBookings(data: Booking[], fromToday: boolean) {
-        return data
-            .filter(booking => {
-                const checkIn = new Date(booking.check_in);
-                const baseDate = new Date(filterDate);
-                const dateOk = fromToday ? checkIn > baseDate : checkIn >= baseDate;
-                return dateOk && (showCancelled ? booking.state === 'cancelada' : booking.state === 'ok');
-            })
-            .sort((a, b) => new Date(a.check_in).getTime() - new Date(b.check_in).getTime());
-    }
+    // Derivado reactivamente — nunca hay stale closures
+    const sourceData = searchResults ?? allBookings;
+    const bookings = sourceData
+        .filter(b => {
+            if (b.state !== 'ok') return showCancelled;
+            const checkIn = new Date(b.check_in);
+            const baseDate = new Date(filterDate);
+            return searchResults ? checkIn >= baseDate : checkIn > baseDate;
+        })
+        .sort((a, b) => new Date(a.check_in).getTime() - new Date(b.check_in).getTime());
 
     function find() {
         API.getBookingByIdentifier(identifier)
-            .then((data: Booking[]) => setBookings(filterBookings(data, false)))
+            .then((data: Booking[]) => setSearchResults(data))
             .catch(console.log);
     }
 
     useEffect(() => {
         const tokenGuardado = localStorage.getItem('token');
         if (tokenGuardado) setToken(tokenGuardado);
-
         API.getAllBookings()
-            .then((data: Booking[]) => {
-                setAllBookings(data);
-                setBookings(filterBookings(data, true));
-            })
+            .then(data => setAllBookings(data))
             .catch(console.log);
-    }, [filterDate, showCancelled]);
+    }, []);
 
     return (
         <>
