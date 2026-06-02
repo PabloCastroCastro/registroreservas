@@ -48,7 +48,7 @@ export default function BookingCalendar({ bookings, showCancelled }: Props) {
     const totalCells = Math.ceil((firstDayOfWeek + daysInMonth) / 7) * 7;
 
     const filteredBookings = bookings.filter(b => {
-        const stateOk = b.state === 'ok' || (showCancelled && b.state === 'cancelada');
+        const stateOk = b.state === 'ok' || (showCancelled && b.state !== 'ok');
         const roomOk = filterRoom === null || b.rooms?.some(r => r.name === filterRoom);
         return stateOk && roomOk;
     });

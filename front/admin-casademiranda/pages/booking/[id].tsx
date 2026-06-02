@@ -131,50 +131,63 @@ export default function BookingPage() {
             <div id="titulo" className='px-4 md:px-5'>
                 <h1 className='relative text-xl text-green text-opacity-75 font-semibold'>Reserva: {booking?.confirmation_number}</h1>
             </div>
-            <div id="datos-reserva" className='mt-5 px-4 md:px-10 grid grid-cols-1 gap-2'>
-                <div id="datos-comunes" className='grid grid-cols-1 md:grid-cols-3 gap-3'>
-                    <div className="grid grid-cols-1">
-                        <label className='text-gray-dark text-opacity-75' id="nombre">Nombre: {booking?.name}</label>
+            <div id="datos-reserva" className='mt-5 px-4 md:px-10 flex flex-col gap-4'>
+
+                {/* Datos personales y fechas */}
+                <section className="border border-gray-light rounded-lg p-4">
+                    <h2 className="text-xs text-gray uppercase tracking-wide font-semibold mb-3">Datos de la reserva</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div>
+                            <p className="text-xs text-gray uppercase tracking-wide">Nombre</p>
+                            <p className="text-gray-dark font-medium">{booking?.name || '—'}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-gray uppercase tracking-wide">Apellidos</p>
+                            <p className="text-gray-dark font-medium">{booking?.surname || '—'}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-gray uppercase tracking-wide">DNI</p>
+                            <p className="text-gray-dark font-medium">{booking?.identifier || '—'}</p>
+                        </div>
+                        <DateComponent label="Check-in" date={booking ? booking.check_in : new Date()} />
+                        <DateComponent label="Check-out" date={booking ? booking.check_out : new Date()} />
+                        <div>
+                            <p className="text-xs text-gray uppercase tracking-wide">Tipo de pago</p>
+                            <p className="text-gray-dark font-medium">{booking?.payment_type || '—'}</p>
+                        </div>
+                        {booking?.other_platform_reference && (
+                            <div>
+                                <p className="text-xs text-gray uppercase tracking-wide">Código otra plataforma</p>
+                                <p className="text-gray-dark font-medium">{booking.other_platform_reference}</p>
+                            </div>
+                        )}
                     </div>
-                    <div className="grid grid-cols-1">
-                        <label className='text-gray-dark text-opacity-75' id="apellidos">Apellidos: {booking?.surname}</label>
+                </section>
+
+                {/* Habitaciones */}
+                <section className="border border-gray-light rounded-lg p-4">
+                    <h2 className="text-xs text-gray uppercase tracking-wide font-semibold mb-3">Habitaciones</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {booking?.rooms.map(r => <RoomComponent key={r.name} room={r} />)}
                     </div>
-                    <div className="grid grid-cols-1">
-                        <label className='text-gray-dark text-opacity-75' id="dni">Dni: {booking?.identifier}</label>
-                    </div>
-                    <div className="grid grid-cols-1">
-                        <DateComponent label="Fecha check_in: " date={booking ? booking.check_in : new Date()} />
-                    </div>
-                    <div className="grid grid-cols-1">
-                        <DateComponent label="Fecha check_out: " date={booking ? booking.check_out : new Date()} />
-                    </div>
-                    <div className="grid grid-cols-1"></div>
-                </div>
-                <div id="datos-habitaciones" className='grid grid-cols-1 md:grid-cols-3 gap-3'>
-                    <div className="grid grid-cols-1">
-                        <label className='text-gray-dark text-opacity-75' id="habitaciones">Habitaciones:</label>
-                    </div>
-                    <div className="grid grid-cols-1"></div>
-                    <div className="grid grid-cols-1"></div>
-                    {booking?.rooms.map(r => (<div className="grid grid-cols-1" key={r.name}><RoomComponent room={r} /></div>))}
-                </div>
-                <div id="datos-clientes" className='grid grid-cols-1 md:grid-cols-3 gap-3'>
-                    <div className="grid grid-cols-1">
-                        <label className='text-gray-dark text-opacity-75' id="clientes">Huespedes:</label>
-                    </div>
-                    <div className="grid grid-cols-1"></div>
-                    <div className="grid grid-cols-1"></div>
-                    {clients && booking ? clients.map(client => (<div key={client.client_id}>
-                        <ClientComponent client={{ ...client, booking_id: booking.booking_id }}></ClientComponent>
-                    </div>)) : <></>}
-                    <div className="grid grid-cols-1">
-                        <Link className='w-12 h-12 rounded-full bg-green bg-opacity-50 hover:bg-gray-dark text-center text-gray-dark text-opacity-75' href={"/client/new-client?booking_id=" + booking?.booking_id}>
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                </section>
+
+                {/* Huéspedes */}
+                <section className="border border-gray-light rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-xs text-gray uppercase tracking-wide font-semibold">Huéspedes</h2>
+                        <Link className='inline-flex items-center gap-1 rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75 px-3 py-1 text-xs font-semibold' href={"/client/new-client?booking_id=" + booking?.booking_id}>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                             </svg>
+                            Añadir
                         </Link>
                     </div>
-                </div>
+                    {clients && booking ? clients.map(client => (
+                        <ClientComponent key={client.client_id} client={{ ...client, booking_id: booking.booking_id }} />
+                    )) : <p className="text-xs text-gray">Sin huéspedes registrados</p>}
+                </section>
+
             </div>
             <div id="botones" className='mt-5 px-4 md:px-5 flex flex-wrap gap-3'>
                 <Button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' onClick={registerCheckIn}>Registrar CheckIn</Button>
