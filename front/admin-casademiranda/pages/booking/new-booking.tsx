@@ -5,6 +5,9 @@ import type { RequestBooking } from '@/interfaces/booking';
 import type { RequestRoom } from '@/interfaces/room';
 import * as APIBooking from "../../services/bookings";
 import * as APIRoomPrices from "../../services/roomPrices";
+import { getRoomsAvailability } from "../../services/bookings";
+
+const ALL_ROOMS = ['A Fonte', 'O Carpinteiro', 'O Cuberto', 'O Faiado'];
 import { useRouter } from 'next/router';
 
 const inputClass = "mt-1 w-full border border-gray-light rounded-lg px-3 py-2 text-gray-dark text-sm focus:outline-none focus:border-gray";
@@ -34,6 +37,7 @@ export default function NewBooking() {
     const [numExtraBed, setNumExtraBed] = useState("");
     const [priceExtraBed, setPriceExtraBed] = useState("");
     const [rooms, setRooms] = useState<RequestRoom[]>([]);
+    const [availability, setAvailability] = useState<Record<string, boolean>>({});
 
     const [errors, setErrors] = useState<Errors>({});
     const [submitting, setSubmitting] = useState(false);
@@ -45,13 +49,20 @@ export default function NewBooking() {
         setErrors(prev => { const e = { ...prev }; delete e[field]; return e; });
     }
 
-    async function handleRoomOrDateChange(room: string, date: string) {
-        if (!room || !date) return;
-        const result = await APIRoomPrices.getPriceForRoom(room, date);
-        if (result) {
-            setPriceRoom(String(result.price));
-            if (parseInt(numExtraBed) > 0 && result.priceExtraBed) {
-                setPriceExtraBed(String(result.priceExtraBed));
+    async function fetchAvailability(ci: string, co: string) {
+        if (!ci || !co) return;
+        const map = await getRoomsAvailability(ci, co);
+        setAvailability(map);
+    }
+
+    async function handleRoomChange(room: string) {
+        setSelectedRoom(room);
+        if (!room || !checkIn) return;
+        const priceResult = await APIRoomPrices.getPriceForRoom(room, checkIn);
+        if (priceResult) {
+            setPriceRoom(String(priceResult.price));
+            if (parseInt(numExtraBed) > 0 && priceResult.priceExtraBed) {
+                setPriceExtraBed(String(priceResult.priceExtraBed));
             }
         }
     }
@@ -209,13 +220,13 @@ export default function NewBooking() {
                             <div>
                                 <label className={labelClass}>Fecha check-in *</label>
                                 <input className={f('checkIn')} type="date" value={checkIn}
-                                    onChange={e => { setCheckIn(e.target.value); clearError('checkIn'); clearError('checkOut'); }} />
+                                    onChange={e => { setCheckIn(e.target.value); clearError('checkIn'); clearError('checkOut'); if (checkOut) fetchAvailability(e.target.value, checkOut); }} />
                                 {errors.checkIn && <p className={errorClass}>{errors.checkIn}</p>}
                             </div>
                             <div>
                                 <label className={labelClass}>Fecha check-out *</label>
                                 <input className={f('checkOut')} type="date" value={checkOut}
-                                    onChange={e => { setCheckOut(e.target.value); clearError('checkOut'); }} />
+                                    onChange={e => { setCheckOut(e.target.value); clearError('checkOut'); if (checkIn) fetchAvailability(checkIn, e.target.value); }} />
                                 {errors.checkOut && <p className={errorClass}>{errors.checkOut}</p>}
                             </div>
                             <div>
@@ -238,12 +249,13 @@ export default function NewBooking() {
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                             <div>
                                 <label className={labelClass}>Habitación</label>
-                                <select className={inputClass} value={selectedRoom} onChange={e => { setSelectedRoom(e.target.value); handleRoomOrDateChange(e.target.value, checkIn); }}>
+                                <select className={inputClass} value={selectedRoom} onChange={e => handleRoomChange(e.target.value)}>
                                     <option value="">-- Selecciona --</option>
-                                    <option value="A Fonte">A Fonte</option>
-                                    <option value="O Carpinteiro">O Carpinteiro</option>
-                                    <option value="O Cuberto">O Cuberto</option>
-                                    <option value="O Faiado">O Faiado</option>
+                                    {ALL_ROOMS.map(r => (
+                                        <option key={r} value={r} disabled={availability[r] === false}>
+                                            {r}{availability[r] === false ? ' (no disponible)' : availability[r] === true ? ' ✓' : ''}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                             <div>
@@ -274,9 +286,15 @@ export default function NewBooking() {
                             </div>
                         </div>
 
+                        {checkIn && checkOut && Object.keys(availability).length > 0 && (
+                            <p className="text-xs text-gray mt-2">
+                                {ALL_ROOMS.filter(r => availability[r] === true).length} habitación(es) disponible(s) para las fechas seleccionadas
+                            </p>
+                        )}
                         {errors.roomPrice && <p className={errorClass + " mt-1"}>{errors.roomPrice}</p>}
 
-                        <button type="button" onClick={agregarHabitacion} disabled={!selectedRoom}
+                        <button type="button" onClick={agregarHabitacion}
+                            disabled={!selectedRoom || availability[selectedRoom] === false}
                             className="mt-3 inline-flex items-center gap-2 rounded-full bg-green bg-opacity-50 px-4 py-2 text-sm font-semibold text-gray-dark disabled:opacity-40">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
