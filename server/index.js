@@ -6,7 +6,7 @@ import fs from 'fs';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import cors from 'cors';
-import generarFactura from './pdf/createPDF.js';
+import { generarFactura, previewFactura } from './pdf/createPDF.js';
 import getInvoiceNumber from './invoices/getInvoiceNumber.js';
 import readFileExcel from './excel/functionsExcel.js';
 import sendMail from './mail/sendMail.js';
@@ -585,12 +585,9 @@ app.post('/reserva', async (req, res) => {
     const numeroConfirmacion = await getInvoiceNumber(req.body.fechaCheckOut);
     let habitaciones;
 
-    try {
-        habitaciones = JSON.parse(req.body.habitaciones);
-    } catch (e) {
-        console.log(e);
-        habitaciones = req.body.habitaciones;
-    }
+    habitaciones = Array.isArray(req.body.habitaciones)
+        ? req.body.habitaciones
+        : JSON.parse(req.body.habitaciones);
 
     const reserva = {
         numeroConfirmacion: numeroConfirmacion,
@@ -624,66 +621,70 @@ app.post('/reserva', async (req, res) => {
     res.json({ id: saved }); 
 })
 
+function parseBillBody(body) {
+    const checkInDate = new Date(body.fechaCheckIn).toLocaleDateString('es-ES');
+    const checkOutDate = new Date(body.fechaCheckOut).toLocaleDateString('es-ES');
+    const dias = Math.floor((new Date(body.fechaCheckOut) - new Date(body.fechaCheckIn)) / 86400000);
+
+    const habitaciones = Array.isArray(body.habitaciones)
+        ? body.habitaciones
+        : JSON.parse(body.habitaciones);
+
+    let extras = body.extras ?? [];
+    if (typeof extras === 'string') { try { extras = JSON.parse(extras); } catch { extras = []; } }
+
+    const reserva = {
+        numeroFactura: body.numeroFactura,
+        fechaReserva: checkOutDate,
+        fechaCheckIn: checkInDate,
+        fechaCheckOut: checkOutDate,
+        dias,
+        habitaciones,
+        tipo: body.tipo ?? 'personal',
+        concepto: body.concepto ?? null,
+        extras,
+    };
+    const cliente = {
+        nombre: body.nombre,
+        apellidos: body.apellidos,
+        dni: body.dni,
+        email: body.email,
+        direccion: body.direccion ?? null,
+        nombreEmpresa: body.nombreEmpresa ?? null,
+        codigoPostalCiudad: body.codigoPostalCiudad ?? null,
+        pais: body.pais ?? null,
+    };
+    return { reserva, cliente };
+}
+
+app.post('/factura/preview', async function (req, res) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.sendStatus(401);
+    try { jwt.verify(token, SECRET_KEY); } catch { return res.sendStatus(403); }
+
+    try {
+        const { reserva, cliente } = parseBillBody(req.body);
+        const buffer = await previewFactura(reserva, cliente);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline; filename="preview.pdf"');
+        res.send(buffer);
+    } catch (err) {
+        console.error('Error generando preview factura:', err);
+        res.sendStatus(500);
+    }
+});
+
 app.post('/factura', async function (req, res) {
 
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) return res.sendStatus(401);
+    try { jwt.verify(token, SECRET_KEY); } catch { return res.sendStatus(403); }
 
-    console.log('query: ', JSON.stringify(req.query));
-
-    jwt.verify(token, SECRET_KEY, (err, user) => {
-        if (err) return res.sendStatus(403);
-    });
-
-
-    console.log('Factura: ', JSON.stringify(req.body))
-    const nombre = req.body.nombre;
-    const numeroFactura = req.body.numeroFactura;
-    const apellidos = req.body.apellidos;
-    const dni = req.body.dni;
-    const email = req.body.email;
-    const checkInDate = new Date(req.body.fechaCheckIn).toLocaleDateString('es-ES');
-    const checkOutDate = new Date(req.body.fechaCheckOut).toLocaleDateString('es-ES');
-
-    const diferenciaEnMilisegundos = new Date(req.body.fechaCheckOut) - new Date(req.body.fechaCheckIn);
-    const milisegundosEnUnDia = 1000 * 60 * 60 * 24;
-    const dias = Math.floor(diferenciaEnMilisegundos / milisegundosEnUnDia);
-    //const dateNow = new Date(req.body.fechaCheckOut);
-    //const fechaFactura = dateNow.toLocaleDateString('es-ES');
-    //const sendConfirmationEmail = req.body.envioConfirmacion;
-    //const fechaFormateada = dateNow.toISOString().split("T")[0].replace(/-/g, "");
-    //let numeroFactura = await getBookingNumber(fechaFormateada.toString()).then(value => { return value });
-    let habitaciones;
-    try {
-        habitaciones = JSON.parse(req.body.habitaciones);
-    } catch (e) {
-        console.log(e);
-        habitaciones = req.body.habitaciones;
-    }
-
-    const reserva = {
-        numeroFactura: numeroFactura,
-        fechaReserva: checkOutDate,
-        fechaCheckIn: checkInDate,
-        fechaCheckOut: checkOutDate,
-        dias: dias,
-        habitaciones: habitaciones,
-    };
-
-    const cliente = {
-        nombre: nombre,
-        apellidos: apellidos,
-        dni: dni,
-        email: email,
-    };
-
-    console.log(reserva);
-    console.log(dias);
-
-    //readFileExcel(numeroFactura, fechaFactura);
-    generarFactura(reserva, cliente);
-    sendMail(numeroFactura, nombre, apellidos, email);
+    const { reserva, cliente } = parseBillBody(req.body);
+    await generarFactura(reserva, cliente);
+    sendMail(reserva.numeroFactura, cliente.nombre, cliente.apellidos, cliente.email);
     res.send('Datos recibidos correctamente.');
 });
 

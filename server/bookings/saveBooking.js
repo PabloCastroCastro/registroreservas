@@ -20,9 +20,11 @@ const save = async (booking, customer) => {
     let alredyExistBooking = await executeQuery('SELECT booking_id FROM casademiranda.bookings WHERE other_platform_reference =?', [booking.referenciaOtraPlataforma]);
     console.log('AlredyExistBooking', alredyExistBooking);
     if (alredyExistBooking == null || alredyExistBooking.length == 0) {
-        await saveBooking(booking, idCustomer);
+        const result = await saveBooking(booking, idCustomer);
+        return result.insertId;
     } else if (alredyExistBooking.length == 1) {
         await updateBooking(booking, idCustomer);
+        return alredyExistBooking[0].booking_id;
     }
 
 }
