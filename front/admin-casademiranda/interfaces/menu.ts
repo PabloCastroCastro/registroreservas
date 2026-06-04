@@ -11,6 +11,7 @@ export type Dish = {
   observations: string | null
   advance_notice: boolean
   min_persons: number | null
+  visible: boolean
 }
 
 export type RequestDish = {
@@ -22,4 +23,5 @@ export type RequestDish = {
   observations: string | null
   advance_notice: boolean
   min_persons: number | null
+  visible: boolean
 }

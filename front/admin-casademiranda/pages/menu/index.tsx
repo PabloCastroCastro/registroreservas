@@ -14,6 +14,7 @@ const EMPTY_DISH: RequestDish = {
     observations: null,
     advance_notice: false,
     min_persons: null,
+    visible: true,
 };
 
 export default function MenuPage() {
@@ -48,6 +49,7 @@ export default function MenuPage() {
             observations: dish.observations,
             advance_notice: !!dish.advance_notice,
             min_persons: dish.min_persons,
+            visible: !!dish.visible,
         });
         setShowModal(true);
     }
@@ -110,6 +112,9 @@ export default function MenuPage() {
                                         <div className="flex-1">
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <p className="font-semibold text-gray-dark">{dish.name}</p>
+                                                {!dish.visible && (
+                                                    <span className="text-xs rounded-full bg-gray-light px-2 py-0.5 text-gray font-medium">Oculto en carta pública</span>
+                                                )}
                                                 {dish.advance_notice && (
                                                     <span className="text-xs rounded-full bg-yellow bg-opacity-50 px-2 py-0.5 text-gray-dark font-medium">Solicitar con antelación</span>
                                                 )}
@@ -191,6 +196,16 @@ export default function MenuPage() {
                                 <textarea className={inputClass} rows={2} value={form.observations ?? ''} onChange={e => set('observations', e.target.value || null)} />
                             </div>
                             <div className="grid grid-cols-2 gap-3">
+                                <div className="flex items-center gap-3 border border-gray-light rounded-lg px-3 py-2">
+                                    <input
+                                        type="checkbox"
+                                        id="visible"
+                                        checked={form.visible}
+                                        onChange={e => set('visible', e.target.checked)}
+                                        className="w-4 h-4"
+                                    />
+                                    <label htmlFor="visible" className="text-sm text-gray-dark cursor-pointer">Visible en carta pública</label>
+                                </div>
                                 <div className="flex items-center gap-3 border border-gray-light rounded-lg px-3 py-2">
                                     <input
                                         type="checkbox"
