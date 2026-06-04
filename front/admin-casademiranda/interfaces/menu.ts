@@ -1,6 +1,13 @@
 export const MENU_CATEGORIES = ['Entrante', 'Principal', 'Postre', 'Bebida'] as const;
 export type MenuCategory = typeof MENU_CATEGORIES[number];
 
+export const ALLERGENS = [
+  'Gluten', 'Crustáceos', 'Huevos', 'Pescado', 'Cacahuetes',
+  'Soja', 'Lácteos', 'Frutos de cáscara', 'Apio', 'Mostaza',
+  'Sésamo', 'Sulfitos', 'Altramuces', 'Moluscos',
+] as const;
+export type Allergen = typeof ALLERGENS[number];
+
 export type Dish = {
   dish_id: number
   name: string
@@ -12,6 +19,7 @@ export type Dish = {
   advance_notice: boolean
   min_persons: number | null
   visible: boolean
+  allergens: Allergen[]
 }
 
 export type RequestDish = {
@@ -24,4 +32,5 @@ export type RequestDish = {
   advance_notice: boolean
   min_persons: number | null
   visible: boolean
+  allergens: Allergen[]
 }

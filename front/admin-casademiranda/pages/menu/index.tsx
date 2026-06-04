@@ -1,8 +1,8 @@
 import "@/app/globals.css";
 import Navbar from "@/components/navbar/navbar";
 import { useEffect, useState } from "react";
-import type { Dish, RequestDish, MenuCategory } from "@/interfaces/menu";
-import { MENU_CATEGORIES } from "@/interfaces/menu";
+import type { Dish, RequestDish, MenuCategory, Allergen } from "@/interfaces/menu";
+import { MENU_CATEGORIES, ALLERGENS } from "@/interfaces/menu";
 import * as APIMenu from "@/services/menu";
 
 const EMPTY_DISH: RequestDish = {
@@ -15,6 +15,7 @@ const EMPTY_DISH: RequestDish = {
     advance_notice: false,
     min_persons: null,
     visible: true,
+    allergens: [],
 };
 
 export default function MenuPage() {
@@ -22,6 +23,15 @@ export default function MenuPage() {
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState<Dish | null>(null);
     const [form, setForm] = useState<RequestDish>(EMPTY_DISH);
+
+    function toggleAllergen(a: Allergen) {
+        setForm(prev => ({
+            ...prev,
+            allergens: prev.allergens.includes(a)
+                ? prev.allergens.filter(x => x !== a)
+                : [...prev.allergens, a]
+        }));
+    }
     const [saving, setSaving] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState<Dish | null>(null);
 
@@ -50,6 +60,7 @@ export default function MenuPage() {
             advance_notice: !!dish.advance_notice,
             min_persons: dish.min_persons,
             visible: !!dish.visible,
+            allergens: dish.allergens ?? [],
         });
         setShowModal(true);
     }
@@ -125,6 +136,9 @@ export default function MenuPage() {
                                             {dish.description && <p className="text-sm text-gray mt-0.5">{dish.description}</p>}
                                             {dish.observations && (
                                                 <p className="text-xs text-gray mt-1 italic">{dish.observations}</p>
+                                            )}
+                                            {dish.allergens?.length > 0 && (
+                                                <p className="text-xs text-gray mt-1"><span className="font-medium">Alérgenos:</span> {dish.allergens.join(', ')}</p>
                                             )}
                                         </div>
                                         <div className="flex gap-4 items-center shrink-0">
@@ -227,6 +241,25 @@ export default function MenuPage() {
                                         value={form.min_persons ?? ''}
                                         onChange={e => set('min_persons', e.target.value ? parseInt(e.target.value) : null)}
                                     />
+                                </div>
+                            </div>
+                            <div>
+                                <label className={labelClass}>Alérgenos</label>
+                                <div className="flex flex-wrap gap-2 mt-1">
+                                    {ALLERGENS.map(a => (
+                                        <button
+                                            key={a}
+                                            type="button"
+                                            onClick={() => toggleAllergen(a)}
+                                            className={`text-xs rounded-full px-3 py-1 border font-medium transition-colors ${
+                                                form.allergens.includes(a)
+                                                    ? 'bg-orange bg-opacity-50 border-orange text-gray-dark'
+                                                    : 'bg-white border-gray-light text-gray'
+                                            }`}
+                                        >
+                                            {a}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
                         </div>

@@ -73,6 +73,14 @@ export function buildMenuPDF(dishes) {
                     y += 12;
                 }
 
+                // Alérgenos
+                const allergens = dish.allergens ?? [];
+                if (allergens.length > 0) {
+                    doc.font('Times-Bold').fontSize(8).fillColor('#8492a6').text('Alérgenos: ', 50, y, { continued: true, width: 495 });
+                    doc.font('Times-Roman').fontSize(8).fillColor('#8492a6').text(allergens.join(', '), { width: 495 });
+                    y += 11;
+                }
+
                 y += 8;
             }
         }
