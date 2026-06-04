@@ -400,6 +400,15 @@ app.get('/cliente/:id', async (req, res) => {
     res.sendStatus(400);
 })
 
+// Debe ir antes de /reserva/:id para evitar que Express capture "disponibilidad" como id
+app.get('/reserva/disponibilidad', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    const { checkIn, checkOut, excludeId } = req.query;
+    if (!checkIn || !checkOut) return res.status(400).json({ error: 'checkIn y checkOut son obligatorios' });
+    const rooms = await checkAllRoomsAvailability(checkIn, checkOut, excludeId ?? null);
+    res.json({ rooms });
+});
+
 app.get('/reserva', async (req, res) => {
 
     const authHeader = req.headers['authorization'];
@@ -694,15 +703,6 @@ app.post('/factura', async function (req, res) {
 });
 
 
-// --- Disponibilidad ---
-
-app.get('/reserva/disponibilidad', async (req, res) => {
-    if (!authGuard(req, res)) return;
-    const { checkIn, checkOut, excludeId } = req.query;
-    if (!checkIn || !checkOut) return res.status(400).json({ error: 'checkIn y checkOut son obligatorios' });
-    const rooms = await checkAllRoomsAvailability(checkIn, checkOut, excludeId ?? null);
-    res.json({ rooms });
-});
 
 // --- Cenas de reserva ---
 
