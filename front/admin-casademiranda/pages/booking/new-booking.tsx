@@ -5,6 +5,7 @@ import type { RequestBooking } from '@/interfaces/booking';
 import type { RequestRoom } from '@/interfaces/room';
 import * as APIBooking from "../../services/bookings";
 import * as APIRoomPrices from "../../services/roomPrices";
+import { checkRoomAvailability } from "../../services/bookings";
 import { useRouter } from 'next/router';
 
 const inputClass = "mt-1 w-full border border-gray-light rounded-lg px-3 py-2 text-gray-dark text-sm focus:outline-none focus:border-gray";
@@ -34,6 +35,7 @@ export default function NewBooking() {
     const [numExtraBed, setNumExtraBed] = useState("");
     const [priceExtraBed, setPriceExtraBed] = useState("");
     const [rooms, setRooms] = useState<RequestRoom[]>([]);
+    const [availability, setAvailability] = useState<Record<string, boolean>>({});
 
     const [errors, setErrors] = useState<Errors>({});
     const [submitting, setSubmitting] = useState(false);
@@ -45,14 +47,21 @@ export default function NewBooking() {
         setErrors(prev => { const e = { ...prev }; delete e[field]; return e; });
     }
 
-    async function handleRoomOrDateChange(room: string, date: string) {
-        if (!room || !date) return;
-        const result = await APIRoomPrices.getPriceForRoom(room, date);
-        if (result) {
-            setPriceRoom(String(result.price));
-            if (parseInt(numExtraBed) > 0 && result.priceExtraBed) {
-                setPriceExtraBed(String(result.priceExtraBed));
+    async function handleRoomOrDateChange(room: string, checkInDate: string, checkOutDate?: string) {
+        if (!room || !checkInDate) return;
+        const [priceResult] = await Promise.all([
+            APIRoomPrices.getPriceForRoom(room, checkInDate),
+        ]);
+        if (priceResult) {
+            setPriceRoom(String(priceResult.price));
+            if (parseInt(numExtraBed) > 0 && priceResult.priceExtraBed) {
+                setPriceExtraBed(String(priceResult.priceExtraBed));
             }
+        }
+        const co = checkOutDate ?? checkOut;
+        if (co) {
+            const avail = await checkRoomAvailability(room, checkInDate, co);
+            setAvailability(prev => ({ ...prev, [room]: avail }));
         }
     }
 
@@ -209,13 +218,13 @@ export default function NewBooking() {
                             <div>
                                 <label className={labelClass}>Fecha check-in *</label>
                                 <input className={f('checkIn')} type="date" value={checkIn}
-                                    onChange={e => { setCheckIn(e.target.value); clearError('checkIn'); clearError('checkOut'); }} />
+                                    onChange={e => { setCheckIn(e.target.value); clearError('checkIn'); clearError('checkOut'); if (selectedRoom && checkOut) handleRoomOrDateChange(selectedRoom, e.target.value, checkOut); }} />
                                 {errors.checkIn && <p className={errorClass}>{errors.checkIn}</p>}
                             </div>
                             <div>
                                 <label className={labelClass}>Fecha check-out *</label>
                                 <input className={f('checkOut')} type="date" value={checkOut}
-                                    onChange={e => { setCheckOut(e.target.value); clearError('checkOut'); }} />
+                                    onChange={e => { setCheckOut(e.target.value); clearError('checkOut'); if (selectedRoom && checkIn) handleRoomOrDateChange(selectedRoom, checkIn, e.target.value); }} />
                                 {errors.checkOut && <p className={errorClass}>{errors.checkOut}</p>}
                             </div>
                             <div>
@@ -245,6 +254,11 @@ export default function NewBooking() {
                                     <option value="O Cuberto">O Cuberto</option>
                                     <option value="O Faiado">O Faiado</option>
                                 </select>
+                                {selectedRoom && checkIn && checkOut && availability[selectedRoom] !== undefined && (
+                                    <p className={`text-xs mt-1 font-medium ${availability[selectedRoom] ? 'text-green' : 'text-orange'}`}>
+                                        {availability[selectedRoom] ? '✓ Disponible' : '✗ No disponible para estas fechas'}
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <label className={labelClass}>Precio (€) *</label>
@@ -276,7 +290,8 @@ export default function NewBooking() {
 
                         {errors.roomPrice && <p className={errorClass + " mt-1"}>{errors.roomPrice}</p>}
 
-                        <button type="button" onClick={agregarHabitacion} disabled={!selectedRoom}
+                        <button type="button" onClick={agregarHabitacion}
+                            disabled={!selectedRoom || availability[selectedRoom] === false}
                             className="mt-3 inline-flex items-center gap-2 rounded-full bg-green bg-opacity-50 px-4 py-2 text-sm font-semibold text-gray-dark disabled:opacity-40">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
