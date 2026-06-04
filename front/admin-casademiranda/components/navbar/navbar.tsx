@@ -34,6 +34,7 @@ export default function DefaultNavbar() {
             <Navbar.Collapse>
                 <Link href="/booking/load-booking"><p className='text-gray text-opacity-75 font-semibold'>Cargar Reservas</p></Link>
                 <Link href="/booking/new-booking"><p className='text-gray text-opacity-75 font-semibold'>Crear Reserva</p></Link>
+                <Link href="/menu"><p className='text-gray text-opacity-75 font-semibold'>Carta de cenas</p></Link>
                 <Link href="/"><p className='text-gray text-opacity-75 font-semibold'>Home</p></Link>
                 <Link href="/logout"><p className='text-gray text-opacity-75 font-semibold'>Cerrar Session</p></Link>
             </Navbar.Collapse>
