@@ -56,7 +56,7 @@ export function buildMenuPDF(dishes) {
         doc.moveTo(PAGE_W - MARGIN - 60, titleY).lineTo(PAGE_W - MARGIN, titleY).lineWidth(1).strokeColor('#8492a6').stroke();
 
         // Casa de Miranda subtitle
-        doc.font(FONT_SERIF).fontSize(9).fillColor('#8492a6')
+        doc.font(FONT_SERIF).fontSize(9).fillColor('#273444')
             .text('CASA DE MIRANDA · Turismo Rural · Ézaro, A Coruña', 0, 88, { align: 'center', width: PAGE_W });
 
         doc.moveTo(MARGIN, 102).lineTo(PAGE_W - MARGIN, 102).lineWidth(0.5).strokeColor('#d3dce6').stroke();
@@ -146,7 +146,7 @@ export function buildMenuPDF(dishes) {
         const footerY = PAGE_H - 45;
         doc.moveTo(MARGIN, footerY).lineTo(PAGE_W - MARGIN, footerY)
             .lineWidth(0.5).strokeColor('#d3dce6').stroke();
-        doc.font(FONT_SERIF).fontSize(8).fillColor('#8492a6')
+        doc.font(FONT_SERIF).fontSize(8).fillColor('#273444')
             .text('Los precios incluyen IVA · Consulte disponibilidad con antelación · casademiranda.com',
                 0, footerY + 8, { align: 'center', width: PAGE_W });
 
