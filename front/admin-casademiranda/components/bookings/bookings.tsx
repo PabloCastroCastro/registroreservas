@@ -11,10 +11,13 @@ import * as API from "../../services/bookings";
 import BookingComponent from "./bookingComponent";
 import BookingCalendar from "./bookingCalendar";
 import Navbar from "../navbar/navbar";
+import { useSyncStatus } from "../../hooks/useSyncStatus";
+import SyncIndicator from "../sync/SyncIndicator";
 
 
 export default function Bookings() {
 
+    const sync = useSyncStatus();
     const [token, setToken] = useState<string | null>(null);
     const [identifier, setIdentifier] = useState("Dni...");
     const [allBookings, setAllBookings] = useState<Booking[]>([]);
@@ -97,6 +100,11 @@ export default function Bookings() {
                     </button>
                 </div>
             </div>
+            {(sync.status === 'warning' || sync.status === 'danger' || sync.status === 'never') && (
+                <div className="px-4 md:px-10 mt-3">
+                    <SyncIndicator sync={sync} showForceButton={false} />
+                </div>
+            )}
             {viewMode === 'calendar' && (
                 <BookingCalendar bookings={allBookings} showCancelled={showCancelled} />
             )}
