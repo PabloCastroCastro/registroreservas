@@ -26,6 +26,7 @@ import readProperty from './configuration/readConfiguration.js';
 import executeQuery from './sql/sqlUtils.js';
 import e from 'express';
 import { listDishes, listPublicDishes, createDish, updateDish, deleteDish } from './menu/menuDishes.js';
+import { listBasePrices, updateBasePrice, updateSeasonConfig, getPriceForRoomAndDate } from './rooms/roomPrices.js';
 import { listBookingDishes, addBookingDish, removeBookingDish } from './bookings/bookingDishes.js';
 import { buildMenuPDF } from './menu/menuPDF.js';
 
@@ -713,6 +714,34 @@ app.delete('/reserva/:id/cenas/:bookingDishId', async (req, res) => {
     if (!authGuard(req, res)) return;
     await removeBookingDish(req.params.bookingDishId);
     res.sendStatus(200);
+});
+
+// --- Precios base ---
+
+app.get('/precios-base', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    res.json(await listBasePrices());
+});
+
+app.put('/precios-base/:id', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    await updateBasePrice(req.params.id, req.body.price, req.body.price_extra_bed);
+    res.sendStatus(200);
+});
+
+app.put('/precios-base/season-config', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    await updateSeasonConfig(req.body.high_season_start, req.body.high_season_end);
+    res.sendStatus(200);
+});
+
+app.get('/precios-base/precio', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    const { room, date } = req.query;
+    if (!room || !date) return res.status(400).json({ error: 'room y date son obligatorios' });
+    const result = await getPriceForRoomAndDate(room, date);
+    if (!result) return res.status(404).json({ error: 'No hay precio configurado' });
+    res.json(result);
 });
 
 // --- Menú ---

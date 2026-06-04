@@ -12,6 +12,7 @@ const NAV_LINKS = [
     { href: '/booking/new-booking', label: 'Crear reserva' },
     { href: '/booking/load-booking', label: 'Cargar reservas' },
     { href: '/menu', label: 'Carta de cenas' },
+    { href: '/precios-base', label: 'Precios base' },
 ];
 
 export default function DefaultNavbar() {
