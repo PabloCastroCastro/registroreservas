@@ -1,7 +1,6 @@
 'use client';
 import React, { Suspense } from "react";
 import './bookings.css'
-import { Button, TextInput } from 'flowbite-react';
 import { useState, useEffect } from 'react';
 import type { Booking } from '../../interfaces/booking'
 import Link from 'next/link';
@@ -59,47 +58,86 @@ export default function Bookings() {
 
     return (
         <>
-            <div className="mt-5 px-4 md:px-10 flex flex-col md:flex-row md:flex-wrap gap-3 items-stretch md:items-center">
-                <TextInput className="w-full md:w-48" type="text" name="identifier" value={identifier} onChange={identifier => setIdentifier(identifier.target.value)} />
-                <button className="w-full md:w-auto rounded-full bg-green bg-opacity-50 py-2 px-5" onClick={find}>
-                    <p className="text-black text-opacity-75 font-semibold">Buscar</p>
-                </button>
-                <TextInput
-                    type="date"
-                    value={filterDate}
-                    onChange={(e) => {
-                        setFilterDate(e.target.value);
-                        localStorage.setItem('bookings_filterDate', e.target.value);
-                    }}
-                    className="w-full md:w-auto"
-                />
-                <label className="flex items-center gap-2 text-gray-dark text-opacity-75 cursor-pointer py-2">
+            <div className="mt-4 mx-4 md:mx-10 border border-gray-light rounded-xl p-4 flex flex-col md:flex-row md:flex-wrap gap-4 items-stretch md:items-center">
+
+                {/* Búsqueda por DNI */}
+                <div className="flex gap-2 flex-1 min-w-0">
+                    <input
+                        type="text"
+                        placeholder="Buscar por DNI..."
+                        value={identifier === 'Dni...' ? '' : identifier}
+                        onChange={e => setIdentifier(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && find()}
+                        className="flex-1 min-w-0 border border-gray-light rounded-lg px-3 py-2 text-sm text-gray-dark focus:outline-none focus:border-gray"
+                    />
+                    <button
+                        onClick={find}
+                        className="rounded-lg bg-green bg-opacity-50 px-4 py-2 text-sm font-semibold text-gray-dark whitespace-nowrap"
+                    >
+                        Buscar
+                    </button>
+                    {searchResults && (
+                        <button
+                            onClick={() => setSearchResults(null)}
+                            className="rounded-lg bg-gray-light px-3 py-2 text-sm font-semibold text-gray"
+                            title="Limpiar búsqueda"
+                        >
+                            ✕
+                        </button>
+                    )}
+                </div>
+
+                {/* Separador vertical (solo desktop) */}
+                <div className="hidden md:block w-px h-8 bg-gray-light self-center" />
+
+                {/* Filtro de fecha */}
+                <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray uppercase tracking-wide whitespace-nowrap">Desde</span>
+                    <input
+                        type="date"
+                        value={filterDate}
+                        onChange={e => {
+                            setFilterDate(e.target.value);
+                            localStorage.setItem('bookings_filterDate', e.target.value);
+                        }}
+                        className="border border-gray-light rounded-lg px-3 py-2 text-sm text-gray-dark focus:outline-none focus:border-gray"
+                    />
+                </div>
+
+                {/* Separador vertical (solo desktop) */}
+                <div className="hidden md:block w-px h-8 bg-gray-light self-center" />
+
+                {/* Checkbox canceladas */}
+                <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
                     <input
                         type="checkbox"
                         checked={showCancelled}
-                        onChange={(e) => {
+                        onChange={e => {
                             setShowCancelled(e.target.checked);
                             localStorage.setItem('bookings_showCancelled', String(e.target.checked));
                         }}
                         className="w-4 h-4"
                     />
-                    Ver canceladas
+                    <span className="text-sm text-gray-dark">Ver canceladas</span>
                 </label>
-                <div className="flex gap-2">
+
+                {/* Vista lista/calendario */}
+                <div className="flex gap-1 ml-auto">
                     <button
                         onClick={() => { setViewMode('list'); localStorage.setItem('bookings_viewMode', 'list'); }}
-                        className={`flex-1 md:flex-none rounded-full px-4 py-2 font-semibold text-sm ${viewMode === 'list' ? 'bg-green bg-opacity-50' : 'bg-gray-light'}`}
+                        className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${viewMode === 'list' ? 'bg-green bg-opacity-50 text-gray-dark' : 'bg-gray-light text-gray hover:text-gray-dark'}`}
                     >
                         Lista
                     </button>
                     <button
                         onClick={() => { setViewMode('calendar'); localStorage.setItem('bookings_viewMode', 'calendar'); }}
-                        className={`flex-1 md:flex-none rounded-full px-4 py-2 font-semibold text-sm ${viewMode === 'calendar' ? 'bg-green bg-opacity-50' : 'bg-gray-light'}`}
+                        className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${viewMode === 'calendar' ? 'bg-green bg-opacity-50 text-gray-dark' : 'bg-gray-light text-gray hover:text-gray-dark'}`}
                     >
                         Calendario
                     </button>
                 </div>
             </div>
+
             {(sync.status === 'warning' || sync.status === 'danger' || sync.status === 'never') && (
                 <div className="px-4 md:px-10 mt-3">
                     <SyncIndicator sync={sync} showForceButton={false} />
