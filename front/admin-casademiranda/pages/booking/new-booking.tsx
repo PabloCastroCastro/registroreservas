@@ -4,6 +4,7 @@ import Navbar from '@/components/navbar/navbar';
 import type { RequestBooking } from '@/interfaces/booking';
 import type { RequestRoom } from '@/interfaces/room';
 import * as APIBooking from "../../services/bookings";
+import * as APIRoomPrices from "../../services/roomPrices";
 import { useRouter } from 'next/router';
 
 const inputClass = "mt-1 w-full border border-gray-light rounded-lg px-3 py-2 text-gray-dark text-sm focus:outline-none focus:border-gray";
@@ -42,6 +43,15 @@ export default function NewBooking() {
     }
     function clearError(field: string) {
         setErrors(prev => { const e = { ...prev }; delete e[field]; return e; });
+    }
+
+    async function handleRoomOrDateChange(room: string, date: string) {
+        if (!room || !date) return;
+        const result = await APIRoomPrices.getPriceForRoom(room, date);
+        if (result) {
+            setPriceRoom(String(result.price));
+            if (result.priceExtraBed) setPriceExtraBed(String(result.priceExtraBed));
+        }
     }
 
     function agregarHabitacion() {
@@ -226,7 +236,7 @@ export default function NewBooking() {
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                             <div>
                                 <label className={labelClass}>Habitación</label>
-                                <select className={inputClass} value={selectedRoom} onChange={e => setSelectedRoom(e.target.value)}>
+                                <select className={inputClass} value={selectedRoom} onChange={e => { setSelectedRoom(e.target.value); handleRoomOrDateChange(e.target.value, checkIn); }}>
                                     <option value="">-- Selecciona --</option>
                                     <option value="A Fonte">A Fonte</option>
                                     <option value="O Carpinteiro">O Carpinteiro</option>
