@@ -9,6 +9,8 @@ export type Dish = {
   price_full: number
   price_half: number | null
   observations: string | null
+  advance_notice: boolean
+  min_persons: number | null
 }
 
 export type RequestDish = {
@@ -18,4 +20,6 @@ export type RequestDish = {
   price_full: number
   price_half: number | null
   observations: string | null
+  advance_notice: boolean
+  min_persons: number | null
 }

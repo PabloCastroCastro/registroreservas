@@ -12,6 +12,8 @@ const EMPTY_DISH: RequestDish = {
     price_full: 0,
     price_half: null,
     observations: null,
+    advance_notice: false,
+    min_persons: null,
 };
 
 export default function MenuPage() {
@@ -44,6 +46,8 @@ export default function MenuPage() {
             price_full: dish.price_full,
             price_half: dish.price_half,
             observations: dish.observations,
+            advance_notice: !!dish.advance_notice,
+            min_persons: dish.min_persons,
         });
         setShowModal(true);
     }
@@ -104,7 +108,15 @@ export default function MenuPage() {
                                 {byCategory[cat].map(dish => (
                                     <div key={dish.dish_id} className="border border-gray-light rounded-lg p-4 flex flex-col md:flex-row md:items-center gap-3">
                                         <div className="flex-1">
-                                            <p className="font-semibold text-gray-dark">{dish.name}</p>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <p className="font-semibold text-gray-dark">{dish.name}</p>
+                                                {dish.advance_notice && (
+                                                    <span className="text-xs rounded-full bg-yellow bg-opacity-50 px-2 py-0.5 text-gray-dark font-medium">Solicitar con antelación</span>
+                                                )}
+                                                {dish.min_persons != null && (
+                                                    <span className="text-xs rounded-full bg-gray-light px-2 py-0.5 text-gray-dark font-medium">Mín. {dish.min_persons} personas</span>
+                                                )}
+                                            </div>
                                             {dish.description && <p className="text-sm text-gray mt-0.5">{dish.description}</p>}
                                             {dish.observations && (
                                                 <p className="text-xs text-gray mt-1 italic">{dish.observations}</p>
@@ -177,6 +189,30 @@ export default function MenuPage() {
                             <div>
                                 <label className={labelClass}>Observaciones</label>
                                 <textarea className={inputClass} rows={2} value={form.observations ?? ''} onChange={e => set('observations', e.target.value || null)} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="flex items-center gap-3 border border-gray-light rounded-lg px-3 py-2">
+                                    <input
+                                        type="checkbox"
+                                        id="advance_notice"
+                                        checked={form.advance_notice}
+                                        onChange={e => set('advance_notice', e.target.checked)}
+                                        className="w-4 h-4"
+                                    />
+                                    <label htmlFor="advance_notice" className="text-sm text-gray-dark cursor-pointer">Solicitar con antelación</label>
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Mínimo de personas</label>
+                                    <input
+                                        className={inputClass}
+                                        type="number"
+                                        min="1"
+                                        step="1"
+                                        placeholder="—"
+                                        value={form.min_persons ?? ''}
+                                        onChange={e => set('min_persons', e.target.value ? parseInt(e.target.value) : null)}
+                                    />
+                                </div>
                             </div>
                         </div>
                         <div className="flex justify-end gap-3 mt-5">
