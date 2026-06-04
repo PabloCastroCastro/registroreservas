@@ -6,7 +6,7 @@ import fs from 'fs';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import cors from 'cors';
-import generarFactura from './pdf/createPDF.js';
+import { generarFactura, previewFactura } from './pdf/createPDF.js';
 import getInvoiceNumber from './invoices/getInvoiceNumber.js';
 import readFileExcel from './excel/functionsExcel.js';
 import sendMail from './mail/sendMail.js';
@@ -14,6 +14,7 @@ import sendConfirmationBookingMail from './confirmacion-reserva/sendMailConfirma
 import saveBooking from './bookings/saveBooking.js';
 import { listAllBookings, listBookingByCustomer, listBookingById } from './bookings/listBooking.js';
 import updateBookingById from './bookings/updateBooking.js';
+import { checkPendingBookingEmails, markBookingEmailsRead } from './mail/checkBookingMails.js';
 import { save, update } from './clients/saveClient.js';
 import { listAllCustomers, listCustomerById, listCustomerByBookingId, listCustomerByIdentifier } from './clients/listClient.js';
 import { getUserByUsername } from './users/getUser.js'
@@ -24,6 +25,7 @@ import getBookingNumber from './bookings/getBookingNumber.js';
 import readProperty from './configuration/readConfiguration.js';
 import executeQuery from './sql/sqlUtils.js';
 import e from 'express';
+import { listDishes, createDish, updateDish, deleteDish } from './menu/menuDishes.js';
 
 const app = express();
 const SECRET_KEY = readProperty("server.secretKey");
@@ -35,15 +37,13 @@ app.use(cors());
 const parseFloatFromText = (str) => typeof str === "string" ? parseFloat(str.replace(/[^\d.-]/g, '')) : str;
 
 const getRoomName = (rowName) => {
-    let roomName = '';
-    if (rowName === 'Habitación Carpinteiro') {
-        roomName = 'O Carpinteiro'
-    } else if (rowName === 'Habitación A Fonte') {
-        roomName = 'A Fonte'
-    } else if (rowName === 'O cuberto') {
-        roomName = 'O cuberto'
-    }
-    return roomName;
+    if (!rowName) return '';
+    const name = rowName.toLowerCase();
+    if (name.includes('carpinteiro')) return 'O Carpinteiro';
+    if (name.includes('fonte'))       return 'A Fonte';
+    if (name.includes('cuberto'))     return 'O Cuberto';
+    if (name.includes('faiado'))      return 'O Faiado';
+    return rowName;
 }
 
 function formatDateToMySQL(dateStr) {
@@ -85,6 +85,45 @@ function buildHabitaciones(row) {
     }));
 }
 
+app.get('/booking-sync/check', async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.sendStatus(401);
+    try { jwt.verify(token, SECRET_KEY); } catch { return res.sendStatus(403); }
+
+    try {
+        const user = readProperty('mail.gmail.imap.user');
+        const pass = readProperty('mail.gmail.imap.password');
+        console.log('[booking-sync] user:', user, '| pass configurado:', !!pass);
+        if (!user || !pass) return res.status(500).json({ error: 'Gmail IMAP no configurado' });
+        const pending = await checkPendingBookingEmails(user, pass);
+        res.json({ hasPending: pending.length > 0, emails: pending });
+    } catch (err) {
+        console.error('[booking-sync] ERROR:', err);
+        console.error('[booking-sync] message:', err.message);
+        console.error('[booking-sync] stack:', err.stack);
+        res.status(500).json({ error: err.message ?? String(err) });
+    }
+});
+
+app.post('/booking-sync/mark-read', async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.sendStatus(401);
+    try { jwt.verify(token, SECRET_KEY); } catch { return res.sendStatus(403); }
+
+    try {
+        const user = readProperty('mail.gmail.imap.user');
+        const pass = readProperty('mail.gmail.imap.password');
+        if (!user || !pass) return res.status(500).json({ error: 'Gmail IMAP no configurado' });
+        const count = await markBookingEmailsRead(user, pass);
+        res.json({ markedRead: count });
+    } catch (err) {
+        console.error('Error marking emails read:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.post('/upload-booking', upload.single("excelFile"), async function (req, res) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -107,10 +146,12 @@ app.post('/upload-booking', upload.single("excelFile"), async function (req, res
         console.log("Datos procesados:", data);
 
         let reservasCreadas = 0;
+        let reservasOmitidas = 0;
+        const errores = [];
 
         for (const row of data) {
+            const referencia = row['Número de reserva'] ?? '(sin referencia)';
             try {
-                // Separar apellidos y nombre del campo "Reservado por"
                 const [apellidosFull, nombre] = row['Reservado por']
                     ? row['Reservado por'].split(',').map((s) => s.trim())
                     : ["", ""];
@@ -119,10 +160,7 @@ app.post('/upload-booking', upload.single("excelFile"), async function (req, res
                 const apellido2 = apellidosParts.length > 1 ? apellidosParts.slice(1).join(' ') : null;
 
                 const numeroConfirmacion = await getInvoiceNumber(row['Salida']);
-
-
                 const dias = parseInt(row['Duración (noches)']) || 1;
-
                 const habitaciones = buildHabitaciones(row);
 
                 const reserva = {
@@ -133,10 +171,9 @@ app.post('/upload-booking', upload.single("excelFile"), async function (req, res
                     dias,
                     habitaciones,
                     tipo_pago: '',
-                    referenciaOtraPlataforma: row['Número de reserva'],
+                    referenciaOtraPlataforma: referencia,
                     estado: row['Estado']
                 };
-                console.error("Reserva convertida", reserva);
 
                 const cliente = {
                     nombre: nombre,
@@ -145,18 +182,28 @@ app.post('/upload-booking', upload.single("excelFile"), async function (req, res
                     dni: "",
                     email: "",
                 };
-                console.error("cliente convertido", cliente);
 
-                await saveBooking(reserva, cliente);
-                reservasCreadas++;
+                const existing = await executeQuery(
+                    'SELECT booking_id FROM casademiranda.bookings WHERE other_platform_reference = ?',
+                    [referencia]
+                );
+                if (existing.length > 0) {
+                    reservasOmitidas++;
+                } else {
+                    await saveBooking(reserva, cliente);
+                    reservasCreadas++;
+                }
             } catch (err) {
                 console.error("Error procesando fila:", row, err);
+                errores.push({ referencia, error: err.message });
             }
         }
 
         res.json({
             message: "Archivo procesado correctamente",
             reservasCreadas,
+            reservasOmitidas,
+            errores,
         });
     } catch (err) {
         console.error("Error al procesar Excel:", err);
@@ -539,12 +586,9 @@ app.post('/reserva', async (req, res) => {
     const numeroConfirmacion = await getInvoiceNumber(req.body.fechaCheckOut);
     let habitaciones;
 
-    try {
-        habitaciones = JSON.parse(req.body.habitaciones);
-    } catch (e) {
-        console.log(e);
-        habitaciones = req.body.habitaciones;
-    }
+    habitaciones = Array.isArray(req.body.habitaciones)
+        ? req.body.habitaciones
+        : JSON.parse(req.body.habitaciones);
 
     const reserva = {
         numeroConfirmacion: numeroConfirmacion,
@@ -578,69 +622,104 @@ app.post('/reserva', async (req, res) => {
     res.json({ id: saved }); 
 })
 
+function parseBillBody(body) {
+    const checkInDate = new Date(body.fechaCheckIn).toLocaleDateString('es-ES');
+    const checkOutDate = new Date(body.fechaCheckOut).toLocaleDateString('es-ES');
+    const dias = Math.floor((new Date(body.fechaCheckOut) - new Date(body.fechaCheckIn)) / 86400000);
+
+    const habitaciones = Array.isArray(body.habitaciones)
+        ? body.habitaciones
+        : JSON.parse(body.habitaciones);
+
+    let extras = body.extras ?? [];
+    if (typeof extras === 'string') { try { extras = JSON.parse(extras); } catch { extras = []; } }
+
+    const reserva = {
+        numeroFactura: body.numeroFactura,
+        fechaReserva: checkOutDate,
+        fechaCheckIn: checkInDate,
+        fechaCheckOut: checkOutDate,
+        dias,
+        habitaciones,
+        tipo: body.tipo ?? 'personal',
+        concepto: body.concepto ?? null,
+        extras,
+    };
+    const cliente = {
+        nombre: body.nombre,
+        apellidos: body.apellidos,
+        dni: body.dni,
+        email: body.email,
+        direccion: body.direccion ?? null,
+        nombreEmpresa: body.nombreEmpresa ?? null,
+        codigoPostalCiudad: body.codigoPostalCiudad ?? null,
+        pais: body.pais ?? null,
+    };
+    return { reserva, cliente };
+}
+
+app.post('/factura/preview', async function (req, res) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.sendStatus(401);
+    try { jwt.verify(token, SECRET_KEY); } catch { return res.sendStatus(403); }
+
+    try {
+        const { reserva, cliente } = parseBillBody(req.body);
+        const buffer = await previewFactura(reserva, cliente);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline; filename="preview.pdf"');
+        res.send(buffer);
+    } catch (err) {
+        console.error('Error generando preview factura:', err);
+        res.sendStatus(500);
+    }
+});
+
 app.post('/factura', async function (req, res) {
 
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) return res.sendStatus(401);
+    try { jwt.verify(token, SECRET_KEY); } catch { return res.sendStatus(403); }
 
-    console.log('query: ', JSON.stringify(req.query));
-
-    jwt.verify(token, SECRET_KEY, (err, user) => {
-        if (err) return res.sendStatus(403);
-    });
-
-
-    console.log('Factura: ', JSON.stringify(req.body))
-    const nombre = req.body.nombre;
-    const numeroFactura = req.body.numeroFactura;
-    const apellidos = req.body.apellidos;
-    const dni = req.body.dni;
-    const email = req.body.email;
-    const checkInDate = new Date(req.body.fechaCheckIn).toLocaleDateString('es-ES');
-    const checkOutDate = new Date(req.body.fechaCheckOut).toLocaleDateString('es-ES');
-
-    const diferenciaEnMilisegundos = new Date(req.body.fechaCheckOut) - new Date(req.body.fechaCheckIn);
-    const milisegundosEnUnDia = 1000 * 60 * 60 * 24;
-    const dias = Math.floor(diferenciaEnMilisegundos / milisegundosEnUnDia);
-    //const dateNow = new Date(req.body.fechaCheckOut);
-    //const fechaFactura = dateNow.toLocaleDateString('es-ES');
-    //const sendConfirmationEmail = req.body.envioConfirmacion;
-    //const fechaFormateada = dateNow.toISOString().split("T")[0].replace(/-/g, "");
-    //let numeroFactura = await getBookingNumber(fechaFormateada.toString()).then(value => { return value });
-    let habitaciones;
-    try {
-        habitaciones = JSON.parse(req.body.habitaciones);
-    } catch (e) {
-        console.log(e);
-        habitaciones = req.body.habitaciones;
-    }
-
-    const reserva = {
-        numeroFactura: numeroFactura,
-        fechaReserva: checkOutDate,
-        fechaCheckIn: checkInDate,
-        fechaCheckOut: checkOutDate,
-        dias: dias,
-        habitaciones: habitaciones,
-    };
-
-    const cliente = {
-        nombre: nombre,
-        apellidos: apellidos,
-        dni: dni,
-        email: email,
-    };
-
-    console.log(reserva);
-    console.log(dias);
-
-    //readFileExcel(numeroFactura, fechaFactura);
-    generarFactura(reserva, cliente);
-    sendMail(numeroFactura, nombre, apellidos, email);
+    const { reserva, cliente } = parseBillBody(req.body);
+    await generarFactura(reserva, cliente);
+    sendMail(reserva.numeroFactura, cliente.nombre, cliente.apellidos, cliente.email);
     res.send('Datos recibidos correctamente.');
 });
 
+
+// --- Menú ---
+
+function authGuard(req, res) {
+    const token = (req.headers['authorization'] ?? '').split(' ')[1];
+    if (!token) { res.sendStatus(401); return false; }
+    try { jwt.verify(token, SECRET_KEY); return true; } catch { res.sendStatus(403); return false; }
+}
+
+app.get('/menu', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    res.json(await listDishes());
+});
+
+app.post('/menu', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    const id = await createDish(req.body);
+    res.json({ id });
+});
+
+app.put('/menu/:id', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    await updateDish(parseInt(req.params.id), req.body);
+    res.sendStatus(200);
+});
+
+app.delete('/menu/:id', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    await deleteDish(parseInt(req.params.id));
+    res.sendStatus(200);
+});
 
 app.listen(3003, function () {
     console.log('Servidor escuchando en el puerto 3003.');
