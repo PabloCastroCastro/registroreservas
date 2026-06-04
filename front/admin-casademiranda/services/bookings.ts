@@ -141,6 +141,27 @@ export async function deleteBooking(bookingId: string) {
   return response.status;
 }
 
+export async function checkBookingSync() {
+  const token = getToken();
+  const response = await fetch(`${API_HOST}/booking-sync/check`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `Error HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+export async function markBookingSyncRead() {
+  const token = getToken();
+  const response = await fetch(`${API_HOST}/booking-sync/mark-read`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  return response.json();
+}
+
 export async function loadBookingBatch(file: File) {
   const token = getToken();
   const formData = new FormData();
@@ -156,10 +177,9 @@ export async function loadBookingBatch(file: File) {
     };
 
     const res = await fetch(`${API_HOST}/upload-booking`, requestOptions);
-    console.error(res);
-    return `Procesado: ${res}`;
+    return res.json();
   } catch (err) {
     console.error(err);
-    return "Error al subir el archivo";
+    throw err;
   }
 }

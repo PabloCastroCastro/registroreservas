@@ -14,6 +14,7 @@ import sendConfirmationBookingMail from './confirmacion-reserva/sendMailConfirma
 import saveBooking from './bookings/saveBooking.js';
 import { listAllBookings, listBookingByCustomer, listBookingById } from './bookings/listBooking.js';
 import updateBookingById from './bookings/updateBooking.js';
+import { checkPendingBookingEmails, markBookingEmailsRead } from './mail/checkBookingMails.js';
 import { save, update } from './clients/saveClient.js';
 import { listAllCustomers, listCustomerById, listCustomerByBookingId, listCustomerByIdentifier } from './clients/listClient.js';
 import { getUserByUsername } from './users/getUser.js'
@@ -35,15 +36,13 @@ app.use(cors());
 const parseFloatFromText = (str) => typeof str === "string" ? parseFloat(str.replace(/[^\d.-]/g, '')) : str;
 
 const getRoomName = (rowName) => {
-    let roomName = '';
-    if (rowName === 'Habitación Carpinteiro') {
-        roomName = 'O Carpinteiro'
-    } else if (rowName === 'Habitación A Fonte') {
-        roomName = 'A Fonte'
-    } else if (rowName === 'O cuberto') {
-        roomName = 'O cuberto'
-    }
-    return roomName;
+    if (!rowName) return '';
+    const name = rowName.toLowerCase();
+    if (name.includes('carpinteiro')) return 'O Carpinteiro';
+    if (name.includes('fonte'))       return 'A Fonte';
+    if (name.includes('cuberto'))     return 'O Cuberto';
+    if (name.includes('faiado'))      return 'O Faiado';
+    return rowName;
 }
 
 function formatDateToMySQL(dateStr) {
@@ -85,6 +84,45 @@ function buildHabitaciones(row) {
     }));
 }
 
+app.get('/booking-sync/check', async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.sendStatus(401);
+    try { jwt.verify(token, SECRET_KEY); } catch { return res.sendStatus(403); }
+
+    try {
+        const user = readProperty('mail.gmail.imap.user');
+        const pass = readProperty('mail.gmail.imap.password');
+        console.log('[booking-sync] user:', user, '| pass configurado:', !!pass);
+        if (!user || !pass) return res.status(500).json({ error: 'Gmail IMAP no configurado' });
+        const pending = await checkPendingBookingEmails(user, pass);
+        res.json({ hasPending: pending.length > 0, emails: pending });
+    } catch (err) {
+        console.error('[booking-sync] ERROR:', err);
+        console.error('[booking-sync] message:', err.message);
+        console.error('[booking-sync] stack:', err.stack);
+        res.status(500).json({ error: err.message ?? String(err) });
+    }
+});
+
+app.post('/booking-sync/mark-read', async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.sendStatus(401);
+    try { jwt.verify(token, SECRET_KEY); } catch { return res.sendStatus(403); }
+
+    try {
+        const user = readProperty('mail.gmail.imap.user');
+        const pass = readProperty('mail.gmail.imap.password');
+        if (!user || !pass) return res.status(500).json({ error: 'Gmail IMAP no configurado' });
+        const count = await markBookingEmailsRead(user, pass);
+        res.json({ markedRead: count });
+    } catch (err) {
+        console.error('Error marking emails read:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.post('/upload-booking', upload.single("excelFile"), async function (req, res) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -107,10 +145,12 @@ app.post('/upload-booking', upload.single("excelFile"), async function (req, res
         console.log("Datos procesados:", data);
 
         let reservasCreadas = 0;
+        let reservasOmitidas = 0;
+        const errores = [];
 
         for (const row of data) {
+            const referencia = row['Número de reserva'] ?? '(sin referencia)';
             try {
-                // Separar apellidos y nombre del campo "Reservado por"
                 const [apellidosFull, nombre] = row['Reservado por']
                     ? row['Reservado por'].split(',').map((s) => s.trim())
                     : ["", ""];
@@ -119,10 +159,7 @@ app.post('/upload-booking', upload.single("excelFile"), async function (req, res
                 const apellido2 = apellidosParts.length > 1 ? apellidosParts.slice(1).join(' ') : null;
 
                 const numeroConfirmacion = await getInvoiceNumber(row['Salida']);
-
-
                 const dias = parseInt(row['Duración (noches)']) || 1;
-
                 const habitaciones = buildHabitaciones(row);
 
                 const reserva = {
@@ -133,10 +170,9 @@ app.post('/upload-booking', upload.single("excelFile"), async function (req, res
                     dias,
                     habitaciones,
                     tipo_pago: '',
-                    referenciaOtraPlataforma: row['Número de reserva'],
+                    referenciaOtraPlataforma: referencia,
                     estado: row['Estado']
                 };
-                console.error("Reserva convertida", reserva);
 
                 const cliente = {
                     nombre: nombre,
@@ -145,18 +181,28 @@ app.post('/upload-booking', upload.single("excelFile"), async function (req, res
                     dni: "",
                     email: "",
                 };
-                console.error("cliente convertido", cliente);
 
-                await saveBooking(reserva, cliente);
-                reservasCreadas++;
+                const existing = await executeQuery(
+                    'SELECT booking_id FROM casademiranda.bookings WHERE other_platform_reference = ?',
+                    [referencia]
+                );
+                if (existing.length > 0) {
+                    reservasOmitidas++;
+                } else {
+                    await saveBooking(reserva, cliente);
+                    reservasCreadas++;
+                }
             } catch (err) {
                 console.error("Error procesando fila:", row, err);
+                errores.push({ referencia, error: err.message });
             }
         }
 
         res.json({
             message: "Archivo procesado correctamente",
             reservasCreadas,
+            reservasOmitidas,
+            errores,
         });
     } catch (err) {
         console.error("Error al procesar Excel:", err);
