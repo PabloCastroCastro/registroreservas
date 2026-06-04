@@ -104,10 +104,55 @@ export default function PreciosBasePage() {
                     <p className="text-xs text-gray mt-2">Temporada baja: resto del año</p>
                 </section>
 
-                {/* Tabla de precios */}
-                <section className="border border-gray-light rounded-lg overflow-hidden">
-                    <div className="overflow-x-auto">
-                    <table className="w-full text-sm min-w-[480px]">
+                {/* Mobile: tarjetas por habitación */}
+                <div className="md:hidden flex flex-col gap-3">
+                    {ROOMS.map(room => (
+                        <section key={room} className="border border-gray-light rounded-lg p-4">
+                            <h3 className="font-semibold text-gray-dark mb-3">{room}</h3>
+                            {(['low', 'high'] as const).map(s => {
+                                const row = prices.find(p => p.room_name === room && p.season === s);
+                                if (!row) return null;
+                                return (
+                                    <div key={row.id} className={`mb-3 pb-3 ${s === 'low' ? 'border-b border-gray-light' : ''}`}>
+                                        <span className={`text-xs rounded-full px-2 py-0.5 font-medium mb-2 inline-block ${s === 'high' ? 'bg-yellow bg-opacity-50 text-gray-dark' : 'bg-gray-light text-gray'}`}>
+                                            Temporada {s === 'high' ? 'alta' : 'baja'}
+                                        </span>
+                                        <div className="grid grid-cols-2 gap-3 mt-2">
+                                            <div>
+                                                <p className="text-xs text-gray uppercase tracking-wide mb-1">Precio/noche</p>
+                                                <div className="flex items-center gap-1">
+                                                    <input
+                                                        className="border border-gray-light rounded-lg px-2 py-1 text-sm text-gray-dark w-full text-right focus:outline-none"
+                                                        type="number" min="0" step="0.01"
+                                                        value={getEdited(row.id, 'price', row.price)}
+                                                        onChange={e => setEditedField(row.id, 'price', e.target.value)}
+                                                    />
+                                                    <span className="text-gray text-sm">€</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-gray uppercase tracking-wide mb-1">Supletoria</p>
+                                                <div className="flex items-center gap-1">
+                                                    <input
+                                                        className="border border-gray-light rounded-lg px-2 py-1 text-sm text-gray-dark w-full text-right focus:outline-none"
+                                                        type="number" min="0" step="0.01"
+                                                        value={getEdited(row.id, 'price_extra_bed', row.price_extra_bed)}
+                                                        onChange={e => setEditedField(row.id, 'price_extra_bed', e.target.value)}
+                                                    />
+                                                    <span className="text-gray text-sm">€</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </section>
+                    ))}
+                </div>
+
+                {/* Desktop: tabla */}
+                <section className="hidden md:block border border-gray-light rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
                         <thead className="bg-gray-light bg-opacity-40">
                             <tr>
                                 <th className="text-left px-4 py-3 text-xs text-gray uppercase tracking-wide font-semibold">Habitación</th>
@@ -130,21 +175,15 @@ export default function PreciosBasePage() {
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3 text-right">
-                                                <input
-                                                    className={inputClass}
-                                                    type="number" min="0" step="0.01"
+                                                <input className={inputClass} type="number" min="0" step="0.01"
                                                     value={getEdited(row.id, 'price', row.price)}
-                                                    onChange={e => setEditedField(row.id, 'price', e.target.value)}
-                                                />
+                                                    onChange={e => setEditedField(row.id, 'price', e.target.value)} />
                                                 <span className="ml-1 text-gray">€</span>
                                             </td>
                                             <td className="px-4 py-3 text-right">
-                                                <input
-                                                    className={inputClass}
-                                                    type="number" min="0" step="0.01"
+                                                <input className={inputClass} type="number" min="0" step="0.01"
                                                     value={getEdited(row.id, 'price_extra_bed', row.price_extra_bed)}
-                                                    onChange={e => setEditedField(row.id, 'price_extra_bed', e.target.value)}
-                                                />
+                                                    onChange={e => setEditedField(row.id, 'price_extra_bed', e.target.value)} />
                                                 <span className="ml-1 text-gray">€</span>
                                             </td>
                                         </tr>
@@ -153,7 +192,6 @@ export default function PreciosBasePage() {
                             ))}
                         </tbody>
                     </table>
-                    </div>
                 </section>
             </div>
         </>
