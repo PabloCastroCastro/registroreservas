@@ -4,20 +4,29 @@ import { Navbar } from 'flowbite-react';
 import logo from '../../public/logo.jpg'
 import Image from "next/image";
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
+const NAV_LINKS = [
+    { href: '/', label: 'Reservas', exact: true },
+    { href: '/booking/new-booking', label: 'Crear Reserva' },
+    { href: '/booking/load-booking', label: 'Cargar Reservas' },
+    { href: '/menu', label: 'Carta de cenas' },
+];
 
 export default function DefaultNavbar() {
-
+    const router = useRouter();
     const [token, setToken] = useState<string | null>(null);
 
-    
     useEffect(() => {
         const tokenGuardado = localStorage.getItem('token');
-        if (tokenGuardado) {
-            setToken(tokenGuardado);
-        }
+        if (tokenGuardado) setToken(tokenGuardado);
     }, []);
+
+    function isActive(href: string, exact?: boolean) {
+        if (exact) return router.pathname === href;
+        return router.pathname.startsWith(href);
+    }
 
     return (
         <Navbar fluid rounded>
@@ -32,14 +41,24 @@ export default function DefaultNavbar() {
             </Navbar.Brand>
             <Navbar.Toggle />
             <Navbar.Collapse>
-                <Link href="/booking/load-booking"><p className='text-gray text-opacity-75 font-semibold'>Cargar Reservas</p></Link>
-                <Link href="/booking/new-booking"><p className='text-gray text-opacity-75 font-semibold'>Crear Reserva</p></Link>
-                <Link href="/menu"><p className='text-gray text-opacity-75 font-semibold'>Carta de cenas</p></Link>
-                <Link href="/"><p className='text-gray text-opacity-75 font-semibold'>Home</p></Link>
-                <Link href="/logout"><p className='text-gray text-opacity-75 font-semibold'>Cerrar Session</p></Link>
+                {NAV_LINKS.map(({ href, label, exact }) => (
+                    <Link key={href} href={href}>
+                        <span className={`
+                            text-sm font-semibold px-1 py-0.5 rounded transition-colors
+                            ${isActive(href, exact)
+                                ? 'text-green border-b-2 border-green'
+                                : 'text-gray hover:text-gray-dark'}
+                        `}>
+                            {label}
+                        </span>
+                    </Link>
+                ))}
+                <Link href="/logout">
+                    <span className="text-sm font-semibold px-1 py-0.5 text-gray hover:text-orange transition-colors">
+                        Cerrar sesión
+                    </span>
+                </Link>
             </Navbar.Collapse>
         </Navbar>
     )
 }
-
-
