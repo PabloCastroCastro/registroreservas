@@ -141,6 +141,18 @@ export async function deleteBooking(bookingId: string) {
   return response.status;
 }
 
+export async function getRoomsAvailability(checkIn: string, checkOut: string, excludeId?: string): Promise<Record<string, boolean>> {
+  const token = getToken();
+  const params = new URLSearchParams({ checkIn, checkOut });
+  if (excludeId) params.append('excludeId', excludeId);
+  const res = await fetch(`${API_HOST}/reserva/disponibilidad?${params}`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!res.ok) return {};
+  const data = await res.json();
+  return data.rooms ?? {};
+}
+
 export async function checkBookingSync() {
   const token = getToken();
   const response = await fetch(`${API_HOST}/booking-sync/check`, {
