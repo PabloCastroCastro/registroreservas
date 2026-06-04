@@ -702,7 +702,7 @@ app.get('/reserva/:id/cenas', async (req, res) => {
 app.post('/reserva/:id/cenas', async (req, res) => {
     if (!authGuard(req, res)) return;
     try {
-        const id = await addBookingDish(req.params.id, req.body.dish_id, req.body.portion_type, req.body.quantity ?? 1);
+        const id = await addBookingDish(req.params.id, req.body.dish_id, req.body.portion_type, req.body.quantity ?? 1, req.body.dinner_date);
         res.json({ id });
     } catch (err) {
         res.status(400).json({ error: err.message });

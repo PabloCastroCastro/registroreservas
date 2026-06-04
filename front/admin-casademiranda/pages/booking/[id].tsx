@@ -44,6 +44,7 @@ export default function BookingPage() {
     const [cenaDishId, setCenaDishId] = useState<number>(0);
     const [cenaPortionType, setCenaPortionType] = useState<'full' | 'half'>('full');
     const [cenaQuantity, setCenaQuantity] = useState(1);
+    const [cenaDinnerDate, setCenaDinnerDate] = useState(new Date().toISOString().split('T')[0]);
     const [cenaLoading, setCenaLoading] = useState(false);
 
     // Billing modal state
@@ -80,7 +81,7 @@ export default function BookingPage() {
     async function handleAddCena() {
         if (!cenaDishId || typeof query.id !== 'string') return;
         setCenaLoading(true);
-        await APIBookingDishes.addBookingDish(query.id, { dish_id: cenaDishId, portion_type: cenaPortionType, quantity: cenaQuantity });
+        await APIBookingDishes.addBookingDish(query.id, { dish_id: cenaDishId, portion_type: cenaPortionType, quantity: cenaQuantity, dinner_date: cenaDinnerDate });
         setCenaLoading(false);
         setShowAddCena(false);
         setCenaDishId(0);
@@ -338,7 +339,9 @@ export default function BookingPage() {
                                         <p className="text-xs text-gray">
                                             {c.portion_type === 'half' ? 'Media ración' : 'Ración'} · x{c.quantity} · {Number(c.price).toFixed(2)} €/ud
                                         </p>
-                                        <p className="text-xs text-gray">{new Date(c.created_at).toLocaleDateString('es-ES')}</p>
+                                        <p className="text-xs text-gray">
+                                            Noche: {new Date(c.dinner_date).toLocaleDateString('es-ES')}
+                                        </p>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <p className="text-sm font-semibold text-gray-dark">{(Number(c.price) * c.quantity).toFixed(2)} €</p>
@@ -398,6 +401,14 @@ export default function BookingPage() {
                                     className="rounded w-full border border-gray-light px-3 py-2 text-sm text-gray-dark"
                                     type="number" min={1} value={cenaQuantity}
                                     onChange={e => setCenaQuantity(parseInt(e.target.value) || 1)}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray uppercase tracking-wide block mb-1">Noche de la cena</label>
+                                <input
+                                    className="rounded w-full border border-gray-light px-3 py-2 text-sm text-gray-dark"
+                                    type="date" value={cenaDinnerDate}
+                                    onChange={e => setCenaDinnerDate(e.target.value)}
                                 />
                             </div>
                             {cenaDishId > 0 && (() => {
