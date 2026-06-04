@@ -106,7 +106,8 @@ export default function PreciosBasePage() {
 
                 {/* Tabla de precios */}
                 <section className="border border-gray-light rounded-lg overflow-hidden">
-                    <table className="w-full text-sm">
+                    <div className="overflow-x-auto">
+                    <table className="w-full text-sm min-w-[480px]">
                         <thead className="bg-gray-light bg-opacity-40">
                             <tr>
                                 <th className="text-left px-4 py-3 text-xs text-gray uppercase tracking-wide font-semibold">Habitación</th>
@@ -152,6 +153,7 @@ export default function PreciosBasePage() {
                             ))}
                         </tbody>
                     </table>
+                    </div>
                 </section>
             </div>
         </>
