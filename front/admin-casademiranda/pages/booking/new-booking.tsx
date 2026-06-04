@@ -257,11 +257,6 @@ export default function NewBooking() {
                                         </option>
                                     ))}
                                 </select>
-                                {checkIn && checkOut && Object.keys(availability).length > 0 && (
-                                    <p className="text-xs text-gray mt-1">
-                                        {ALL_ROOMS.filter(r => availability[r] === true).length} habitación(es) disponible(s)
-                                    </p>
-                                )}
                             </div>
                             <div>
                                 <label className={labelClass}>Precio (€) *</label>
@@ -291,6 +286,11 @@ export default function NewBooking() {
                             </div>
                         </div>
 
+                        {checkIn && checkOut && Object.keys(availability).length > 0 && (
+                            <p className="text-xs text-gray mt-2">
+                                {ALL_ROOMS.filter(r => availability[r] === true).length} habitación(es) disponible(s) para las fechas seleccionadas
+                            </p>
+                        )}
                         {errors.roomPrice && <p className={errorClass + " mt-1"}>{errors.roomPrice}</p>}
 
                         <button type="button" onClick={agregarHabitacion}
