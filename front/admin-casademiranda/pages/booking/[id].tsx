@@ -4,9 +4,13 @@ import RoomComponent from '@/components/rooms/roomComponent';
 import { useRouter } from 'next/router'
 import type { Booking, ResponseError, RequestUpdateBooking } from '../../interfaces/booking'
 import type { Bill, BillExtra } from '@/interfaces/bill'
+import type { BookingDish } from '@/interfaces/bookingDish'
+import type { Dish } from '@/interfaces/menu'
 import * as APIBooking from "../../services/bookings";
 import * as APIBilling from "../../services/bills";
 import * as APIClient from "@/services/clients";
+import * as APIBookingDishes from "@/services/bookingDishes";
+import * as APIMenu from "@/services/menu";
 import { useState, useEffect } from 'react';
 import { Button } from 'flowbite-react';
 import { RequestRoom } from '@/interfaces/room';
@@ -33,6 +37,16 @@ export default function BookingPage() {
     const [editPaymentType, setEditPaymentType] = useState('');
     const [editPlatformRef, setEditPlatformRef] = useState('');
 
+    // Cenas state
+    const [cenas, setCenas] = useState<BookingDish[]>([]);
+    const [menuDishes, setMenuDishes] = useState<Dish[]>([]);
+    const [showAddCena, setShowAddCena] = useState(false);
+    const [cenaDishId, setCenaDishId] = useState<number>(0);
+    const [cenaPortionType, setCenaPortionType] = useState<'full' | 'half'>('full');
+    const [cenaQuantity, setCenaQuantity] = useState(1);
+    const [cenaDinnerDate, setCenaDinnerDate] = useState(new Date().toISOString().split('T')[0]);
+    const [cenaLoading, setCenaLoading] = useState(false);
+
     // Billing modal state
     const [showBillModal, setShowBillModal] = useState(false);
     const [billTipo, setBillTipo] = useState<'personal' | 'empresa'>('personal');
@@ -51,9 +65,36 @@ export default function BookingPage() {
     const [billSuccess, setBillSuccess] = useState(false);
 
     useEffect(() => {
-        query.id !== undefined && typeof query.id === "string" ? APIBooking.getBookingById(query.id).then(setBooking).catch(console.log) : setBooking;
-        query.id !== undefined && typeof query.id === "string" ? APIClient.getClientsByBookingId(query.id).then(setClients).catch(console.log) : setClients([]);
-    }, []);
+        if (query.id === undefined || typeof query.id !== "string") return;
+        APIBooking.getBookingById(query.id).then(setBooking).catch(console.log);
+        APIClient.getClientsByBookingId(query.id).then(setClients).catch(console.log);
+        APIBookingDishes.getBookingDishes(query.id).then(setCenas).catch(console.log);
+        APIMenu.getDishes().then(setMenuDishes).catch(console.log);
+    }, [query.id]);
+
+    async function loadCenas() {
+        if (typeof query.id === "string") {
+            APIBookingDishes.getBookingDishes(query.id).then(setCenas);
+        }
+    }
+
+    async function handleAddCena() {
+        if (!cenaDishId || typeof query.id !== 'string') return;
+        setCenaLoading(true);
+        await APIBookingDishes.addBookingDish(query.id, { dish_id: cenaDishId, portion_type: cenaPortionType, quantity: cenaQuantity, dinner_date: cenaDinnerDate });
+        setCenaLoading(false);
+        setShowAddCena(false);
+        setCenaDishId(0);
+        setCenaQuantity(1);
+        setCenaPortionType('full');
+        loadCenas();
+    }
+
+    async function handleRemoveCena(bookingDishId: number) {
+        if (typeof query.id !== 'string') return;
+        await APIBookingDishes.removeBookingDish(query.id, bookingDishId);
+        loadCenas();
+    }
 
     function openBillModal() {
         if (!booking) return;
@@ -63,7 +104,9 @@ export default function BookingPage() {
         setBillDni(booking.identifier);
         setBillAddress('');
         setBillConcepto('');
-        setBillExtras([]);
+        // Pre-añadir cenas como un extra si hay pedidas
+        const totalCenas = cenas.reduce((sum, c) => sum + Number(c.price) * c.quantity, 0);
+        setBillExtras(totalCenas > 0 ? [{ descripcion: 'Cenas', precio: Math.round(totalCenas * 100) / 100 }] : []);
         setBillEmail(clients?.[0]?.email ?? '');
         setBillNombreEmpresa('');
         setBillCodigoPostalCiudad('');
@@ -262,6 +305,57 @@ export default function BookingPage() {
                     )) : <p className="text-xs text-gray">Sin huéspedes registrados</p>}
                 </section>
 
+                {/* Cenas */}
+                <section className="border border-gray-light rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                        <div>
+                            <h2 className="text-xs text-gray uppercase tracking-wide font-semibold">Cenas</h2>
+                            {cenas.length > 0 && (
+                                <p className="text-xs text-gray mt-0.5">
+                                    Total: <span className="font-semibold text-gray-dark">
+                                        {cenas.reduce((s, c) => s + Number(c.price) * c.quantity, 0).toFixed(2)} €
+                                    </span>
+                                </p>
+                            )}
+                        </div>
+                        <button
+                            onClick={() => setShowAddCena(true)}
+                            className="inline-flex items-center gap-1 rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75 px-3 py-1 text-xs font-semibold"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            </svg>
+                            Añadir
+                        </button>
+                    </div>
+                    {cenas.length === 0 ? (
+                        <p className="text-xs text-gray">Sin cenas registradas</p>
+                    ) : (
+                        <div className="flex flex-col gap-2">
+                            {cenas.map(c => (
+                                <div key={c.booking_dish_id} className="flex items-center justify-between border border-gray-light rounded-lg px-3 py-2">
+                                    <div>
+                                        <p className="text-sm text-gray-dark font-medium">{c.dish_name}</p>
+                                        <p className="text-xs text-gray">
+                                            {c.portion_type === 'half' ? 'Media ración' : 'Ración'} · x{c.quantity} · {Number(c.price).toFixed(2)} €/ud
+                                        </p>
+                                        <p className="text-xs text-gray">
+                                            Noche: {new Date(c.dinner_date).toLocaleDateString('es-ES')}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <p className="text-sm font-semibold text-gray-dark">{(Number(c.price) * c.quantity).toFixed(2)} €</p>
+                                        <button
+                                            onClick={() => handleRemoveCena(c.booking_dish_id)}
+                                            className="text-xs text-orange font-semibold px-2"
+                                        >✕</button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </section>
+
             </div>
             <div id="botones" className='mt-5 px-4 md:px-5 flex flex-wrap gap-3'>
                 <Button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' onClick={registerCheckIn}>Registrar CheckIn</Button>
@@ -270,6 +364,72 @@ export default function BookingPage() {
                 <Button className='rounded-full bg-yellow bg-opacity-50 text-gray-dark text-opacity-75' onClick={() => setShowConfirmModal('cancel')}>Cancelar Reserva</Button>
                 <Button className='rounded-full bg-orange bg-opacity-50 text-gray-dark text-opacity-75' onClick={() => setShowConfirmModal('delete')}>Eliminar Reserva</Button>
             </div>
+
+            {/* Modal añadir cena */}
+            {showAddCena && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                    <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm mx-4">
+                        <h2 className="text-lg font-semibold mb-4 text-gray-dark">Añadir cena</h2>
+                        <div className="flex flex-col gap-3">
+                            <div>
+                                <label className="text-xs text-gray uppercase tracking-wide block mb-1">Plato</label>
+                                <select
+                                    className="rounded w-full border border-gray-light px-3 py-2 text-sm text-gray-dark"
+                                    value={cenaDishId}
+                                    onChange={e => setCenaDishId(parseInt(e.target.value))}
+                                >
+                                    <option value={0}>Seleccionar plato...</option>
+                                    {menuDishes.map(d => (
+                                        <option key={d.dish_id} value={d.dish_id}>{d.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray uppercase tracking-wide block mb-1">Tipo de ración</label>
+                                <select
+                                    className="rounded w-full border border-gray-light px-3 py-2 text-sm text-gray-dark"
+                                    value={cenaPortionType}
+                                    onChange={e => setCenaPortionType(e.target.value as 'full' | 'half')}
+                                >
+                                    <option value="full">Ración entera</option>
+                                    <option value="half">Media ración</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray uppercase tracking-wide block mb-1">Cantidad</label>
+                                <input
+                                    className="rounded w-full border border-gray-light px-3 py-2 text-sm text-gray-dark"
+                                    type="number" min={1} value={cenaQuantity}
+                                    onChange={e => setCenaQuantity(parseInt(e.target.value) || 1)}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray uppercase tracking-wide block mb-1">Noche de la cena</label>
+                                <input
+                                    className="rounded w-full border border-gray-light px-3 py-2 text-sm text-gray-dark"
+                                    type="date" value={cenaDinnerDate}
+                                    onChange={e => setCenaDinnerDate(e.target.value)}
+                                />
+                            </div>
+                            {cenaDishId > 0 && (() => {
+                                const d = menuDishes.find(x => x.dish_id === cenaDishId);
+                                const price = cenaPortionType === 'half' ? (d?.price_half ?? d?.price_full) : d?.price_full;
+                                return <p className="text-sm text-gray-dark">Precio: <span className="font-semibold">{Number(price ?? 0).toFixed(2)} €</span></p>;
+                            })()}
+                        </div>
+                        <div className="flex justify-end gap-3 mt-5">
+                            <button className="rounded-full bg-gray-light px-5 py-2 text-sm font-semibold text-gray-dark" onClick={() => setShowAddCena(false)}>Cancelar</button>
+                            <button
+                                className="rounded-full bg-green bg-opacity-50 px-5 py-2 text-sm font-semibold text-gray-dark disabled:opacity-40"
+                                onClick={handleAddCena}
+                                disabled={!cenaDishId || cenaLoading}
+                            >
+                                {cenaLoading ? 'Guardando...' : 'Añadir'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Modal de facturación */}
             {showBillModal && (

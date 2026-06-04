@@ -26,6 +26,7 @@ import readProperty from './configuration/readConfiguration.js';
 import executeQuery from './sql/sqlUtils.js';
 import e from 'express';
 import { listDishes, listPublicDishes, createDish, updateDish, deleteDish } from './menu/menuDishes.js';
+import { listBookingDishes, addBookingDish, removeBookingDish } from './bookings/bookingDishes.js';
 import { buildMenuPDF } from './menu/menuPDF.js';
 
 const app = express();
@@ -690,6 +691,29 @@ app.post('/factura', async function (req, res) {
     res.send('Datos recibidos correctamente.');
 });
 
+
+// --- Cenas de reserva ---
+
+app.get('/reserva/:id/cenas', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    res.json(await listBookingDishes(req.params.id));
+});
+
+app.post('/reserva/:id/cenas', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    try {
+        const id = await addBookingDish(req.params.id, req.body.dish_id, req.body.portion_type, req.body.quantity ?? 1, req.body.dinner_date);
+        res.json({ id });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+app.delete('/reserva/:id/cenas/:bookingDishId', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    await removeBookingDish(req.params.bookingDishId);
+    res.sendStatus(200);
+});
 
 // --- Menú ---
 
