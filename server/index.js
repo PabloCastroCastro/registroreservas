@@ -24,6 +24,7 @@ import getBookingNumber from './bookings/getBookingNumber.js';
 import readProperty from './configuration/readConfiguration.js';
 import executeQuery from './sql/sqlUtils.js';
 import e from 'express';
+import { listDishes, createDish, updateDish, deleteDish } from './menu/menuDishes.js';
 
 const app = express();
 const SECRET_KEY = readProperty("server.secretKey");
@@ -641,6 +642,37 @@ app.post('/factura', async function (req, res) {
     res.send('Datos recibidos correctamente.');
 });
 
+
+// --- Menú ---
+
+function authGuard(req, res) {
+    const token = (req.headers['authorization'] ?? '').split(' ')[1];
+    if (!token) { res.sendStatus(401); return false; }
+    try { jwt.verify(token, SECRET_KEY); return true; } catch { res.sendStatus(403); return false; }
+}
+
+app.get('/menu', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    res.json(await listDishes());
+});
+
+app.post('/menu', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    const id = await createDish(req.body);
+    res.json({ id });
+});
+
+app.put('/menu/:id', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    await updateDish(parseInt(req.params.id), req.body);
+    res.sendStatus(200);
+});
+
+app.delete('/menu/:id', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    await deleteDish(parseInt(req.params.id));
+    res.sendStatus(200);
+});
 
 app.listen(3003, function () {
     console.log('Servidor escuchando en el puerto 3003.');
