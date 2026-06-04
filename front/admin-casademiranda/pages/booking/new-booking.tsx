@@ -50,7 +50,9 @@ export default function NewBooking() {
         const result = await APIRoomPrices.getPriceForRoom(room, date);
         if (result) {
             setPriceRoom(String(result.price));
-            if (result.priceExtraBed) setPriceExtraBed(String(result.priceExtraBed));
+            if (parseInt(numExtraBed) > 0 && result.priceExtraBed) {
+                setPriceExtraBed(String(result.priceExtraBed));
+            }
         }
     }
 
