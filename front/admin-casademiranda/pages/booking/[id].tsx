@@ -42,6 +42,7 @@ export default function BookingPage() {
     const [billAddress, setBillAddress] = useState('');
     const [billConcepto, setBillConcepto] = useState('');
     const [billExtras, setBillExtras] = useState<BillExtra[]>([]);
+    const [billEmail, setBillEmail] = useState('');
     const [billNombreEmpresa, setBillNombreEmpresa] = useState('');
     const [billCodigoPostalCiudad, setBillCodigoPostalCiudad] = useState('');
     const [billPais, setBillPais] = useState('España');
@@ -63,6 +64,7 @@ export default function BookingPage() {
         setBillAddress('');
         setBillConcepto('');
         setBillExtras([]);
+        setBillEmail('');
         setBillNombreEmpresa('');
         setBillCodigoPostalCiudad('');
         setBillPais('España');
@@ -90,7 +92,7 @@ export default function BookingPage() {
             nombre: billName,
             apellidos: billSurname,
             dni: billDni,
-            email: "casademirandaezaro@gmail.com",
+            email: billEmail,
             nombreEmpresa: billTipo === 'empresa' ? billNombreEmpresa || undefined : undefined,
             codigoPostalCiudad: billTipo === 'empresa' ? billCodigoPostalCiudad || undefined : undefined,
             pais: billTipo === 'empresa' ? billPais || undefined : undefined,
@@ -335,6 +337,11 @@ export default function BookingPage() {
                                                 </div>
                                             </>
                                         )}
+                                        <div className="sm:col-span-2">
+                                            <label className={labelClass}>Email destinatario</label>
+                                            <input className={inputClass} type="email" value={billEmail} onChange={e => setBillEmail(e.target.value)} placeholder="email@ejemplo.com" />
+                                            <p className="text-xs text-gray mt-1">casademirandaezaro@gmail.com recibirá siempre una copia (CC)</p>
+                                        </div>
                                         <div className="sm:col-span-2">
                                             <label className={labelClass}>Concepto (opcional)</label>
                                             <input className={inputClass} value={billConcepto} onChange={e => setBillConcepto(e.target.value)} placeholder="Ej: Alojamiento vacacional en Casa de Miranda" />
