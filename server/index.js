@@ -585,12 +585,9 @@ app.post('/reserva', async (req, res) => {
     const numeroConfirmacion = await getInvoiceNumber(req.body.fechaCheckOut);
     let habitaciones;
 
-    try {
-        habitaciones = JSON.parse(req.body.habitaciones);
-    } catch (e) {
-        console.log(e);
-        habitaciones = req.body.habitaciones;
-    }
+    habitaciones = Array.isArray(req.body.habitaciones)
+        ? req.body.habitaciones
+        : JSON.parse(req.body.habitaciones);
 
     const reserva = {
         numeroConfirmacion: numeroConfirmacion,
@@ -629,8 +626,9 @@ function parseBillBody(body) {
     const checkOutDate = new Date(body.fechaCheckOut).toLocaleDateString('es-ES');
     const dias = Math.floor((new Date(body.fechaCheckOut) - new Date(body.fechaCheckIn)) / 86400000);
 
-    let habitaciones;
-    try { habitaciones = JSON.parse(body.habitaciones); } catch { habitaciones = body.habitaciones; }
+    const habitaciones = Array.isArray(body.habitaciones)
+        ? body.habitaciones
+        : JSON.parse(body.habitaciones);
 
     let extras = body.extras ?? [];
     if (typeof extras === 'string') { try { extras = JSON.parse(extras); } catch { extras = []; } }
