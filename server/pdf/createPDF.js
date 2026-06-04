@@ -1,6 +1,10 @@
 import PDFDocument from 'pdfkit';
 import fs from 'fs';
 
+// PDFKit wraps at word boundaries even with lineBreak:false, so truncate manually.
+// At fontSize 12 Times-Roman: ~6px/char. 450px column ≈ 75 chars, 165px ≈ 27 chars.
+const trunc = (str, max) => str && str.length > max ? str.slice(0, max - 1) + '…' : (str ?? '');
+
 function buildPDF(reserva, cliente) {
     return new Promise((resolve, reject) => {
         const doc = new PDFDocument();
@@ -29,23 +33,23 @@ function buildPDF(reserva, cliente) {
         doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Check-out:', 450, 210, { ...col, width: 75 });
 
         const clientName = cliente.nombre + ' ' + (cliente.apellido1 ?? cliente.apellidos ?? '') + (cliente.apellido2 ? ' ' + cliente.apellido2 : '');
-        doc.font('Times-Roman').fontSize(12).fillColor('grey').text(clientName, 75, 224, { ...col, width: 165 });
-        doc.font('Times-Roman').fontSize(12).fillColor('grey').text(cliente.dni ?? '—', 250, 224, { ...col, width: 90 });
+        doc.font('Times-Roman').fontSize(12).fillColor('grey').text(trunc(clientName, 27), 75, 224, { ...col, width: 165 });
+        doc.font('Times-Roman').fontSize(12).fillColor('grey').text(trunc(cliente.dni ?? '—', 14), 250, 224, { ...col, width: 90 });
         doc.font('Times-Roman').fontSize(12).fillColor('grey').text(reserva.fechaCheckIn, 350, 224, { ...col, width: 90 });
         doc.font('Times-Roman').fontSize(12).fillColor('grey').text(reserva.fechaCheckOut, 450, 224, { ...col, width: 75 });
 
         // Address (optional)
         let nextY = 238;
         if (cliente.direccion) {
-            doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Dirección:', 75, nextY, { ...col, width: 450 });
-            doc.font('Times-Roman').fontSize(12).fillColor('grey').text(cliente.direccion, 75, nextY + 14, { ...col, width: 450 });
+            doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Dirección:', 75, nextY);
+            doc.font('Times-Roman').fontSize(12).fillColor('grey').text(trunc(cliente.direccion, 70), 75, nextY + 14);
             nextY += 30;
         }
 
         // Concepto (optional)
         if (reserva.concepto) {
-            doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Concepto:', 75, nextY, { ...col, width: 450 });
-            doc.font('Times-Roman').fontSize(12).fillColor('grey').text(reserva.concepto, 75, nextY + 14, { ...col, width: 450 });
+            doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Concepto:', 75, nextY);
+            doc.font('Times-Roman').fontSize(12).fillColor('grey').text(trunc(reserva.concepto, 70), 75, nextY + 14);
             nextY += 30;
         }
 
