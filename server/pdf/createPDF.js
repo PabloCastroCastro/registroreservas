@@ -32,9 +32,11 @@ function buildPDF(reserva, cliente) {
         if (reserva.tipo === 'empresa') {
             // Bloque datos fiscales empresa
             let ey = 205;
+            doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Cliente:', 75, ey);
+            ey += 15;
             if (cliente.nombreEmpresa) {
-                doc.font('Times-Bold').fontSize(14).fillColor('#154360').text(trunc(cliente.nombreEmpresa, 60), 75, ey);
-                ey += 18;
+                doc.font('Times-Roman').fontSize(12).fillColor('grey').text(trunc(cliente.nombreEmpresa, 60), 75, ey);
+                ey += 15;
             }
             doc.font('Times-Roman').fontSize(12).fillColor('grey').text(trunc(clientName, 60), 75, ey);
             ey += 15;
