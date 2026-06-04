@@ -1,93 +1,147 @@
 import PDFDocument from 'pdfkit';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const SOURCES = path.join(__dirname, 'sources');
+const FONT_SCRIPT = path.join(SOURCES, 'Dancing_Script', 'static', 'DancingScript-Bold.ttf');
+const FONT_SCRIPT_REG = path.join(SOURCES, 'Dancing_Script', 'static', 'DancingScript-Regular.ttf');
+const FONT_SERIF = 'Times-Roman';
+const FONT_SERIF_BOLD = 'Times-Bold';
+const BG_IMAGE = path.join(SOURCES, 'fondo.png');
 
 const CATEGORIES = ['Entrante', 'Principal', 'Postre', 'Bebida'];
 
+// Page dimensions (A4)
+const PAGE_W = 595;
+const PAGE_H = 842;
+const MARGIN = 45;
+const COL_W = (PAGE_W - MARGIN * 2 - 20) / 2;
+const COL_LEFT = MARGIN;
+const COL_RIGHT = MARGIN + COL_W + 20;
+
 export function buildMenuPDF(dishes) {
     return new Promise((resolve, reject) => {
-        const doc = new PDFDocument({ margin: 50 });
+        const doc = new PDFDocument({ size: 'A4', margin: 0 });
         const chunks = [];
         doc.on('data', chunk => chunks.push(chunk));
         doc.on('end', () => resolve(Buffer.concat(chunks)));
         doc.on('error', reject);
 
-        // Header bar
-        doc.lineCap('butt').moveTo(0, 0).lineTo(700, 0).lineWidth(10).fillAndStroke('green');
+        doc.registerFont('Script', FONT_SCRIPT);
+        doc.registerFont('ScriptReg', FONT_SCRIPT_REG);
+
+        // Background image
+        try {
+            doc.image(BG_IMAGE, 0, 0, { width: PAGE_W, height: PAGE_H, opacity: 0.15 });
+        } catch (_) {}
+
+        // Semi-transparent white overlay for readability
+        doc.rect(0, 0, PAGE_W, PAGE_H).fillOpacity(0.55).fill('white').fillOpacity(1);
 
         // Title
-        doc.font('Times-Roman').fontSize(28).fillColor('green').text('Casa de Miranda', 50, 40);
-        doc.font('Times-Bold').fontSize(16).fillColor('#154360').text('Carta de Cenas', 50, 76);
+        doc.font('Script').fontSize(52).fillColor('#2c2c2c')
+            .text('Carta de Cenas', 0, 30, { align: 'center', width: PAGE_W });
 
-        doc.font('Times-Roman').fontSize(10).fillColor('grey')
-            .text('Lugar Ézaro · 15297, A Coruña · (+34) 659134018', 50, 96);
+        // Decorative lines beside title
+        const titleY = 55;
+        doc.moveTo(MARGIN, titleY).lineTo(MARGIN + 60, titleY).lineWidth(1).strokeColor('#8492a6').stroke();
+        doc.moveTo(PAGE_W - MARGIN - 60, titleY).lineTo(PAGE_W - MARGIN, titleY).lineWidth(1).strokeColor('#8492a6').stroke();
 
-        doc.moveTo(50, 115).lineTo(545, 115).lineWidth(1).strokeColor('#d3dce6').stroke();
+        // Casa de Miranda subtitle
+        doc.font(FONT_SERIF).fontSize(9).fillColor('#8492a6')
+            .text('CASA DE MIRANDA · Turismo Rural · Ézaro, A Coruña', 0, 88, { align: 'center', width: PAGE_W });
 
-        let y = 130;
+        doc.moveTo(MARGIN, 102).lineTo(PAGE_W - MARGIN, 102).lineWidth(0.5).strokeColor('#d3dce6').stroke();
 
-        for (const cat of CATEGORIES) {
-            const catDishes = dishes.filter(d => d.category === cat);
-            if (catDishes.length === 0) continue;
+        // Split categories into two columns
+        const catDishes = CATEGORIES.map(cat => ({
+            cat,
+            dishes: dishes.filter(d => d.category === cat)
+        })).filter(c => c.dishes.length > 0);
 
-            // Category header
-            y += 10;
-            doc.font('Times-Bold').fontSize(13).fillColor('#154360').text(cat.toUpperCase(), 50, y);
-            y += 18;
-            doc.moveTo(50, y).lineTo(545, y).lineWidth(0.5).strokeColor('#d3dce6').stroke();
-            y += 10;
+        // Distribute categories: left column gets first half, right gets second
+        const mid = Math.ceil(catDishes.length / 2);
+        const leftCats = catDishes.slice(0, mid);
+        const rightCats = catDishes.slice(mid);
 
-            for (const dish of catDishes) {
-                // Check if we need a new page
-                if (y > 720) {
-                    doc.addPage();
-                    y = 50;
-                }
+        let leftY = 115;
+        let rightY = 115;
 
-                // Dish name + prices on same line
-                doc.font('Times-Bold').fontSize(11).fillColor('#1B2631').text(dish.name, 50, y, { continued: false, width: 350 });
+        const renderCategory = (cat, dishes, x, y) => {
+            // Category header in script font
+            doc.font('Script').fontSize(28).fillColor('#2c2c2c').text(cat, x, y, { width: COL_W });
+            y += 36;
 
-                const priceText = dish.price_half != null
-                    ? `${Number(dish.price_full).toFixed(2)} € / ${Number(dish.price_half).toFixed(2)} € (½)`
-                    : `${Number(dish.price_full).toFixed(2)} €`;
-                doc.font('Times-Roman').fontSize(11).fillColor('#154360').text(priceText, 400, y, { width: 145, align: 'right' });
+            for (const dish of dishes) {
+                if (y > PAGE_H - 80) return y; // avoid overflow
+
+                // Name + price on same line
+                const priceStr = dish.price_half != null
+                    ? `${Number(dish.price_full).toFixed(0)}€ / ${Number(dish.price_half).toFixed(0)}€ (½)`
+                    : `${Number(dish.price_full).toFixed(0)}€`;
+
+                const nameWidth = COL_W - 70;
+
+                doc.font(FONT_SERIF).fontSize(10).fillColor('#1B2631')
+                    .text(dish.name, x, y, { width: nameWidth, continued: false });
+
+                doc.font(FONT_SERIF).fontSize(10).fillColor('#154360')
+                    .text('| ' + priceStr, x + nameWidth, y, { width: 70, align: 'right' });
 
                 y += 14;
 
-                // Description
                 if (dish.description) {
-                    doc.font('Times-Italic').fontSize(10).fillColor('grey').text(dish.description, 50, y, { width: 495 });
-                    y += 13;
-                }
-
-                // Observations
-                if (dish.observations) {
-                    doc.font('Times-Roman').fontSize(9).fillColor('grey').text(dish.observations, 50, y, { width: 495 });
+                    doc.font('Times-Italic').fontSize(8.5).fillColor('#8492a6')
+                        .text(dish.description, x, y, { width: COL_W });
                     y += 12;
                 }
 
-                // Badges
                 const badges = [];
                 if (dish.advance_notice) badges.push('Solicitar con antelación');
-                if (dish.min_persons != null) badges.push(`Mín. ${dish.min_persons} personas`);
+                if (dish.min_persons != null) badges.push(`Mín. ${dish.min_persons} pers.`);
                 if (badges.length > 0) {
-                    doc.font('Times-Roman').fontSize(9).fillColor('#ff7849').text(badges.join(' · '), 50, y, { width: 495 });
-                    y += 12;
-                }
-
-                // Alérgenos
-                const allergens = dish.allergens ?? [];
-                if (allergens.length > 0) {
-                    doc.font('Times-Bold').fontSize(8).fillColor('#8492a6').text('Alérgenos: ', 50, y, { continued: true, width: 495 });
-                    doc.font('Times-Roman').fontSize(8).fillColor('#8492a6').text(allergens.join(', '), { width: 495 });
+                    doc.font(FONT_SERIF).fontSize(8).fillColor('#ff7849')
+                        .text(badges.join(' · '), x, y, { width: COL_W });
                     y += 11;
                 }
 
-                y += 8;
+                const allergens = dish.allergens ?? [];
+                if (allergens.length > 0) {
+                    doc.font(FONT_SERIF).fontSize(7.5).fillColor('#8492a6')
+                        .text('Alérgenos: ' + allergens.join(', '), x, y, { width: COL_W });
+                    y += 10;
+                }
+
+                y += 6;
             }
+
+            return y;
+        };
+
+        for (const { cat, dishes } of leftCats) {
+            leftY = renderCategory(cat, dishes, COL_LEFT, leftY);
+            leftY += 10;
         }
 
+        for (const { cat, dishes } of rightCats) {
+            rightY = renderCategory(cat, dishes, COL_RIGHT, rightY);
+            rightY += 10;
+        }
+
+        // Vertical divider
+        const divTop = 115;
+        const divBottom = Math.max(leftY, rightY) - 10;
+        doc.moveTo(PAGE_W / 2, divTop).lineTo(PAGE_W / 2, divBottom)
+            .lineWidth(0.5).strokeColor('#d3dce6').stroke();
+
         // Footer
-        doc.font('Times-Roman').fontSize(9).fillColor('grey')
-            .text('Los precios incluyen IVA. Consulte disponibilidad con antelación.', 50, y + 10, { align: 'center', width: 495 });
+        const footerY = PAGE_H - 45;
+        doc.moveTo(MARGIN, footerY).lineTo(PAGE_W - MARGIN, footerY)
+            .lineWidth(0.5).strokeColor('#d3dce6').stroke();
+        doc.font(FONT_SERIF).fontSize(8).fillColor('#8492a6')
+            .text('Los precios incluyen IVA · Consulte disponibilidad con antelación · casademiranda.com',
+                0, footerY + 8, { align: 'center', width: PAGE_W });
 
         doc.end();
     });
