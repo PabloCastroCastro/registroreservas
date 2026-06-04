@@ -9,8 +9,8 @@ import { useEffect, useState } from 'react';
 
 const NAV_LINKS = [
     { href: '/', label: 'Reservas', exact: true },
-    { href: '/booking/new-booking', label: 'Crear Reserva' },
-    { href: '/booking/load-booking', label: 'Cargar Reservas' },
+    { href: '/booking/new-booking', label: 'Crear reserva' },
+    { href: '/booking/load-booking', label: 'Cargar reservas' },
     { href: '/menu', label: 'Carta de cenas' },
 ];
 
