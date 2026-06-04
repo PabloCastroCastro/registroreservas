@@ -31,13 +31,20 @@ export function buildMenuPDF(dishes) {
         doc.registerFont('Script', FONT_SCRIPT);
         doc.registerFont('ScriptReg', FONT_SCRIPT_REG);
 
-        // Background image
+        // Background image — solo en franja superior e inferior como decoración
         try {
-            doc.image(BG_IMAGE, 0, 0, { width: PAGE_W, height: PAGE_H, opacity: 0.15 });
+            doc.image(BG_IMAGE, 0, 0, { width: PAGE_W, height: 110 });
+            doc.image(BG_IMAGE, 0, PAGE_H - 60, { width: PAGE_W, height: 60 });
         } catch (_) {}
 
-        // Semi-transparent white overlay for readability
-        doc.rect(0, 0, PAGE_W, PAGE_H).fillOpacity(0.55).fill('white').fillOpacity(1);
+        // Gradiente sobre franja superior para que el título sea legible
+        doc.rect(0, 0, PAGE_W, 110).fillOpacity(0.6).fill('white').fillOpacity(1);
+
+        // Fondo blanco limpio para el área de contenido
+        doc.rect(0, 108, PAGE_W, PAGE_H - 168).fillOpacity(1).fill('white').fillOpacity(1);
+
+        // Franja inferior con overlay
+        doc.rect(0, PAGE_H - 60, PAGE_W, 60).fillOpacity(0.7).fill('white').fillOpacity(1);
 
         // Title
         doc.font('Script').fontSize(52).fillColor('#2c2c2c')
