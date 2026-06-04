@@ -28,7 +28,7 @@ import e from 'express';
 import { listDishes, listPublicDishes, createDish, updateDish, deleteDish } from './menu/menuDishes.js';
 import { listBasePrices, updateBasePrice, updateSeasonConfig, getPriceForRoomAndDate } from './rooms/roomPrices.js';
 import { listBookingDishes, addBookingDish, removeBookingDish } from './bookings/bookingDishes.js';
-import { checkRoomAvailability } from './bookings/checkAvailability.js';
+import { checkAllRoomsAvailability } from './bookings/checkAvailability.js';
 import { buildMenuPDF } from './menu/menuPDF.js';
 
 const app = express();
@@ -698,10 +698,10 @@ app.post('/factura', async function (req, res) {
 
 app.get('/reserva/disponibilidad', async (req, res) => {
     if (!authGuard(req, res)) return;
-    const { room, checkIn, checkOut, excludeId } = req.query;
-    if (!room || !checkIn || !checkOut) return res.status(400).json({ error: 'room, checkIn y checkOut son obligatorios' });
-    const available = await checkRoomAvailability(room, checkIn, checkOut, excludeId ?? null);
-    res.json({ available });
+    const { checkIn, checkOut, excludeId } = req.query;
+    if (!checkIn || !checkOut) return res.status(400).json({ error: 'checkIn y checkOut son obligatorios' });
+    const rooms = await checkAllRoomsAvailability(checkIn, checkOut, excludeId ?? null);
+    res.json({ rooms });
 });
 
 // --- Cenas de reserva ---

@@ -5,7 +5,7 @@ import type { RequestBooking } from '@/interfaces/booking';
 import type { RequestRoom } from '@/interfaces/room';
 import * as APIBooking from "../../services/bookings";
 import * as APIRoomPrices from "../../services/roomPrices";
-import { checkRoomAvailability } from "../../services/bookings";
+import { getRoomsAvailability } from "../../services/bookings";
 
 const ALL_ROOMS = ['A Fonte', 'O Carpinteiro', 'O Cuberto', 'O Faiado'];
 import { useRouter } from 'next/router';
@@ -49,13 +49,9 @@ export default function NewBooking() {
         setErrors(prev => { const e = { ...prev }; delete e[field]; return e; });
     }
 
-    async function checkAllRoomsAvailability(ci: string, co: string) {
+    async function fetchAvailability(ci: string, co: string) {
         if (!ci || !co) return;
-        const results = await Promise.all(
-            ALL_ROOMS.map(r => checkRoomAvailability(r, ci, co).then(avail => ({ r, avail })))
-        );
-        const map: Record<string, boolean> = {};
-        results.forEach(({ r, avail }) => { map[r] = avail; });
+        const map = await getRoomsAvailability(ci, co);
         setAvailability(map);
     }
 
@@ -224,13 +220,13 @@ export default function NewBooking() {
                             <div>
                                 <label className={labelClass}>Fecha check-in *</label>
                                 <input className={f('checkIn')} type="date" value={checkIn}
-                                    onChange={e => { setCheckIn(e.target.value); clearError('checkIn'); clearError('checkOut'); if (checkOut) checkAllRoomsAvailability(e.target.value, checkOut); }} />
+                                    onChange={e => { setCheckIn(e.target.value); clearError('checkIn'); clearError('checkOut'); if (checkOut) fetchAvailability(e.target.value, checkOut); }} />
                                 {errors.checkIn && <p className={errorClass}>{errors.checkIn}</p>}
                             </div>
                             <div>
                                 <label className={labelClass}>Fecha check-out *</label>
                                 <input className={f('checkOut')} type="date" value={checkOut}
-                                    onChange={e => { setCheckOut(e.target.value); clearError('checkOut'); if (checkIn) checkAllRoomsAvailability(checkIn, e.target.value); }} />
+                                    onChange={e => { setCheckOut(e.target.value); clearError('checkOut'); if (checkIn) fetchAvailability(checkIn, e.target.value); }} />
                                 {errors.checkOut && <p className={errorClass}>{errors.checkOut}</p>}
                             </div>
                             <div>
