@@ -3,7 +3,7 @@ import Navbar from '../../components/navbar/navbar'
 import RoomComponent from '@/components/rooms/roomComponent';
 import { useRouter } from 'next/router'
 import type { Booking, ResponseError, RequestUpdateBooking } from '../../interfaces/booking'
-import type { Bill } from '@/interfaces/bill'
+import type { Bill, BillExtra } from '@/interfaces/bill'
 import * as APIBooking from "../../services/bookings";
 import * as APIBilling from "../../services/bills";
 import * as APIClient from "@/services/clients";
@@ -33,34 +33,91 @@ export default function BookingPage() {
     const [editPaymentType, setEditPaymentType] = useState('');
     const [editPlatformRef, setEditPlatformRef] = useState('');
 
+    // Billing modal state
+    const [showBillModal, setShowBillModal] = useState(false);
+    const [billName, setBillName] = useState('');
+    const [billSurname, setBillSurname] = useState('');
+    const [billDni, setBillDni] = useState('');
+    const [billAddress, setBillAddress] = useState('');
+    const [billConcepto, setBillConcepto] = useState('');
+    const [billExtras, setBillExtras] = useState<BillExtra[]>([]);
+    const [billLoading, setBillLoading] = useState(false);
+    const [billPreviewing, setBillPreviewing] = useState(false);
+    const [billSuccess, setBillSuccess] = useState(false);
+
     useEffect(() => {
         query.id !== undefined && typeof query.id === "string" ? APIBooking.getBookingById(query.id).then(setBooking).catch(console.log) : setBooking;
         query.id !== undefined && typeof query.id === "string" ? APIClient.getClientsByBookingId(query.id).then(setClients).catch(console.log) : setClients([]);
     }, []);
 
-    function createBill() {
+    function openBillModal() {
+        if (!booking) return;
+        setBillName(booking.name);
+        setBillSurname(booking.surname);
+        setBillDni(booking.identifier);
+        setBillAddress('');
+        setBillConcepto('');
+        setBillExtras([]);
+        setBillSuccess(false);
+        setShowBillModal(true);
+    }
 
-        let bill: Bill = {
-            numeroFactura: booking? booking.confirmation_number: "",
-            nombre: booking ? booking.name : "",
-            apellidos: booking ? booking.surname : "",
-            dni: booking ? booking.identifier : "",
+    function addExtra() {
+        setBillExtras(prev => [...prev, { descripcion: '', precio: 0 }]);
+    }
+
+    function updateExtra(index: number, field: keyof BillExtra, value: string | number) {
+        setBillExtras(prev => prev.map((e, i) => i === index ? { ...e, [field]: value } : e));
+    }
+
+    function removeExtra(index: number) {
+        setBillExtras(prev => prev.filter((_, i) => i !== index));
+    }
+
+    function buildBillPayload(): Bill | null {
+        if (!booking) return null;
+        return {
+            numeroFactura: booking.confirmation_number,
+            nombre: billName,
+            apellidos: billSurname,
+            dni: billDni,
             email: "casademirandaezaro@gmail.com",
-            fechaCheckIn: booking ? booking.check_in.toLocaleString() : new Date().toLocaleString(),
-            fechaCheckOut: booking ? booking.check_out.toLocaleString() : new Date().toLocaleString(),
-            habitaciones: booking ? booking.rooms.map(room => {
-                let roomBill: RequestRoom = {
-                    habitacion: room.name,
-                    precio: room.price,
-                    supletorias: room.extra_beds ? room.extra_beds : 0,
-                    precioSupletoria: room.extra_beds ? room.price_extra_bed : 0
-                }
-                return roomBill;
-            }) : []
+            direccion: billAddress || undefined,
+            concepto: billConcepto || undefined,
+            fechaCheckIn: booking.check_in.toLocaleString(),
+            fechaCheckOut: booking.check_out.toLocaleString(),
+            habitaciones: booking.rooms.map(room => ({
+                habitacion: room.name,
+                precio: room.price,
+                supletorias: room.extra_beds ?? 0,
+                precioSupletoria: room.extra_beds ? room.price_extra_bed : 0
+            } as RequestRoom)),
+            extras: billExtras.filter(e => e.descripcion.trim() !== ''),
+        };
+    }
 
+    async function handlePreviewBill() {
+        const bill = buildBillPayload();
+        if (!bill) return;
+        setBillPreviewing(true);
+        try {
+            const blob = await APIBilling.previewBill(bill);
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setBillPreviewing(false);
         }
+    }
 
-        APIBilling.createBill(bill).then(setBillStatus).catch(console.log);
+    async function handleCreateBill() {
+        const bill = buildBillPayload();
+        if (!bill) return;
+        setBillLoading(true);
+        await APIBilling.createBill(bill).catch(console.error);
+        setBillLoading(false);
+        setBillSuccess(true);
     }
 
     function registerCheckIn() {
@@ -124,6 +181,9 @@ export default function BookingPage() {
             router.push('/');
         }
     }
+
+    const inputClass = "rounded w-full border border-gray-light p-1 text-sm text-gray-dark";
+    const labelClass = "text-xs text-gray uppercase tracking-wide block mb-1";
 
     return (
         <>
@@ -191,11 +251,117 @@ export default function BookingPage() {
             </div>
             <div id="botones" className='mt-5 px-4 md:px-5 flex flex-wrap gap-3'>
                 <Button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' onClick={registerCheckIn}>Registrar CheckIn</Button>
-                <Button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' onClick={createBill}>Generar Factura</Button>
+                <Button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' onClick={openBillModal}>Generar Factura</Button>
                 <Button className='rounded-full bg-blue bg-opacity-50 text-gray-dark text-opacity-75' onClick={openEditModal}>Editar Reserva</Button>
                 <Button className='rounded-full bg-yellow bg-opacity-50 text-gray-dark text-opacity-75' onClick={() => setShowConfirmModal('cancel')}>Cancelar Reserva</Button>
                 <Button className='rounded-full bg-orange bg-opacity-50 text-gray-dark text-opacity-75' onClick={() => setShowConfirmModal('delete')}>Eliminar Reserva</Button>
             </div>
+
+            {/* Modal de facturación */}
+            {showBillModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start z-50 overflow-y-auto py-8">
+                    <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-lg mx-4">
+                        <h2 className="text-xl font-semibold mb-4 text-gray-dark">Generar Factura</h2>
+
+                        {billSuccess ? (
+                            <div className="text-center py-6">
+                                <p className="text-green font-semibold text-lg mb-4">Factura generada correctamente</p>
+                                <Button className='bg-gray-light text-gray-dark text-opacity-75' onClick={() => setShowBillModal(false)}>Cerrar</Button>
+                            </div>
+                        ) : (
+                            <>
+                                <section className="mb-4">
+                                    <h3 className="text-xs text-gray uppercase tracking-wide font-semibold mb-3">Datos de facturación</h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label className={labelClass}>Nombre</label>
+                                            <input className={inputClass} value={billName} onChange={e => setBillName(e.target.value)} />
+                                        </div>
+                                        <div>
+                                            <label className={labelClass}>Apellidos</label>
+                                            <input className={inputClass} value={billSurname} onChange={e => setBillSurname(e.target.value)} />
+                                        </div>
+                                        <div>
+                                            <label className={labelClass}>DNI / NIF</label>
+                                            <input className={inputClass} value={billDni} onChange={e => setBillDni(e.target.value)} />
+                                        </div>
+                                        <div>
+                                            <label className={labelClass}>Dirección (opcional)</label>
+                                            <input className={inputClass} value={billAddress} onChange={e => setBillAddress(e.target.value)} placeholder="Calle, número, ciudad..." />
+                                        </div>
+                                        <div className="sm:col-span-2">
+                                            <label className={labelClass}>Concepto (opcional)</label>
+                                            <input className={inputClass} value={billConcepto} onChange={e => setBillConcepto(e.target.value)} placeholder="Ej: Alojamiento vacacional en Casa de Miranda" />
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section className="mb-4">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h3 className="text-xs text-gray uppercase tracking-wide font-semibold">Extras</h3>
+                                        <button
+                                            onClick={addExtra}
+                                            className="text-xs rounded-full bg-gray-light px-3 py-1 text-gray-dark font-semibold"
+                                        >
+                                            + Añadir extra
+                                        </button>
+                                    </div>
+                                    {billExtras.length === 0 ? (
+                                        <p className="text-xs text-gray">Sin extras</p>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            {billExtras.map((extra, i) => (
+                                                <div key={i} className="flex gap-2 items-center">
+                                                    <input
+                                                        className="flex-1 rounded border border-gray-light p-1 text-sm text-gray-dark"
+                                                        placeholder="Descripción"
+                                                        value={extra.descripcion}
+                                                        onChange={e => updateExtra(i, 'descripcion', e.target.value)}
+                                                    />
+                                                    <input
+                                                        className="w-24 rounded border border-gray-light p-1 text-sm text-gray-dark text-right"
+                                                        placeholder="Precio €"
+                                                        type="number"
+                                                        min="0"
+                                                        step="0.01"
+                                                        value={extra.precio}
+                                                        onChange={e => updateExtra(i, 'precio', parseFloat(e.target.value) || 0)}
+                                                    />
+                                                    <button
+                                                        onClick={() => removeExtra(i)}
+                                                        className="text-orange text-xs font-semibold px-2"
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </section>
+
+                                <div className="flex justify-end gap-3 mt-5 flex-wrap">
+                                    <Button className='bg-gray-light text-gray-dark text-opacity-75' onClick={() => setShowBillModal(false)}>Cancelar</Button>
+                                    <Button
+                                        className='bg-gray-light text-gray-dark text-opacity-75'
+                                        onClick={handlePreviewBill}
+                                        disabled={billPreviewing || billLoading}
+                                    >
+                                        {billPreviewing ? 'Cargando...' : 'Vista previa'}
+                                    </Button>
+                                    <Button
+                                        className='bg-green bg-opacity-50 text-gray-dark text-opacity-75'
+                                        onClick={handleCreateBill}
+                                        disabled={billLoading || billPreviewing}
+                                    >
+                                        {billLoading ? 'Generando...' : 'Confirmar y enviar'}
+                                    </Button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {/* Modal de edición */}
             {showEditModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">

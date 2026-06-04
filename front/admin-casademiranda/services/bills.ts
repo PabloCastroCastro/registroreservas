@@ -5,6 +5,20 @@ import { API_HOST } from './config';
 const API_URL = `${API_HOST}/factura`;
 
 
+export async function previewBill(bill: Bill): Promise<Blob> {
+    const token = getToken();
+    const response = await fetch(`${API_URL}/preview`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(bill)
+    });
+    if (!response.ok) throw new Error(`Error HTTP ${response.status}`);
+    return response.blob();
+}
+
 export async function createBill(bill: Bill) {
     try {
 
