@@ -8,7 +8,7 @@ const FONT_SCRIPT = path.join(SOURCES, 'Dancing_Script', 'static', 'DancingScrip
 const FONT_SCRIPT_REG = path.join(SOURCES, 'Dancing_Script', 'static', 'DancingScript-Regular.ttf');
 const FONT_SERIF = 'Times-Roman';
 const FONT_SERIF_BOLD = 'Times-Bold';
-const BG_IMAGE = path.join(SOURCES, 'fondo.png');
+const BG_IMAGE = path.join(SOURCES, 'fondo.jpg');
 
 const CATEGORIES = ['Entrante', 'Principal', 'Postre', 'Bebida'];
 
