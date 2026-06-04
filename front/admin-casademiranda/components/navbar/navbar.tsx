@@ -54,7 +54,7 @@ export default function DefaultNavbar() {
                     </Link>
                 ))}
                 <Link href="/logout">
-                    <span className="text-sm font-semibold px-1 py-0.5 text-gray hover:text-orange transition-colors">
+                    <span className="text-sm font-semibold px-3 py-1.5 rounded-lg border border-gray-light text-gray hover:border-orange hover:text-orange transition-colors">
                         Cerrar sesión
                     </span>
                 </Link>
