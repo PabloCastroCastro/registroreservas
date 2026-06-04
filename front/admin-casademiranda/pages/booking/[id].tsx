@@ -357,7 +357,7 @@ export default function BookingPage() {
                 </section>
 
             </div>
-            <div id="botones" className='mt-5 px-4 md:px-5 flex flex-wrap gap-3'>
+            <div id="botones" className='mt-5 mb-10 px-4 md:px-5 flex flex-wrap gap-3'>
                 <Button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' onClick={registerCheckIn}>Registrar CheckIn</Button>
                 <Button className='rounded-full bg-green bg-opacity-50 text-gray-dark text-opacity-75' onClick={openBillModal}>Generar Factura</Button>
                 <Button className='rounded-full bg-blue bg-opacity-50 text-gray-dark text-opacity-75' onClick={openEditModal}>Editar Reserva</Button>
