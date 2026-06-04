@@ -22,16 +22,17 @@ function buildPDF(reserva, cliente) {
         doc.font('Times-Roman').fontSize(12).fillColor('green').text('Fecha: ' + reserva.fechaReserva, 75, 176);
 
         // Client header
-        doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Nombre cliente:', 75, 210);
-        doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Dni:', 250, 210);
-        doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Check-in:', 350, 210);
-        doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Check-out:', 450, 210);
+        const col = { lineBreak: false, ellipsis: true };
+        doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Nombre cliente:', 75, 210, { ...col, width: 165 });
+        doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Dni:', 250, 210, { ...col, width: 90 });
+        doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Check-in:', 350, 210, { ...col, width: 90 });
+        doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Check-out:', 450, 210, { ...col, width: 75 });
 
         const clientName = cliente.nombre + ' ' + (cliente.apellido1 ?? cliente.apellidos ?? '') + (cliente.apellido2 ? ' ' + cliente.apellido2 : '');
-        doc.font('Times-Roman').fontSize(12).fillColor('grey').text(clientName, 75, 224);
-        doc.font('Times-Roman').fontSize(12).fillColor('grey').text(cliente.dni, 250, 224);
-        doc.font('Times-Roman').fontSize(12).fillColor('grey').text(reserva.fechaCheckIn, 350, 224);
-        doc.font('Times-Roman').fontSize(12).fillColor('grey').text(reserva.fechaCheckOut, 450, 224);
+        doc.font('Times-Roman').fontSize(12).fillColor('grey').text(clientName, 75, 224, { ...col, width: 165 });
+        doc.font('Times-Roman').fontSize(12).fillColor('grey').text(cliente.dni ?? '—', 250, 224, { ...col, width: 90 });
+        doc.font('Times-Roman').fontSize(12).fillColor('grey').text(reserva.fechaCheckIn, 350, 224, { ...col, width: 90 });
+        doc.font('Times-Roman').fontSize(12).fillColor('grey').text(reserva.fechaCheckOut, 450, 224, { ...col, width: 75 });
 
         // Address (optional)
         let nextY = 238;
