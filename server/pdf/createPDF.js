@@ -34,20 +34,24 @@ function buildPDF(reserva, cliente) {
         doc.font('Times-Roman').fontSize(12).fillColor('grey').text(reserva.fechaCheckOut, 450, 224);
 
         // Address (optional)
-        let tableStartY = 275;
+        let nextY = 238;
         if (cliente.direccion) {
-            doc.font('Times-Roman').fontSize(10).fillColor('grey').text(cliente.direccion, 75, 238);
-            tableStartY = 290;
+            doc.font('Times-Bold').fontSize(9).fillColor('#8492a6').text('Dirección:', 75, nextY);
+            doc.font('Times-Roman').fontSize(10).fillColor('grey').text(cliente.direccion, 75, nextY + 10);
+            nextY += 24;
         }
-
-        doc.lineCap('butt').moveTo(75, tableStartY).lineTo(525, tableStartY).lineWidth(1).fillAndStroke('grey');
 
         // Concepto (optional)
-        const colLabelY = tableStartY + 15 + (reserva.concepto ? 15 : 0);
         if (reserva.concepto) {
-            doc.font('Times-Italic').fontSize(10).fillColor('#154360').text(reserva.concepto, 75, tableStartY + 10);
+            doc.font('Times-Bold').fontSize(9).fillColor('#8492a6').text('Concepto:', 75, nextY);
+            doc.font('Times-Roman').fontSize(10).fillColor('#1B2631').text(reserva.concepto, 75, nextY + 10);
+            nextY += 24;
         }
 
+        const tableStartY = Math.max(nextY + 6, 275);
+        doc.lineCap('butt').moveTo(75, tableStartY).lineTo(525, tableStartY).lineWidth(1).fillAndStroke('grey');
+
+        const colLabelY = tableStartY + 15;
         doc.font('Times-Bold').fontSize(12).fillColor('#154360').text('Descripción', 75, colLabelY);
         doc.font('Times-Bold').fontSize(12).fillColor('#154360').text('Cantidad', 300, colLabelY);
         doc.font('Times-Bold').fontSize(12).fillColor('#154360').text('Precio unitario', 370, colLabelY);
