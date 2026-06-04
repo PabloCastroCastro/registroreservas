@@ -640,6 +640,7 @@ function parseBillBody(body) {
         fechaCheckOut: checkOutDate,
         dias,
         habitaciones,
+        tipo: body.tipo ?? 'personal',
         concepto: body.concepto ?? null,
         extras,
     };
@@ -649,6 +650,9 @@ function parseBillBody(body) {
         dni: body.dni,
         email: body.email,
         direccion: body.direccion ?? null,
+        nombreEmpresa: body.nombreEmpresa ?? null,
+        codigoPostalCiudad: body.codigoPostalCiudad ?? null,
+        pais: body.pais ?? null,
     };
     return { reserva, cliente };
 }

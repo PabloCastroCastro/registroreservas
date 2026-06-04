@@ -6,11 +6,17 @@ export type BillExtra = {
 }
 
 export type Bill = {
+  tipo: 'personal' | 'empresa'
   numeroFactura: string
   nombre: string
   apellidos: string
   dni: string
   email: string
+  // empresa only
+  nombreEmpresa?: string
+  codigoPostalCiudad?: string
+  pais?: string
+  // shared optional
   direccion?: string
   concepto?: string
   fechaCheckIn: string

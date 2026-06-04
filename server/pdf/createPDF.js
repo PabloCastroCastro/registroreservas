@@ -25,28 +25,58 @@ function buildPDF(reserva, cliente) {
         doc.font('Times-Bold').fontSize(20).fillColor('#154360').text('Reserva', 75, 150);
         doc.font('Times-Roman').fontSize(12).fillColor('green').text('Fecha: ' + reserva.fechaReserva, 75, 176);
 
-        // Client header
         const col = { lineBreak: false, ellipsis: true };
-        doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Nombre cliente:', 75, 210, { ...col, width: 165 });
-        doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Dni:', 250, 210, { ...col, width: 90 });
-        doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Check-in:', 350, 210, { ...col, width: 90 });
-        doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Check-out:', 450, 210, { ...col, width: 75 });
-
         const clientName = cliente.nombre + ' ' + (cliente.apellido1 ?? cliente.apellidos ?? '') + (cliente.apellido2 ? ' ' + cliente.apellido2 : '');
-        doc.font('Times-Roman').fontSize(12).fillColor('grey').text(trunc(clientName, 27), 75, 224, { ...col, width: 165 });
-        doc.font('Times-Roman').fontSize(12).fillColor('grey').text(trunc(cliente.dni ?? '—', 14), 250, 224, { ...col, width: 90 });
-        doc.font('Times-Roman').fontSize(12).fillColor('grey').text(reserva.fechaCheckIn, 350, 224, { ...col, width: 90 });
-        doc.font('Times-Roman').fontSize(12).fillColor('grey').text(reserva.fechaCheckOut, 450, 224, { ...col, width: 75 });
+        let nextY;
 
-        // Address (optional)
-        let nextY = 238;
-        if (cliente.direccion) {
-            doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Dirección:', 75, nextY);
-            doc.font('Times-Roman').fontSize(12).fillColor('grey').text(trunc(cliente.direccion, 70), 75, nextY + 14);
-            nextY += 30;
+        if (reserva.tipo === 'empresa') {
+            // Bloque datos fiscales empresa
+            let ey = 205;
+            if (cliente.nombreEmpresa) {
+                doc.font('Times-Bold').fontSize(14).fillColor('#1B2631').text(trunc(cliente.nombreEmpresa, 60), 75, ey);
+                ey += 18;
+            }
+            doc.font('Times-Roman').fontSize(12).fillColor('#1B2631').text(trunc(clientName, 60), 75, ey);
+            ey += 15;
+            doc.font('Times-Roman').fontSize(12).fillColor('#1B2631').text('NIF: ' + trunc(cliente.dni ?? '', 20), 75, ey);
+            ey += 15;
+            if (cliente.direccion) {
+                doc.font('Times-Roman').fontSize(12).fillColor('#1B2631').text(trunc(cliente.direccion, 60), 75, ey);
+                ey += 15;
+            }
+            if (cliente.codigoPostalCiudad) {
+                doc.font('Times-Roman').fontSize(12).fillColor('#1B2631').text(trunc(cliente.codigoPostalCiudad, 60), 75, ey);
+                ey += 15;
+            }
+            if (cliente.pais) {
+                doc.font('Times-Roman').fontSize(12).fillColor('#1B2631').text(trunc(cliente.pais, 40), 75, ey);
+                ey += 15;
+            }
+            // Dates on the right side
+            doc.font('Times-Bold').fontSize(11).fillColor('#1B2631').text('Check-in:', 350, 205, { ...col, width: 90 });
+            doc.font('Times-Bold').fontSize(11).fillColor('#1B2631').text('Check-out:', 450, 205, { ...col, width: 75 });
+            doc.font('Times-Roman').fontSize(11).fillColor('grey').text(reserva.fechaCheckIn, 350, 218, { ...col, width: 90 });
+            doc.font('Times-Roman').fontSize(11).fillColor('grey').text(reserva.fechaCheckOut, 450, 218, { ...col, width: 75 });
+            nextY = ey + 5;
+        } else {
+            // Layout personal: 4 columnas
+            doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Nombre cliente:', 75, 210, { ...col, width: 165 });
+            doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Dni:', 250, 210, { ...col, width: 90 });
+            doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Check-in:', 350, 210, { ...col, width: 90 });
+            doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Check-out:', 450, 210, { ...col, width: 75 });
+            doc.font('Times-Roman').fontSize(12).fillColor('grey').text(trunc(clientName, 27), 75, 224, { ...col, width: 165 });
+            doc.font('Times-Roman').fontSize(12).fillColor('grey').text(trunc(cliente.dni ?? '—', 14), 250, 224, { ...col, width: 90 });
+            doc.font('Times-Roman').fontSize(12).fillColor('grey').text(reserva.fechaCheckIn, 350, 224, { ...col, width: 90 });
+            doc.font('Times-Roman').fontSize(12).fillColor('grey').text(reserva.fechaCheckOut, 450, 224, { ...col, width: 75 });
+            nextY = 238;
+            if (cliente.direccion) {
+                doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Dirección:', 75, nextY);
+                doc.font('Times-Roman').fontSize(12).fillColor('grey').text(trunc(cliente.direccion, 70), 75, nextY + 14);
+                nextY += 30;
+            }
         }
 
-        // Concepto (optional)
+        // Concepto (optional, ambos tipos)
         if (reserva.concepto) {
             doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Concepto:', 75, nextY);
             doc.font('Times-Roman').fontSize(12).fillColor('grey').text(trunc(reserva.concepto, 70), 75, nextY + 14);

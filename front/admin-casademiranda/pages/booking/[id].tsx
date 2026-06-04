@@ -35,12 +35,16 @@ export default function BookingPage() {
 
     // Billing modal state
     const [showBillModal, setShowBillModal] = useState(false);
+    const [billTipo, setBillTipo] = useState<'personal' | 'empresa'>('personal');
     const [billName, setBillName] = useState('');
     const [billSurname, setBillSurname] = useState('');
     const [billDni, setBillDni] = useState('');
     const [billAddress, setBillAddress] = useState('');
     const [billConcepto, setBillConcepto] = useState('');
     const [billExtras, setBillExtras] = useState<BillExtra[]>([]);
+    const [billNombreEmpresa, setBillNombreEmpresa] = useState('');
+    const [billCodigoPostalCiudad, setBillCodigoPostalCiudad] = useState('');
+    const [billPais, setBillPais] = useState('España');
     const [billLoading, setBillLoading] = useState(false);
     const [billPreviewing, setBillPreviewing] = useState(false);
     const [billSuccess, setBillSuccess] = useState(false);
@@ -52,12 +56,16 @@ export default function BookingPage() {
 
     function openBillModal() {
         if (!booking) return;
+        setBillTipo('personal');
         setBillName(booking.name);
         setBillSurname(booking.surname);
         setBillDni(booking.identifier);
         setBillAddress('');
         setBillConcepto('');
         setBillExtras([]);
+        setBillNombreEmpresa('');
+        setBillCodigoPostalCiudad('');
+        setBillPais('España');
         setBillSuccess(false);
         setShowBillModal(true);
     }
@@ -77,11 +85,15 @@ export default function BookingPage() {
     function buildBillPayload(): Bill | null {
         if (!booking) return null;
         return {
+            tipo: billTipo,
             numeroFactura: booking.confirmation_number,
             nombre: billName,
             apellidos: billSurname,
             dni: billDni,
             email: "casademirandaezaro@gmail.com",
+            nombreEmpresa: billTipo === 'empresa' ? billNombreEmpresa || undefined : undefined,
+            codigoPostalCiudad: billTipo === 'empresa' ? billCodigoPostalCiudad || undefined : undefined,
+            pais: billTipo === 'empresa' ? billPais || undefined : undefined,
             direccion: billAddress || undefined,
             concepto: billConcepto || undefined,
             fechaCheckIn: booking.check_in.toLocaleString(),
@@ -271,24 +283,58 @@ export default function BookingPage() {
                         ) : (
                             <>
                                 <section className="mb-4">
+                                    {/* Selector de tipo */}
+                                    <div className="flex gap-2 mb-4">
+                                        <button
+                                            onClick={() => setBillTipo('personal')}
+                                            className={`flex-1 rounded-full py-2 text-sm font-semibold border transition-colors ${billTipo === 'personal' ? 'bg-green bg-opacity-50 border-green text-gray-dark' : 'bg-white border-gray-light text-gray'}`}
+                                        >
+                                            Particular
+                                        </button>
+                                        <button
+                                            onClick={() => setBillTipo('empresa')}
+                                            className={`flex-1 rounded-full py-2 text-sm font-semibold border transition-colors ${billTipo === 'empresa' ? 'bg-green bg-opacity-50 border-green text-gray-dark' : 'bg-white border-gray-light text-gray'}`}
+                                        >
+                                            Empresa
+                                        </button>
+                                    </div>
+
                                     <h3 className="text-xs text-gray uppercase tracking-wide font-semibold mb-3">Datos de facturación</h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {billTipo === 'empresa' && (
+                                            <div className="sm:col-span-2">
+                                                <label className={labelClass}>Nombre de la empresa</label>
+                                                <input className={inputClass} value={billNombreEmpresa} onChange={e => setBillNombreEmpresa(e.target.value)} placeholder="PICHIN SA" />
+                                            </div>
+                                        )}
                                         <div>
-                                            <label className={labelClass}>Nombre</label>
+                                            <label className={labelClass}>{billTipo === 'empresa' ? 'Nombre contacto' : 'Nombre'}</label>
                                             <input className={inputClass} value={billName} onChange={e => setBillName(e.target.value)} />
                                         </div>
                                         <div>
-                                            <label className={labelClass}>Apellidos</label>
+                                            <label className={labelClass}>{billTipo === 'empresa' ? 'Apellidos contacto' : 'Apellidos'}</label>
                                             <input className={inputClass} value={billSurname} onChange={e => setBillSurname(e.target.value)} />
                                         </div>
                                         <div>
-                                            <label className={labelClass}>DNI / NIF</label>
+                                            <label className={labelClass}>NIF / DNI</label>
                                             <input className={inputClass} value={billDni} onChange={e => setBillDni(e.target.value)} />
                                         </div>
                                         <div>
-                                            <label className={labelClass}>Dirección (opcional)</label>
-                                            <input className={inputClass} value={billAddress} onChange={e => setBillAddress(e.target.value)} placeholder="Calle, número, ciudad..." />
+                                            <label className={labelClass}>Dirección{billTipo === 'personal' ? ' (opcional)' : ''}</label>
+                                            <input className={inputClass} value={billAddress} onChange={e => setBillAddress(e.target.value)} placeholder="Calle, número..." />
                                         </div>
+                                        {billTipo === 'empresa' && (
+                                            <>
+                                                <div>
+                                                    <label className={labelClass}>Código postal y ciudad</label>
+                                                    <input className={inputClass} value={billCodigoPostalCiudad} onChange={e => setBillCodigoPostalCiudad(e.target.value)} placeholder="15297 A Coruña" />
+                                                </div>
+                                                <div>
+                                                    <label className={labelClass}>País</label>
+                                                    <input className={inputClass} value={billPais} onChange={e => setBillPais(e.target.value)} />
+                                                </div>
+                                            </>
+                                        )}
                                         <div className="sm:col-span-2">
                                             <label className={labelClass}>Concepto (opcional)</label>
                                             <input className={inputClass} value={billConcepto} onChange={e => setBillConcepto(e.target.value)} placeholder="Ej: Alojamiento vacacional en Casa de Miranda" />
