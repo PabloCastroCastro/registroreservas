@@ -25,7 +25,8 @@ import getBookingNumber from './bookings/getBookingNumber.js';
 import readProperty from './configuration/readConfiguration.js';
 import executeQuery from './sql/sqlUtils.js';
 import e from 'express';
-import { listDishes, createDish, updateDish, deleteDish } from './menu/menuDishes.js';
+import { listDishes, listPublicDishes, createDish, updateDish, deleteDish } from './menu/menuDishes.js';
+import { buildMenuPDF } from './menu/menuPDF.js';
 
 const app = express();
 const SECRET_KEY = readProperty("server.secretKey");
@@ -697,6 +698,20 @@ function authGuard(req, res) {
     if (!token) { res.sendStatus(401); return false; }
     try { jwt.verify(token, SECRET_KEY); return true; } catch { res.sendStatus(403); return false; }
 }
+
+// Endpoint público — sin autenticación
+app.get('/menu/pdf', async (req, res) => {
+    try {
+        const dishes = await listPublicDishes();
+        const buffer = await buildMenuPDF(dishes);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline; filename="carta-cenas.pdf"');
+        res.send(buffer);
+    } catch (err) {
+        console.error('Error generando PDF carta:', err);
+        res.sendStatus(500);
+    }
+});
 
 app.get('/menu', async (req, res) => {
     if (!authGuard(req, res)) return;

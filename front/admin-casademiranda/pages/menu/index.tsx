@@ -1,8 +1,8 @@
 import "@/app/globals.css";
 import Navbar from "@/components/navbar/navbar";
 import { useEffect, useState } from "react";
-import type { Dish, RequestDish, MenuCategory } from "@/interfaces/menu";
-import { MENU_CATEGORIES } from "@/interfaces/menu";
+import type { Dish, RequestDish, MenuCategory, Allergen } from "@/interfaces/menu";
+import { MENU_CATEGORIES, ALLERGENS } from "@/interfaces/menu";
 import * as APIMenu from "@/services/menu";
 
 const EMPTY_DISH: RequestDish = {
@@ -14,6 +14,8 @@ const EMPTY_DISH: RequestDish = {
     observations: null,
     advance_notice: false,
     min_persons: null,
+    visible: true,
+    allergens: [],
 };
 
 export default function MenuPage() {
@@ -21,6 +23,15 @@ export default function MenuPage() {
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState<Dish | null>(null);
     const [form, setForm] = useState<RequestDish>(EMPTY_DISH);
+
+    function toggleAllergen(a: Allergen) {
+        setForm(prev => ({
+            ...prev,
+            allergens: prev.allergens.includes(a)
+                ? prev.allergens.filter(x => x !== a)
+                : [...prev.allergens, a]
+        }));
+    }
     const [saving, setSaving] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState<Dish | null>(null);
 
@@ -48,6 +59,8 @@ export default function MenuPage() {
             observations: dish.observations,
             advance_notice: !!dish.advance_notice,
             min_persons: dish.min_persons,
+            visible: !!dish.visible,
+            allergens: dish.allergens ?? [],
         });
         setShowModal(true);
     }
@@ -110,6 +123,9 @@ export default function MenuPage() {
                                         <div className="flex-1">
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <p className="font-semibold text-gray-dark">{dish.name}</p>
+                                                {!dish.visible && (
+                                                    <span className="text-xs rounded-full bg-gray-light px-2 py-0.5 text-gray font-medium">Oculto en carta pública</span>
+                                                )}
                                                 {dish.advance_notice && (
                                                     <span className="text-xs rounded-full bg-yellow bg-opacity-50 px-2 py-0.5 text-gray-dark font-medium">Solicitar con antelación</span>
                                                 )}
@@ -120,6 +136,9 @@ export default function MenuPage() {
                                             {dish.description && <p className="text-sm text-gray mt-0.5">{dish.description}</p>}
                                             {dish.observations && (
                                                 <p className="text-xs text-gray mt-1 italic">{dish.observations}</p>
+                                            )}
+                                            {dish.allergens?.length > 0 && (
+                                                <p className="text-xs text-gray mt-1"><span className="font-medium">Alérgenos:</span> {dish.allergens.join(', ')}</p>
                                             )}
                                         </div>
                                         <div className="flex gap-4 items-center shrink-0">
@@ -194,6 +213,16 @@ export default function MenuPage() {
                                 <div className="flex items-center gap-3 border border-gray-light rounded-lg px-3 py-2">
                                     <input
                                         type="checkbox"
+                                        id="visible"
+                                        checked={form.visible}
+                                        onChange={e => set('visible', e.target.checked)}
+                                        className="w-4 h-4"
+                                    />
+                                    <label htmlFor="visible" className="text-sm text-gray-dark cursor-pointer">Visible en carta pública</label>
+                                </div>
+                                <div className="flex items-center gap-3 border border-gray-light rounded-lg px-3 py-2">
+                                    <input
+                                        type="checkbox"
                                         id="advance_notice"
                                         checked={form.advance_notice}
                                         onChange={e => set('advance_notice', e.target.checked)}
@@ -212,6 +241,25 @@ export default function MenuPage() {
                                         value={form.min_persons ?? ''}
                                         onChange={e => set('min_persons', e.target.value ? parseInt(e.target.value) : null)}
                                     />
+                                </div>
+                            </div>
+                            <div>
+                                <label className={labelClass}>Alérgenos</label>
+                                <div className="flex flex-wrap gap-2 mt-1">
+                                    {ALLERGENS.map(a => (
+                                        <button
+                                            key={a}
+                                            type="button"
+                                            onClick={() => toggleAllergen(a)}
+                                            className={`text-xs rounded-full px-3 py-1 border font-medium transition-colors ${
+                                                form.allergens.includes(a)
+                                                    ? 'bg-orange bg-opacity-50 border-orange text-gray-dark'
+                                                    : 'bg-white border-gray-light text-gray'
+                                            }`}
+                                        >
+                                            {a}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
                         </div>
