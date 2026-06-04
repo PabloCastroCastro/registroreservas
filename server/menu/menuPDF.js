@@ -31,14 +31,22 @@ export function buildMenuPDF(dishes) {
         doc.registerFont('Script', FONT_SCRIPT);
         doc.registerFont('ScriptReg', FONT_SCRIPT_REG);
 
-        // Background image — solo en franja superior e inferior como decoración
+        // Background image con clip — franja superior
         try {
-            doc.image(BG_IMAGE, 0, 0, { width: PAGE_W, height: 110 });
-            doc.image(BG_IMAGE, 0, PAGE_H - 60, { width: PAGE_W, height: 60 });
+            doc.save();
+            doc.rect(0, 0, PAGE_W, 110).clip();
+            doc.image(BG_IMAGE, 0, 0, { width: PAGE_W });
+            doc.restore();
+
+            // Franja inferior — recorta la parte baja de la imagen
+            doc.save();
+            doc.rect(0, PAGE_H - 60, PAGE_W, 60).clip();
+            doc.image(BG_IMAGE, 0, PAGE_H - 60 - 200, { width: PAGE_W });
+            doc.restore();
         } catch (_) {}
 
-        // Gradiente sobre franja superior para que el título sea legible
-        doc.rect(0, 0, PAGE_W, 110).fillOpacity(0.6).fill('white').fillOpacity(1);
+        // Overlay sobre franja superior para legibilidad del título
+        doc.rect(0, 0, PAGE_W, 110).fillOpacity(0.55).fill('white').fillOpacity(1);
 
         // Fondo blanco limpio para el área de contenido
         doc.rect(0, 108, PAGE_W, PAGE_H - 168).fillOpacity(1).fill('white').fillOpacity(1);
@@ -88,13 +96,13 @@ export function buildMenuPDF(dishes) {
                     ? `${Number(dish.price_full).toFixed(0)}€ / ${Number(dish.price_half).toFixed(0)}€ (½)`
                     : `${Number(dish.price_full).toFixed(0)}€`;
 
-                const nameWidth = COL_W - 70;
+                const nameWidth = COL_W - 65;
 
                 doc.font(FONT_SERIF).fontSize(10).fillColor('#1B2631')
                     .text(dish.name, x, y, { width: nameWidth, continued: false });
 
                 doc.font(FONT_SERIF).fontSize(10).fillColor('#154360')
-                    .text('| ' + priceStr, x + nameWidth, y, { width: 70, align: 'right' });
+                    .text(priceStr, x + nameWidth, y, { width: 65, align: 'right' });
 
                 y += 14;
 
