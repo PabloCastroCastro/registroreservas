@@ -50,7 +50,9 @@ export default function NewBooking() {
         const result = await APIRoomPrices.getPriceForRoom(room, date);
         if (result) {
             setPriceRoom(String(result.price));
-            if (result.priceExtraBed) setPriceExtraBed(String(result.priceExtraBed));
+            if (parseInt(numExtraBed) > 0 && result.priceExtraBed) {
+                setPriceExtraBed(String(result.priceExtraBed));
+            }
         }
     }
 
@@ -254,7 +256,16 @@ export default function NewBooking() {
                             <div>
                                 <label className={labelClass}>Nº supletorias</label>
                                 <input className={inputClass} type="number" min="0" value={numExtraBed}
-                                    onChange={e => setNumExtraBed(e.target.value)} disabled={!selectedRoom} />
+                                    onChange={async e => {
+                                        setNumExtraBed(e.target.value);
+                                        const n = parseInt(e.target.value) || 0;
+                                        if (n > 0 && selectedRoom && checkIn) {
+                                            const result = await APIRoomPrices.getPriceForRoom(selectedRoom, checkIn);
+                                            if (result?.priceExtraBed) setPriceExtraBed(String(result.priceExtraBed));
+                                        } else if (n === 0) {
+                                            setPriceExtraBed('');
+                                        }
+                                    }} disabled={!selectedRoom} />
                             </div>
                             <div>
                                 <label className={labelClass}>Precio supletoria (€)</label>
