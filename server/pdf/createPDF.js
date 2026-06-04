@@ -37,16 +37,16 @@ function buildPDF(reserva, cliente) {
         // Address (optional)
         let nextY = 238;
         if (cliente.direccion) {
-            doc.font('Times-Bold').fontSize(9).fillColor('#8492a6').text('Dirección:', 75, nextY);
-            doc.font('Times-Roman').fontSize(10).fillColor('grey').text(cliente.direccion, 75, nextY + 10);
-            nextY += 24;
+            doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Dirección:', 75, nextY, { ...col, width: 450 });
+            doc.font('Times-Roman').fontSize(12).fillColor('grey').text(cliente.direccion, 75, nextY + 14, { ...col, width: 450 });
+            nextY += 30;
         }
 
         // Concepto (optional)
         if (reserva.concepto) {
-            doc.font('Times-Bold').fontSize(9).fillColor('#8492a6').text('Concepto:', 75, nextY);
-            doc.font('Times-Roman').fontSize(10).fillColor('#1B2631').text(reserva.concepto, 75, nextY + 10);
-            nextY += 24;
+            doc.font('Times-Bold').fontSize(12).fillColor('#1B2631').text('Concepto:', 75, nextY, { ...col, width: 450 });
+            doc.font('Times-Roman').fontSize(12).fillColor('grey').text(reserva.concepto, 75, nextY + 14, { ...col, width: 450 });
+            nextY += 30;
         }
 
         const tableStartY = Math.max(nextY + 6, 275);
