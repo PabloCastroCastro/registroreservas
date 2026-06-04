@@ -6,6 +6,8 @@ import type { RequestRoom } from '@/interfaces/room';
 import * as APIBooking from "../../services/bookings";
 import * as APIRoomPrices from "../../services/roomPrices";
 import { checkRoomAvailability } from "../../services/bookings";
+
+const ALL_ROOMS = ['A Fonte', 'O Carpinteiro', 'O Cuberto', 'O Faiado'];
 import { useRouter } from 'next/router';
 
 const inputClass = "mt-1 w-full border border-gray-light rounded-lg px-3 py-2 text-gray-dark text-sm focus:outline-none focus:border-gray";
@@ -47,21 +49,25 @@ export default function NewBooking() {
         setErrors(prev => { const e = { ...prev }; delete e[field]; return e; });
     }
 
-    async function handleRoomOrDateChange(room: string, checkInDate: string, checkOutDate?: string) {
-        if (!room || !checkInDate) return;
-        const [priceResult] = await Promise.all([
-            APIRoomPrices.getPriceForRoom(room, checkInDate),
-        ]);
+    async function checkAllRoomsAvailability(ci: string, co: string) {
+        if (!ci || !co) return;
+        const results = await Promise.all(
+            ALL_ROOMS.map(r => checkRoomAvailability(r, ci, co).then(avail => ({ r, avail })))
+        );
+        const map: Record<string, boolean> = {};
+        results.forEach(({ r, avail }) => { map[r] = avail; });
+        setAvailability(map);
+    }
+
+    async function handleRoomChange(room: string) {
+        setSelectedRoom(room);
+        if (!room || !checkIn) return;
+        const priceResult = await APIRoomPrices.getPriceForRoom(room, checkIn);
         if (priceResult) {
             setPriceRoom(String(priceResult.price));
             if (parseInt(numExtraBed) > 0 && priceResult.priceExtraBed) {
                 setPriceExtraBed(String(priceResult.priceExtraBed));
             }
-        }
-        const co = checkOutDate ?? checkOut;
-        if (co) {
-            const avail = await checkRoomAvailability(room, checkInDate, co);
-            setAvailability(prev => ({ ...prev, [room]: avail }));
         }
     }
 
@@ -218,13 +224,13 @@ export default function NewBooking() {
                             <div>
                                 <label className={labelClass}>Fecha check-in *</label>
                                 <input className={f('checkIn')} type="date" value={checkIn}
-                                    onChange={e => { setCheckIn(e.target.value); clearError('checkIn'); clearError('checkOut'); if (selectedRoom && checkOut) handleRoomOrDateChange(selectedRoom, e.target.value, checkOut); }} />
+                                    onChange={e => { setCheckIn(e.target.value); clearError('checkIn'); clearError('checkOut'); if (checkOut) checkAllRoomsAvailability(e.target.value, checkOut); }} />
                                 {errors.checkIn && <p className={errorClass}>{errors.checkIn}</p>}
                             </div>
                             <div>
                                 <label className={labelClass}>Fecha check-out *</label>
                                 <input className={f('checkOut')} type="date" value={checkOut}
-                                    onChange={e => { setCheckOut(e.target.value); clearError('checkOut'); if (selectedRoom && checkIn) handleRoomOrDateChange(selectedRoom, checkIn, e.target.value); }} />
+                                    onChange={e => { setCheckOut(e.target.value); clearError('checkOut'); if (checkIn) checkAllRoomsAvailability(checkIn, e.target.value); }} />
                                 {errors.checkOut && <p className={errorClass}>{errors.checkOut}</p>}
                             </div>
                             <div>
@@ -247,16 +253,17 @@ export default function NewBooking() {
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                             <div>
                                 <label className={labelClass}>Habitación</label>
-                                <select className={inputClass} value={selectedRoom} onChange={e => { setSelectedRoom(e.target.value); handleRoomOrDateChange(e.target.value, checkIn); }}>
+                                <select className={inputClass} value={selectedRoom} onChange={e => handleRoomChange(e.target.value)}>
                                     <option value="">-- Selecciona --</option>
-                                    <option value="A Fonte">A Fonte</option>
-                                    <option value="O Carpinteiro">O Carpinteiro</option>
-                                    <option value="O Cuberto">O Cuberto</option>
-                                    <option value="O Faiado">O Faiado</option>
+                                    {ALL_ROOMS.map(r => (
+                                        <option key={r} value={r} disabled={availability[r] === false}>
+                                            {r}{availability[r] === false ? ' (no disponible)' : availability[r] === true ? ' ✓' : ''}
+                                        </option>
+                                    ))}
                                 </select>
-                                {selectedRoom && checkIn && checkOut && availability[selectedRoom] !== undefined && (
-                                    <p className={`text-xs mt-1 font-medium ${availability[selectedRoom] ? 'text-green' : 'text-orange'}`}>
-                                        {availability[selectedRoom] ? '✓ Disponible' : '✗ No disponible para estas fechas'}
+                                {checkIn && checkOut && Object.keys(availability).length > 0 && (
+                                    <p className="text-xs text-gray mt-1">
+                                        {ALL_ROOMS.filter(r => availability[r] === true).length} habitación(es) disponible(s)
                                     </p>
                                 )}
                             </div>
