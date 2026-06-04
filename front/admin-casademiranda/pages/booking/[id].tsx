@@ -64,7 +64,7 @@ export default function BookingPage() {
         setBillAddress('');
         setBillConcepto('');
         setBillExtras([]);
-        setBillEmail('');
+        setBillEmail(clients?.[0]?.email ?? '');
         setBillNombreEmpresa('');
         setBillCodigoPostalCiudad('');
         setBillPais('España');
