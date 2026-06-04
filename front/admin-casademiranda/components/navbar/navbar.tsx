@@ -29,7 +29,7 @@ export default function DefaultNavbar() {
     }
 
     return (
-        <Navbar fluid rounded>
+        <Navbar fluid rounded className="border-b border-gray-light shadow-sm">
             <Navbar.Brand href="/">
                 <Image
                     alt="Logo Casa de Miranda"
