@@ -3,6 +3,7 @@ import Navbar from "@/components/navbar/navbar";
 import { useEffect, useState } from "react";
 import type { RoomBasePrice, SeasonConfig } from "@/interfaces/roomPrice";
 import * as API from "@/services/roomPrices";
+import { isAdmin } from "@/auth/auth";
 
 const ROOMS = ['A Fonte', 'O Carpinteiro', 'O Cuberto', 'O Faiado'];
 
@@ -13,6 +14,7 @@ export default function PreciosBasePage() {
     const [seasonEdited, setSeasonEdited] = useState<SeasonConfig | null>(null);
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
+    const [canEdit] = useState(isAdmin());
 
     useEffect(() => { load(); }, []);
 
@@ -66,7 +68,7 @@ export default function PreciosBasePage() {
             <div className="px-4 md:px-10 mt-5">
                 <div className="flex items-center justify-between mb-5">
                     <h1 className="text-xl text-green text-opacity-75 font-semibold">Precios base</h1>
-                    {hasChanges && (
+                    {canEdit && hasChanges && (
                         <button
                             onClick={handleSave}
                             disabled={saving}
@@ -88,6 +90,7 @@ export default function PreciosBasePage() {
                                 className={inputClass + " w-full"}
                                 value={season.high_season_start}
                                 placeholder="06-15"
+                                disabled={!canEdit}
                                 onChange={e => setSeasonEdited({ ...season, high_season_start: e.target.value })}
                             />
                         </div>
@@ -97,6 +100,7 @@ export default function PreciosBasePage() {
                                 className={inputClass + " w-full"}
                                 value={season.high_season_end}
                                 placeholder="09-15"
+                                disabled={!canEdit}
                                 onChange={e => setSeasonEdited({ ...season, high_season_end: e.target.value })}
                             />
                         </div>
@@ -124,6 +128,7 @@ export default function PreciosBasePage() {
                                                     <input
                                                         className="border border-gray-light rounded-lg px-2 py-1 text-sm text-gray-dark w-full text-right focus:outline-none"
                                                         type="number" min="0" step="0.01"
+                                                        disabled={!canEdit}
                                                         value={getEdited(row.id, 'price', row.price)}
                                                         onChange={e => setEditedField(row.id, 'price', e.target.value)}
                                                     />
@@ -136,6 +141,7 @@ export default function PreciosBasePage() {
                                                     <input
                                                         className="border border-gray-light rounded-lg px-2 py-1 text-sm text-gray-dark w-full text-right focus:outline-none"
                                                         type="number" min="0" step="0.01"
+                                                        disabled={!canEdit}
                                                         value={getEdited(row.id, 'price_extra_bed', row.price_extra_bed)}
                                                         onChange={e => setEditedField(row.id, 'price_extra_bed', e.target.value)}
                                                     />
@@ -176,12 +182,14 @@ export default function PreciosBasePage() {
                                             </td>
                                             <td className="px-4 py-3 text-right">
                                                 <input className={inputClass} type="number" min="0" step="0.01"
+                                                    disabled={!canEdit}
                                                     value={getEdited(row.id, 'price', row.price)}
                                                     onChange={e => setEditedField(row.id, 'price', e.target.value)} />
                                                 <span className="ml-1 text-gray">€</span>
                                             </td>
                                             <td className="px-4 py-3 text-right">
                                                 <input className={inputClass} type="number" min="0" step="0.01"
+                                                    disabled={!canEdit}
                                                     value={getEdited(row.id, 'price_extra_bed', row.price_extra_bed)}
                                                     onChange={e => setEditedField(row.id, 'price_extra_bed', e.target.value)} />
                                                 <span className="ml-1 text-gray">€</span>
