@@ -47,6 +47,19 @@ export async function createManagedUser(username: string, password: string, role
     }
 }
 
+export async function changePassword(id: number, password: string): Promise<void> {
+    const token = getToken();
+    const res = await fetch(`${API_HOST}/usuarios/${id}/password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ password })
+    });
+    if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message ?? `HTTP ${res.status}`);
+    }
+}
+
 export async function deleteManagedUser(id: number): Promise<void> {
     const token = getToken();
     const res = await fetch(`${API_HOST}/usuarios/${id}`, {

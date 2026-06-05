@@ -841,6 +841,20 @@ app.post('/usuarios', async (req, res) => {
     }
 });
 
+app.put('/usuarios/:id/password', async (req, res) => {
+    if (!adminGuard(req, res)) return;
+    const { password } = req.body;
+    if (!password) return res.status(400).json({ message: 'password es obligatorio' });
+    try {
+        const hash = await bcrypt.hash(password, 12);
+        await executeQuery('UPDATE casademiranda.users SET password_hash = ? WHERE id = ?', [hash, req.params.id]);
+        res.sendStatus(204);
+    } catch (err) {
+        console.error('Error changing password:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.delete('/usuarios/:id', async (req, res) => {
     if (!adminGuard(req, res)) return;
     try {
