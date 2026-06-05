@@ -1,13 +1,11 @@
 import executeQuery from '../sql/sqlUtils.js';
 
 
-const createUser = async (username, hashedPassword) => {
-    return new Promise((resolve, reject) => {
-        executeQuery('INSERT INTO casademiranda.users (username, password_hash) VALUES (?, ?)', [username, hashedPassword]).then((result, error) => {
-            if (error) reject(error);
-            resolve(result)
-        })
-    })
+const createUser = async (username, hashedPassword, role = 'admin') => {
+    return executeQuery(
+        'INSERT INTO casademiranda.users (username, password_hash, role) VALUES (?, ?, ?)',
+        [username, hashedPassword, role]
+    );
 }
 
 export {createUser};

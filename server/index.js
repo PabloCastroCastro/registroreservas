@@ -236,10 +236,10 @@ app.post('/register', async (req, res) => {
             return res.status(500).json({ message: 'Error interno' });
         }
 
-        const newUser = await createUser(username, hashedPassword);
+        const newUser = await createUser(username, hashedPassword, 'admin');
         console.log('Usuario creado:', newUser);
 
-        const token = jwt.sign({ id: newUser.id }, SECRET_KEY, { expiresIn: '1h' });
+        const token = jwt.sign({ id: newUser.insertId, role: 'admin' }, SECRET_KEY, { expiresIn: '1h' });
         return res.status(201).json({ message: 'Usuario registrado con éxito', token });
     });
 });
@@ -257,7 +257,7 @@ app.post('/loginuser', async (req, res) => {
         return res.status(401).json({ message: 'Credenciales inválidas' });
     }
 
-    const token = jwt.sign({ id: user.id }, SECRET_KEY, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user.id, role: user.role }, SECRET_KEY, { expiresIn: '1h' });
     return res.json({ message: 'Login correcto', token });
 });
 
@@ -735,13 +735,13 @@ app.get('/precios-base', async (req, res) => {
 });
 
 app.put('/precios-base/:id', async (req, res) => {
-    if (!authGuard(req, res)) return;
+    if (!adminGuard(req, res)) return;
     await updateBasePrice(req.params.id, req.body.price, req.body.price_extra_bed);
     res.sendStatus(200);
 });
 
 app.put('/precios-base/season-config', async (req, res) => {
-    if (!authGuard(req, res)) return;
+    if (!adminGuard(req, res)) return;
     await updateSeasonConfig(req.body.high_season_start, req.body.high_season_end);
     res.sendStatus(200);
 });
@@ -761,6 +761,16 @@ function authGuard(req, res) {
     const token = (req.headers['authorization'] ?? '').split(' ')[1];
     if (!token) { res.sendStatus(401); return false; }
     try { jwt.verify(token, SECRET_KEY); return true; } catch { res.sendStatus(403); return false; }
+}
+
+function adminGuard(req, res) {
+    const token = (req.headers['authorization'] ?? '').split(' ')[1];
+    if (!token) { res.sendStatus(401); return false; }
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        if (decoded.role !== 'admin') { res.sendStatus(403); return false; }
+        return true;
+    } catch { res.sendStatus(403); return false; }
 }
 
 // Endpoint público — sin autenticación
@@ -798,6 +808,62 @@ app.delete('/menu/:id', async (req, res) => {
     if (!authGuard(req, res)) return;
     await deleteDish(parseInt(req.params.id));
     res.sendStatus(200);
+});
+
+// --- Gestión de usuarios (solo admin) ---
+
+app.get('/usuarios', async (req, res) => {
+    if (!adminGuard(req, res)) return;
+    try {
+        const users = await executeQuery('SELECT id, username, role FROM casademiranda.users ORDER BY id');
+        res.json(users);
+    } catch (err) {
+        console.error('Error listing users:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/usuarios', async (req, res) => {
+    if (!adminGuard(req, res)) return;
+    const { username, password, role } = req.body;
+    if (!username || !password || !['admin', 'manager'].includes(role)) {
+        return res.status(400).json({ message: 'username, password y role (admin|manager) son requeridos' });
+    }
+    try {
+        const existing = await getUserByUsername(username);
+        if (existing) return res.status(409).json({ message: 'El usuario ya existe' });
+        const hash = await bcrypt.hash(password, 12);
+        await createUser(username, hash, role);
+        res.status(201).json({ message: 'Usuario creado' });
+    } catch (err) {
+        console.error('Error creating user:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/usuarios/:id/password', async (req, res) => {
+    if (!adminGuard(req, res)) return;
+    const { password } = req.body;
+    if (!password) return res.status(400).json({ message: 'password es obligatorio' });
+    try {
+        const hash = await bcrypt.hash(password, 12);
+        await executeQuery('UPDATE casademiranda.users SET password_hash = ? WHERE id = ?', [hash, req.params.id]);
+        res.sendStatus(204);
+    } catch (err) {
+        console.error('Error changing password:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/usuarios/:id', async (req, res) => {
+    if (!adminGuard(req, res)) return;
+    try {
+        await executeQuery('DELETE FROM casademiranda.users WHERE id = ?', [req.params.id]);
+        res.sendStatus(204);
+    } catch (err) {
+        console.error('Error deleting user:', err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.listen(3003, function () {

@@ -6,22 +6,26 @@ import Image from "next/image";
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { getRole } from '@/auth/auth';
 
 const NAV_LINKS = [
-    { href: '/', label: 'Reservas', exact: true },
-    { href: '/booking/new-booking', label: 'Crear reserva' },
-    { href: '/booking/load-booking', label: 'Cargar reservas' },
-    { href: '/menu', label: 'Carta de cenas' },
-    { href: '/precios-base', label: 'Precios base' },
+    { href: '/', label: 'Reservas', exact: true, adminOnly: false },
+    { href: '/booking/new-booking', label: 'Crear reserva', adminOnly: false },
+    { href: '/booking/load-booking', label: 'Cargar reservas', adminOnly: false },
+    { href: '/menu', label: 'Carta de cenas', adminOnly: false },
+    { href: '/precios-base', label: 'Precios base', adminOnly: false },
+    { href: '/usuarios', label: 'Usuarios', adminOnly: true },
 ];
 
 export default function DefaultNavbar() {
     const router = useRouter();
     const [token, setToken] = useState<string | null>(null);
+    const [role, setRole] = useState<string | null>(null);
 
     useEffect(() => {
         const tokenGuardado = localStorage.getItem('token');
         if (tokenGuardado) setToken(tokenGuardado);
+        setRole(getRole());
     }, []);
 
     function isActive(href: string, exact?: boolean) {
@@ -42,7 +46,7 @@ export default function DefaultNavbar() {
             </Navbar.Brand>
             <Navbar.Toggle />
             <Navbar.Collapse>
-                {NAV_LINKS.map(({ href, label, exact }) => (
+                {NAV_LINKS.filter(({ adminOnly }) => !adminOnly || role === 'admin').map(({ href, label, exact }) => (
                     <Link key={href} href={href}>
                         <span className={`
                             text-sm font-semibold px-1 py-0.5 rounded transition-colors
