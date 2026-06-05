@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Navbar from '@/components/navbar/navbar';
 import { isAdmin } from '@/auth/auth';
-import { getUsers, createManagedUser, deleteManagedUser, changePassword, ManagedUser } from '@/services/users';
+import { getUsers, createManagedUser, deleteManagedUser, changePassword, changeRole, ManagedUser } from '@/services/users';
 
 const inputClass = "mt-1 w-full border border-gray-light rounded-lg px-3 py-2 text-gray-dark text-sm focus:outline-none focus:border-gray";
 const labelClass = "text-xs text-gray uppercase tracking-wide block";
@@ -62,6 +62,15 @@ export default function Usuarios() {
         }
     }
 
+    async function handleRoleChange(id: number, newRole: 'admin' | 'manager') {
+        try {
+            await changeRole(id, newRole);
+            setUsers(prev => prev.map(u => u.id === id ? { ...u, role: newRole } : u));
+        } catch (e: any) {
+            alert(`Error: ${e.message}`);
+        }
+    }
+
     async function handleDelete(id: number, name: string) {
         if (!confirm(`¿Eliminar el usuario "${name}"?`)) return;
         try {
@@ -94,9 +103,16 @@ export default function Usuarios() {
         }
     }
 
-    const roleBadge = (r: string) => r === 'admin'
-        ? <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-green bg-opacity-20 text-gray-dark">Admin</span>
-        : <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-light text-gray-dark">Manager</span>;
+    const roleSelect = (u: ManagedUser) => (
+        <select
+            value={u.role}
+            onChange={e => handleRoleChange(u.id, e.target.value as 'admin' | 'manager')}
+            className="border border-gray-light rounded-lg px-2 py-1 text-xs text-gray-dark focus:outline-none focus:border-gray"
+        >
+            <option value="manager">Manager</option>
+            <option value="admin">Admin</option>
+        </select>
+    );
 
     return (
         <>
@@ -159,7 +175,7 @@ export default function Usuarios() {
                                     {users.map(u => (
                                         <tr key={u.id} className="border-b border-gray-light last:border-0">
                                             <td className="py-2 px-3 text-gray-dark font-medium">{u.username}</td>
-                                            <td className="py-2 px-3">{roleBadge(u.role)}</td>
+                                            <td className="py-2 px-3">{roleSelect(u)}</td>
                                             <td className="py-2 px-3 text-right flex items-center justify-end gap-3">
                                                 <button onClick={() => openPwdModal(u)}
                                                     title="Cambiar contraseña"
