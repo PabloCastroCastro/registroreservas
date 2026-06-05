@@ -814,8 +814,13 @@ app.delete('/menu/:id', async (req, res) => {
 
 app.get('/usuarios', async (req, res) => {
     if (!adminGuard(req, res)) return;
-    const users = await executeQuery('SELECT id, username, role FROM casademiranda.users ORDER BY id');
-    res.json(users);
+    try {
+        const users = await executeQuery('SELECT id, username, role FROM casademiranda.users ORDER BY id');
+        res.json(users);
+    } catch (err) {
+        console.error('Error listing users:', err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.post('/usuarios', async (req, res) => {
@@ -824,17 +829,27 @@ app.post('/usuarios', async (req, res) => {
     if (!username || !password || !['admin', 'manager'].includes(role)) {
         return res.status(400).json({ message: 'username, password y role (admin|manager) son requeridos' });
     }
-    const existing = await getUserByUsername(username);
-    if (existing) return res.status(409).json({ message: 'El usuario ya existe' });
-    const hash = await bcrypt.hash(password, 12);
-    await createUser(username, hash, role);
-    res.status(201).json({ message: 'Usuario creado' });
+    try {
+        const existing = await getUserByUsername(username);
+        if (existing) return res.status(409).json({ message: 'El usuario ya existe' });
+        const hash = await bcrypt.hash(password, 12);
+        await createUser(username, hash, role);
+        res.status(201).json({ message: 'Usuario creado' });
+    } catch (err) {
+        console.error('Error creating user:', err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.delete('/usuarios/:id', async (req, res) => {
     if (!adminGuard(req, res)) return;
-    await executeQuery('DELETE FROM casademiranda.users WHERE id = ?', [req.params.id]);
-    res.sendStatus(204);
+    try {
+        await executeQuery('DELETE FROM casademiranda.users WHERE id = ?', [req.params.id]);
+        res.sendStatus(204);
+    } catch (err) {
+        console.error('Error deleting user:', err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.listen(3003, function () {
