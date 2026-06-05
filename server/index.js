@@ -841,6 +841,21 @@ app.post('/usuarios', async (req, res) => {
     }
 });
 
+app.put('/usuarios/:id/role', async (req, res) => {
+    if (!adminGuard(req, res)) return;
+    const { role } = req.body;
+    if (!['admin', 'manager'].includes(role)) {
+        return res.status(400).json({ message: 'role debe ser admin o manager' });
+    }
+    try {
+        await executeQuery('UPDATE casademiranda.users SET role = ? WHERE id = ?', [role, req.params.id]);
+        res.sendStatus(204);
+    } catch (err) {
+        console.error('Error changing role:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.put('/usuarios/:id/password', async (req, res) => {
     if (!adminGuard(req, res)) return;
     const { password } = req.body;

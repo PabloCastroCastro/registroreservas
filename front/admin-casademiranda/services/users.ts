@@ -47,6 +47,19 @@ export async function createManagedUser(username: string, password: string, role
     }
 }
 
+export async function changeRole(id: number, role: 'admin' | 'manager'): Promise<void> {
+    const token = getToken();
+    const res = await fetch(`${API_HOST}/usuarios/${id}/role`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ role })
+    });
+    if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message ?? `HTTP ${res.status}`);
+    }
+}
+
 export async function changePassword(id: number, password: string): Promise<void> {
     const token = getToken();
     const res = await fetch(`${API_HOST}/usuarios/${id}/password`, {
