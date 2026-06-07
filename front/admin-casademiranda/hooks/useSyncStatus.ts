@@ -34,9 +34,9 @@ export function useSyncStatus(): SyncInfo {
     if (forcedRed) {
         status = 'danger';
     } else if (lastSyncTs !== null && daysAgo !== null) {
-        if (daysAgo > 7) status = 'danger';
-        else if (daysAgo > 3) status = 'warning';
-        else status = 'ok';
+        if (daysAgo === 0) status = 'ok';
+        else if (daysAgo === 1) status = 'warning';
+        else status = 'danger';
     }
 
     function setForcedRed() {
