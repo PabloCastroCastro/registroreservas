@@ -1,9 +1,12 @@
-import tesseract from 'node-tesseract-ocr';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
 import sharp from 'sharp';
 import { parse } from 'mrz';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+
+const execFileAsync = promisify(execFile);
 
 function mrzDateToISO(yymmdd) {
     if (!yymmdd || yymmdd.length !== 6) return null;
@@ -20,7 +23,6 @@ export async function parseDNIFromImage(inputBuffer) {
     try {
         const metadata = await sharp(inputBuffer).metadata();
 
-        // Recortar la zona MRZ (25% inferior del documento)
         const mrzHeight = Math.floor(metadata.height * 0.28);
         const mrzTop = metadata.height - mrzHeight;
 
@@ -33,14 +35,16 @@ export async function parseDNIFromImage(inputBuffer) {
             .png()
             .toFile(tmpProcessed);
 
-        const text = await tesseract.recognize(tmpProcessed, {
-            lang: 'eng',
-            oem: 1,
-            psm: 6,
-            tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<',
-        });
+        // execFile evita el shell, por lo que < no se interpreta como redirección
+        const { stdout } = await execFileAsync('tesseract', [
+            tmpProcessed, 'stdout',
+            '-l', 'eng',
+            '--oem', '1',
+            '--psm', '6',
+            '-c', 'tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<',
+        ]);
 
-        const lines = text
+        const lines = stdout
             .toUpperCase()
             .split('\n')
             .map(l => l.replace(/\s/g, '').replace(/[^A-Z0-9<]/g, ''))
