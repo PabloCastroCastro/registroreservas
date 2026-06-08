@@ -2,6 +2,34 @@ import type { Client, ClientDTO } from "@/interfaces/client";
 import { getToken } from '../auth/auth';
 import { API_HOST } from './config';
 
+export interface DniScanResult {
+    nombre: string;
+    apellido1: string;
+    apellido2: string;
+    documentNumber: string;
+    supportDocument: string;
+    birthDate: string | null;
+    expirationDate: string | null;
+    sex: string;
+    nationality: string;
+}
+
+export async function parseDNI(file: File): Promise<DniScanResult> {
+    const token = getToken();
+    const formData = new FormData();
+    formData.append('image', file);
+    const res = await fetch(`${API_HOST}/parse-dni`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+    });
+    if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? `HTTP ${res.status}`);
+    }
+    return res.json();
+}
+
 const API_URL = `${API_HOST}/cliente`;
 
 

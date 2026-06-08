@@ -30,6 +30,7 @@ import { listBasePrices, updateBasePrice, updateSeasonConfig, getPriceForRoomAnd
 import { listBookingDishes, addBookingDish, removeBookingDish } from './bookings/bookingDishes.js';
 import { checkAllRoomsAvailability } from './bookings/checkAvailability.js';
 import { buildMenuPDF } from './menu/menuPDF.js';
+import { parseDNIFromImage } from './dni/parseDNI.js';
 
 const app = express();
 const SECRET_KEY = readProperty("server.secretKey");
@@ -852,6 +853,20 @@ app.delete('/menu/:id', async (req, res) => {
     if (!authGuard(req, res)) return;
     await deleteDish(parseInt(req.params.id));
     res.sendStatus(200);
+});
+
+// --- Parseo DNI ---
+
+app.post('/parse-dni', upload.single('image'), async (req, res) => {
+    if (!authGuard(req, res)) return;
+    if (!req.file) return res.status(400).json({ error: 'No se recibió imagen' });
+    try {
+        const result = await parseDNIFromImage(req.file.buffer);
+        res.json(result);
+    } catch (err) {
+        console.error('Error parsing DNI:', err.message);
+        res.status(422).json({ error: err.message });
+    }
 });
 
 // --- Gestión de usuarios (solo admin) ---
