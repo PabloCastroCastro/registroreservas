@@ -130,7 +130,7 @@ export default function UpdateClient() {
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
                                 </svg>
                                 {scanning ? 'Escaneando...' : 'Escanear DNI'}
-                                <input type="file" accept="image/*" className="hidden" onChange={handleScanDNI} disabled={scanning} />
+                                <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleScanDNI} disabled={scanning} />
                             </label>
                             {scanning && <span className="text-sm text-gray">Procesando imagen, puede tardar unos segundos...</span>}
                             {scanError && <span className="text-sm text-orange">{scanError}</span>}
