@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { getLastBookingSync, setForcedRedSync, clearForcedRedSync } from '../services/bookings';
 
 export type SyncStatus = 'ok' | 'warning' | 'danger' | 'never';
 
@@ -12,18 +13,15 @@ export type SyncInfo = {
     markSynced: () => void;
 };
 
-const LAST_SYNC_KEY = 'booking_last_sync';
-const FORCED_RED_KEY = 'booking_sync_forced_red';
-
 export function useSyncStatus(): SyncInfo {
     const [lastSyncTs, setLastSyncTs] = useState<number | null>(null);
     const [forcedRed, setForcedRedState] = useState(false);
 
     useEffect(() => {
-        const ts = localStorage.getItem(LAST_SYNC_KEY);
-        const forced = localStorage.getItem(FORCED_RED_KEY) === 'true';
-        if (ts) setLastSyncTs(parseInt(ts));
-        setForcedRedState(forced);
+        getLastBookingSync().then(({ lastSyncAt, forcedRed: fr }) => {
+            if (lastSyncAt) setLastSyncTs(new Date(lastSyncAt).getTime());
+            setForcedRedState(fr);
+        });
     }, []);
 
     const daysAgo = lastSyncTs
@@ -34,26 +32,23 @@ export function useSyncStatus(): SyncInfo {
     if (forcedRed) {
         status = 'danger';
     } else if (lastSyncTs !== null && daysAgo !== null) {
-        if (daysAgo > 7) status = 'danger';
-        else if (daysAgo > 3) status = 'warning';
-        else status = 'ok';
+        if (daysAgo === 0) status = 'ok';
+        else if (daysAgo === 1) status = 'warning';
+        else status = 'danger';
     }
 
     function setForcedRed() {
-        localStorage.setItem(FORCED_RED_KEY, 'true');
         setForcedRedState(true);
+        setForcedRedSync();
     }
 
     function clearForcedRed() {
-        localStorage.removeItem(FORCED_RED_KEY);
         setForcedRedState(false);
+        clearForcedRedSync();
     }
 
     function markSynced() {
-        const now = Date.now();
-        localStorage.setItem(LAST_SYNC_KEY, String(now));
-        localStorage.removeItem(FORCED_RED_KEY);
-        setLastSyncTs(now);
+        setLastSyncTs(Date.now());
         setForcedRedState(false);
     }
 
