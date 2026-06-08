@@ -121,9 +121,24 @@ app.post('/booking-sync/mark-read', async (req, res) => {
         const pass = readProperty('mail.gmail.imap.password');
         if (!user || !pass) return res.status(500).json({ error: 'Gmail IMAP no configurado' });
         const count = await markBookingEmailsRead(user, pass);
+        await executeQuery(
+            'INSERT INTO casademiranda.app_settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)',
+            ['last_booking_sync', new Date().toISOString()]
+        );
         res.json({ markedRead: count });
     } catch (err) {
         console.error('Error marking emails read:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/booking-sync/last-sync', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    try {
+        const rows = await executeQuery('SELECT `value` FROM casademiranda.app_settings WHERE `key` = ?', ['last_booking_sync']);
+        const lastSync = rows?.[0]?.value ?? null;
+        res.json({ lastSyncAt: lastSync });
+    } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
@@ -203,6 +218,10 @@ app.post('/upload-booking', upload.single("excelFile"), async function (req, res
             }
         }
 
+        await executeQuery(
+            'INSERT INTO casademiranda.app_settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)',
+            ['last_booking_sync', new Date().toISOString()]
+        );
         res.json({
             message: "Archivo procesado correctamente",
             reservasCreadas,
