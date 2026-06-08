@@ -174,14 +174,29 @@ export async function markBookingSyncRead() {
   return response.json();
 }
 
-export async function getLastBookingSync(): Promise<string | null> {
+export async function getLastBookingSync(): Promise<{ lastSyncAt: string | null; forcedRed: boolean }> {
   const token = getToken();
   const response = await fetch(`${API_HOST}/booking-sync/last-sync`, {
     headers: { 'Authorization': `Bearer ${token}` }
   });
-  if (!response.ok) return null;
-  const data = await response.json();
-  return data.lastSyncAt ?? null;
+  if (!response.ok) return { lastSyncAt: null, forcedRed: false };
+  return response.json();
+}
+
+export async function setForcedRedSync(): Promise<void> {
+  const token = getToken();
+  await fetch(`${API_HOST}/booking-sync/force-red`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+}
+
+export async function clearForcedRedSync(): Promise<void> {
+  const token = getToken();
+  await fetch(`${API_HOST}/booking-sync/force-red`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
 }
 
 export async function loadBookingBatch(file: File) {

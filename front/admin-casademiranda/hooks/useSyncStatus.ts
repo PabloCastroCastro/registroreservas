@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { getLastBookingSync } from '../services/bookings';
+import { getLastBookingSync, setForcedRedSync, clearForcedRedSync } from '../services/bookings';
 
 export type SyncStatus = 'ok' | 'warning' | 'danger' | 'never';
 
@@ -13,18 +13,14 @@ export type SyncInfo = {
     markSynced: () => void;
 };
 
-const FORCED_RED_KEY = 'booking_sync_forced_red';
-
 export function useSyncStatus(): SyncInfo {
     const [lastSyncTs, setLastSyncTs] = useState<number | null>(null);
     const [forcedRed, setForcedRedState] = useState(false);
 
     useEffect(() => {
-        const forced = localStorage.getItem(FORCED_RED_KEY) === 'true';
-        setForcedRedState(forced);
-
-        getLastBookingSync().then(isoDate => {
-            if (isoDate) setLastSyncTs(new Date(isoDate).getTime());
+        getLastBookingSync().then(({ lastSyncAt, forcedRed: fr }) => {
+            if (lastSyncAt) setLastSyncTs(new Date(lastSyncAt).getTime());
+            setForcedRedState(fr);
         });
     }, []);
 
@@ -42,18 +38,16 @@ export function useSyncStatus(): SyncInfo {
     }
 
     function setForcedRed() {
-        localStorage.setItem(FORCED_RED_KEY, 'true');
         setForcedRedState(true);
+        setForcedRedSync();
     }
 
     function clearForcedRed() {
-        localStorage.removeItem(FORCED_RED_KEY);
         setForcedRedState(false);
+        clearForcedRedSync();
     }
 
     function markSynced() {
-        // La fecha se actualiza en el backend; aquí solo refrescamos el estado local
-        localStorage.removeItem(FORCED_RED_KEY);
         setLastSyncTs(Date.now());
         setForcedRedState(false);
     }

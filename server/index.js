@@ -121,9 +121,10 @@ app.post('/booking-sync/mark-read', async (req, res) => {
         const pass = readProperty('mail.gmail.imap.password');
         if (!user || !pass) return res.status(500).json({ error: 'Gmail IMAP no configurado' });
         const count = await markBookingEmailsRead(user, pass);
+        const now = new Date().toISOString();
         await executeQuery(
-            'INSERT INTO casademiranda.app_settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)',
-            ['last_booking_sync', new Date().toISOString()]
+            'INSERT INTO casademiranda.app_settings (`key`, `value`) VALUES (?, ?),(?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)',
+            ['last_booking_sync', now, 'booking_sync_forced_red', 'false']
         );
         res.json({ markedRead: count });
     } catch (err) {
@@ -135,12 +136,36 @@ app.post('/booking-sync/mark-read', async (req, res) => {
 app.get('/booking-sync/last-sync', async (req, res) => {
     if (!authGuard(req, res)) return;
     try {
-        const rows = await executeQuery('SELECT `value` FROM casademiranda.app_settings WHERE `key` = ?', ['last_booking_sync']);
-        const lastSync = rows?.[0]?.value ?? null;
-        res.json({ lastSyncAt: lastSync });
+        const rows = await executeQuery(
+            'SELECT `key`, `value` FROM casademiranda.app_settings WHERE `key` IN (?, ?)',
+            ['last_booking_sync', 'booking_sync_forced_red']
+        );
+        const map = Object.fromEntries((rows ?? []).map(r => [r.key, r.value]));
+        res.json({
+            lastSyncAt: map['last_booking_sync'] ?? null,
+            forcedRed: map['booking_sync_forced_red'] === 'true',
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
+});
+
+app.post('/booking-sync/force-red', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    await executeQuery(
+        'INSERT INTO casademiranda.app_settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)',
+        ['booking_sync_forced_red', 'true']
+    );
+    res.sendStatus(204);
+});
+
+app.delete('/booking-sync/force-red', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    await executeQuery(
+        'INSERT INTO casademiranda.app_settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)',
+        ['booking_sync_forced_red', 'false']
+    );
+    res.sendStatus(204);
 });
 
 app.post('/upload-booking', upload.single("excelFile"), async function (req, res) {
