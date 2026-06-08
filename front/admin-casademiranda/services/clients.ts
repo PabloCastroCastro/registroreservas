@@ -10,14 +10,19 @@ export interface DniScanResult {
     supportDocument: string;
     birthDate: string | null;
     expirationDate: string | null;
+    expeditionDate: string | null;
     sex: string;
     nationality: string;
+    domicilio: string | null;
+    municipio: string | null;
+    provincia: string | null;
 }
 
-export async function parseDNI(file: File): Promise<DniScanResult> {
+export async function parseDNI(back: File, front?: File): Promise<DniScanResult> {
     const token = getToken();
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('back', back);
+    if (front) formData.append('front', front);
     const res = await fetch(`${API_HOST}/parse-dni`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },

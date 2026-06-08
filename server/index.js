@@ -30,7 +30,7 @@ import { listBasePrices, updateBasePrice, updateSeasonConfig, getPriceForRoomAnd
 import { listBookingDishes, addBookingDish, removeBookingDish } from './bookings/bookingDishes.js';
 import { checkAllRoomsAvailability } from './bookings/checkAvailability.js';
 import { buildMenuPDF } from './menu/menuPDF.js';
-import { parseDNIFromImage } from './dni/parseDNI.js';
+import { parseDNIFromImage, parseExpeditionDate } from './dni/parseDNI.js';
 
 const app = express();
 const SECRET_KEY = readProperty("server.secretKey");
@@ -857,11 +857,15 @@ app.delete('/menu/:id', async (req, res) => {
 
 // --- Parseo DNI ---
 
-app.post('/parse-dni', upload.single('image'), async (req, res) => {
+app.post('/parse-dni', upload.fields([{ name: 'back', maxCount: 1 }, { name: 'front', maxCount: 1 }]), async (req, res) => {
     if (!authGuard(req, res)) return;
-    if (!req.file) return res.status(400).json({ error: 'No se recibió imagen' });
+    const files = req.files ?? {};
+    if (!files.back?.[0]) return res.status(400).json({ error: 'No se recibió la imagen de la cara trasera' });
     try {
-        const result = await parseDNIFromImage(req.file.buffer);
+        const result = await parseDNIFromImage(files.back[0].buffer);
+        if (files.front?.[0]) {
+            result.expeditionDate = await parseExpeditionDate(files.front[0].buffer);
+        }
         res.json(result);
     } catch (err) {
         console.error('Error parsing DNI:', err.message);
