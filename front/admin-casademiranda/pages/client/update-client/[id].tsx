@@ -4,6 +4,7 @@ import "@/app/globals.css";
 import Navbar from "@/components/navbar/navbar";
 import { Client } from "@/interfaces/client"
 import * as APIClient from '@/services/clients';
+import { parseDNI } from '@/services/clients';
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
@@ -32,6 +33,8 @@ export default function UpdateClient() {
     const [paises, setPaises] = useState<Country[]>([]);
     const [countryCodeSelected, setCountryCodeSelected] = useState("");
     const [younger, setYounger] = useState(false);
+    const [scanning, setScanning] = useState(false);
+    const [scanError, setScanError] = useState('');
 
 
 
@@ -46,6 +49,33 @@ export default function UpdateClient() {
             .then((data) => setPaises(data))
             .catch((error) => console.error("Error cargando países:", error));
     }, []);
+
+    const handleScanDNI = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !client) return;
+        setScanning(true);
+        setScanError('');
+        try {
+            const result = await parseDNI(file);
+            setClient({
+                ...client,
+                name: result.nombre,
+                firstSurname: result.apellido1,
+                secondSurname: result.apellido2,
+                document_number: result.documentNumber,
+                support_document: result.supportDocument,
+                document_type: 'NIF',
+                gender: result.sex,
+                nacionality: result.nationality,
+                ...(result.birthDate ? { birthdate: new Date(result.birthDate) } : {}),
+            });
+        } catch (err: any) {
+            setScanError(err.message);
+        } finally {
+            setScanning(false);
+            e.target.value = '';
+        }
+    };
 
     const validData = (client: Client | undefined) => {
         if (client === undefined) {
@@ -92,6 +122,20 @@ export default function UpdateClient() {
             {client ? (
                 <div id="datos-cliente" className='mt-5 px-4 md:px-10 grid grid-cols-1 gap-2'>
                     <form id="mi-formulario" onSubmit={handleSubmit}>
+                        {/* Escanear DNI */}
+                        <div className="mb-4 flex items-center gap-3 flex-wrap">
+                            <label className={`inline-flex items-center gap-2 cursor-pointer rounded-full px-4 py-2 text-sm font-semibold text-gray-dark border border-gray-light hover:border-gray transition-colors ${scanning ? 'opacity-50 pointer-events-none' : ''}`}>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+                                </svg>
+                                {scanning ? 'Escaneando...' : 'Escanear DNI'}
+                                <input type="file" accept="image/*" className="hidden" onChange={handleScanDNI} disabled={scanning} />
+                            </label>
+                            {scanning && <span className="text-sm text-gray">Procesando imagen, puede tardar unos segundos...</span>}
+                            {scanError && <span className="text-sm text-orange">{scanError}</span>}
+                        </div>
+
                         <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>
                             <div className="grid grid-cols-1">
                                 <label className='text-gray-dark text-opacity-75' id="fecha-checkin">Fecha de check-in:</label>
