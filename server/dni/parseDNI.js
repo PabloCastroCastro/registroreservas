@@ -17,44 +17,69 @@ function mrzDateToISO(yymmdd) {
     return `${year}-${mm}-${dd}`;
 }
 
+async function runOCR(imagePath) {
+    const { stdout } = await execFileAsync('tesseract', [
+        imagePath, 'stdout',
+        '-l', 'eng',
+        '--oem', '1',
+        '--psm', '6',
+        '-c', 'tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<',
+    ]);
+    return stdout;
+}
+
+function extractMrzLines(text) {
+    return text
+        .toUpperCase()
+        .split('\n')
+        .map(l => l.replace(/\s/g, '').replace(/[^A-Z0-9<]/g, ''))
+        .filter(l => l.length >= 20);
+}
+
 export async function parseDNIFromImage(inputBuffer) {
-    const tmpProcessed = path.join(os.tmpdir(), `dni_${Date.now()}.png`);
+    const tmpFull = path.join(os.tmpdir(), `dni_full_${Date.now()}.png`);
+    const tmpCrop = path.join(os.tmpdir(), `dni_crop_${Date.now()}.png`);
 
     try {
         const metadata = await sharp(inputBuffer).metadata();
 
-        const mrzHeight = Math.floor(metadata.height * 0.28);
-        const mrzTop = metadata.height - mrzHeight;
+        // Imagen completa preprocesada
+        await sharp(inputBuffer)
+            .greyscale()
+            .normalize()
+            .sharpen()
+            .resize({ width: 1800, withoutEnlargement: false })
+            .png()
+            .toFile(tmpFull);
 
+        // Recorte del 35% inferior (zona MRZ)
+        const mrzHeight = Math.floor(metadata.height * 0.35);
+        const mrzTop = metadata.height - mrzHeight;
         await sharp(inputBuffer)
             .extract({ left: 0, top: mrzTop, width: metadata.width, height: mrzHeight })
             .greyscale()
             .normalize()
             .sharpen()
-            .resize({ width: 1500, withoutEnlargement: false })
+            .resize({ width: 1800, withoutEnlargement: false })
             .png()
-            .toFile(tmpProcessed);
+            .toFile(tmpCrop);
 
-        // execFile evita el shell, por lo que < no se interpreta como redirección
-        const { stdout } = await execFileAsync('tesseract', [
-            tmpProcessed, 'stdout',
-            '-l', 'eng',
-            '--oem', '1',
-            '--psm', '6',
-            '-c', 'tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<',
-        ]);
-
-        const lines = stdout
-            .toUpperCase()
-            .split('\n')
-            .map(l => l.replace(/\s/g, '').replace(/[^A-Z0-9<]/g, ''))
-            .filter(l => l.length >= 28);
+        // Intentar primero con el recorte, luego con imagen completa
+        let lines = [];
+        for (const imgPath of [tmpCrop, tmpFull]) {
+            const text = await runOCR(imgPath);
+            console.log('[parseDNI] OCR output:', JSON.stringify(text));
+            lines = extractMrzLines(text);
+            console.log('[parseDNI] MRZ candidates:', lines);
+            if (lines.length >= 3) break;
+        }
 
         if (lines.length < 3) {
-            throw new Error('No se detectaron las 3 líneas MRZ. Asegúrate de fotografiar el DNI completo con buena iluminación.');
+            throw new Error(`No se detectaron las 3 líneas MRZ (encontradas: ${lines.length}). Asegúrate de fotografiar el DNI completo con buena iluminación y encuadrado.`);
         }
 
         const mrzLines = lines.slice(-3).map(l => l.slice(0, 30).padEnd(30, '<'));
+        console.log('[parseDNI] Parsing MRZ lines:', mrzLines);
         const result = parse(mrzLines);
 
         if (!result.valid) {
@@ -76,6 +101,6 @@ export async function parseDNIFromImage(inputBuffer) {
             nationality: f.nationality ?? 'ESP',
         };
     } finally {
-        try { fs.unlinkSync(tmpProcessed); } catch {}
+        [tmpFull, tmpCrop].forEach(f => { try { fs.unlinkSync(f); } catch {} });
     }
 }
