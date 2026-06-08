@@ -1,6 +1,6 @@
 FROM node:current-alpine3.20
 
-RUN apk add --no-cache tesseract-ocr tesseract-ocr-data-spa
+RUN apk add --no-cache tesseract-ocr tesseract-ocr-data-eng tesseract-ocr-data-spa
 
 # Create app directory
 WORKDIR /server
