@@ -130,8 +130,29 @@ export default function UpdateClient() {
                 <div id="datos-cliente" className='mt-5 px-4 md:px-10 grid grid-cols-1 gap-2'>
                     <form id="mi-formulario" onSubmit={handleSubmit}>
                         {/* Escanear DNI */}
-                        <div className="mb-4 border border-gray-light rounded-lg p-3 flex flex-col gap-2 max-w-lg">
+                        <div className="mb-4 border border-gray-light rounded-lg p-3 flex flex-col gap-3 max-w-lg">
                             <p className="text-xs text-gray uppercase tracking-wide font-semibold">Escanear DNI</p>
+
+                            {/* Instrucciones de fotografía */}
+                            <div className="bg-gray-light bg-opacity-30 rounded-lg p-3 flex gap-3">
+                                <div className="flex-shrink-0 flex flex-col items-center gap-1">
+                                    <div className="w-16 h-10 rounded border-2 border-gray flex flex-col justify-end overflow-hidden">
+                                        <div className="w-full px-1 pb-0.5 flex flex-col gap-px">
+                                            <div className="h-px bg-gray opacity-70 w-full"></div>
+                                            <div className="h-px bg-gray opacity-70 w-full"></div>
+                                            <div className="h-px bg-gray opacity-70 w-full"></div>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs text-gray">Cara trasera</span>
+                                </div>
+                                <ul className="text-xs text-gray-dark space-y-1">
+                                    <li>· Coloca el DNI sobre una superficie oscura</li>
+                                    <li>· Las 3 líneas de código deben verse al fondo</li>
+                                    <li>· El DNI debe ocupar casi toda la foto</li>
+                                    <li>· Buena luz, sin reflejos ni sombras</li>
+                                </ul>
+                            </div>
+
                             <div className="flex flex-col sm:flex-row gap-2">
                                 <label className="flex-1 flex items-center gap-2 cursor-pointer rounded-lg px-3 py-2 text-sm text-gray-dark border border-gray-light hover:border-gray transition-colors">
                                     <span className="text-xs text-gray whitespace-nowrap">Cara trasera *</span>
