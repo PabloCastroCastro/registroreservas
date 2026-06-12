@@ -13,6 +13,7 @@ const NAV_LINKS = [
     { href: '/booking/new-booking', label: 'Crear reserva', adminOnly: false },
     { href: '/booking/load-booking', label: 'Cargar reservas', adminOnly: false },
     { href: '/menu', label: 'Carta de cenas', adminOnly: false },
+    { href: '/checkin-xml', label: 'Check-in XML', adminOnly: false },
     { href: '/precios-base', label: 'Precios base', adminOnly: false },
     { href: '/usuarios', label: 'Usuarios', adminOnly: true },
 ];

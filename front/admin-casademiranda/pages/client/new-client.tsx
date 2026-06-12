@@ -8,6 +8,7 @@ import * as APIClient from '@/services/clients';
 import { parseDNI } from '@/services/clients';
 import type { Address, Client } from '@/interfaces/client';
 import { useRouter } from 'next/router';
+import { findMunicipioByName } from '@/utils/municipioSearch';
 
 type Country = {
     pais: string;
@@ -77,7 +78,10 @@ export default function NewClient() {
             if (result.birthDate) setBirthdate(result.birthDate);
             if (result.expeditionDate) setExpeditionDate(result.expeditionDate);
             if (result.domicilio) setLine(result.domicilio);
-            if (result.municipio) setLocation(result.municipio);
+            if (result.municipio) {
+                const match = findMunicipioByName(result.municipio, municipios);
+                setLocation(match ? match.codigo : result.municipio);
+            }
             if (result.provincia) setProvince(result.provincia);
         } catch (err: any) {
             setScanError(err.message);
@@ -236,6 +240,7 @@ export default function NewClient() {
                         <div className="grid grid-cols-1">
                             <label className='text-gray-dark text-opacity-75' id="documentType">Tipo documento:</label>
                             <select name="documentType" id="documentType" className='rounded-full' onChange={e => { setDocumentType(e.target.value); }} value={documentType} required>
+                                <option value="">- Seleccionar -</option>
                                 <option value="NIF">NIF - Número de Identificación Fiscal</option>
                                 <option value="NIE">NIE - Número de Identidad de Extranjero</option>
                                 <option value="PAS">PAS - Número de pasaporte</option>
