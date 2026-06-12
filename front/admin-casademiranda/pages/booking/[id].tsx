@@ -19,15 +19,54 @@ import { Client } from '@/interfaces/client';
 import ClientComponent from '@/components/clients/clientComponent';
 import DateComponent from '@/components/dates/dateComponent';
 
+function validateClientForCheckin(c: Client): string[] {
+    const errors: string[] = [];
+
+    if (!c.name?.trim()) errors.push('Nombre obligatorio');
+    if (!c.firstSurname?.trim()) errors.push('Primer apellido obligatorio');
+
+    const bd = c.birthdate ? new Date(c.birthdate) : null;
+    if (!bd || isNaN(bd.getTime())) {
+        errors.push('Fecha de nacimiento inválida');
+    } else {
+        const age = (Date.now() - bd.getTime()) / (365.25 * 24 * 3600 * 1000);
+        const isSpanish = c.address?.country === 'ESP';
+        if (age >= 18 || (age >= 14 && isSpanish)) {
+            if (!c.document_type) errors.push('Tipo de documento obligatorio');
+            if (!c.document_number?.trim()) errors.push('Número de documento obligatorio');
+            if (['NIF', 'NIE'].includes(c.document_type) && !c.support_document?.trim())
+                errors.push('Número de soporte obligatorio (NIF/NIE)');
+            if (c.document_type === 'NIF' && !c.secondSurname?.trim())
+                errors.push('Segundo apellido obligatorio con NIF');
+        }
+    }
+
+    if (!c.address?.line?.trim()) errors.push('Dirección (calle) obligatoria');
+    if (!String(c.address?.postalCode ?? '').trim()) errors.push('Código postal obligatorio');
+    if (!c.address?.country?.trim()) errors.push('País obligatorio');
+    if (!c.address?.location?.trim()) {
+        errors.push('Municipio obligatorio');
+    } else if (c.address?.country === 'ESP' && !/^\d{5}$/.test(String(c.address.location).trim())) {
+        errors.push('Municipio: selecciona de la lista (código INE de 5 dígitos)');
+    }
+
+    if (!c.phone?.trim() && !c.other_phone?.trim() && !c.email?.trim())
+        errors.push('Teléfono o email obligatorio');
+
+    return errors;
+}
+
 export default function BookingPage() {
     const router = useRouter()
     const { query } = router
     const [booking, setBooking] = useState<Booking>();
     const [clients, setClients] = useState<Client[]>();
     const [billStatus, setBillStatus] = useState(200);
-    const [checkInStatus, setCheckInStatus] = useState(0);
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState<'cancel' | 'delete' | null>(null);
+    const [showCheckInModal, setShowCheckInModal] = useState(false);
+    const [checkInLoading, setCheckInLoading] = useState(false);
+    const [checkInDone, setCheckInDone] = useState(false);
+    const [checkInError, setCheckInError] = useState<string | null>(null);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editName, setEditName] = useState('');
     const [editSurname, setEditSurname] = useState('');
@@ -178,18 +217,38 @@ export default function BookingPage() {
     }
 
     function registerCheckIn() {
-        if (query.id !== undefined && typeof query.id === "string") {
-            APIBooking.postRegisterCheckIn(query.id).then(
-                res => {
-                    console.log('Response status:', res.status);
-                    setCheckInStatus(res.status);
-                    setShowSuccessModal(true);
-                }
-            ).catch(console.log)
+        setCheckInDone(false);
+        setCheckInError(null);
+        setShowCheckInModal(true);
+    }
 
+    async function handleConfirmCheckIn() {
+        if (typeof query.id !== 'string') return;
+        setCheckInLoading(true);
+        setCheckInError(null);
+        const res = await APIBooking.postRegisterCheckIn(query.id);
+        setCheckInLoading(false);
+        if (res.status === 204) {
+            setCheckInDone(true);
         } else {
-            setCheckInStatus(0);
-            setShowSuccessModal(false);
+            setCheckInError('Error al registrar el check-in. Comprueba que todos los huéspedes tienen los datos completos.');
+        }
+    }
+
+    async function handleDownloadXml() {
+        const fecha = new Date().toISOString().split('T')[0];
+        try {
+            const blob = await APIBooking.downloadCheckInXml(fecha);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `checkin_${fecha}.xml`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (err: any) {
+            console.error('[downloadXml]', err);
         }
     }
 
@@ -624,20 +683,77 @@ export default function BookingPage() {
                 </div>
             )}
 
-            {/* Modal de éxito */}
-            {showSuccessModal && (
+            {/* Modal check-in */}
+            {showCheckInModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                    <div className="bg-white p-6 rounded-xl shadow-lg text-center">
-                        {checkInStatus === 204 ? (
+                    <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md mx-4">
+                        {checkInDone ? (
                             <>
-                                <h2 className="text-xl font-semibold mb-4 text-green">Check-In realizado correctamente</h2>
+                                <h2 className="text-xl font-semibold mb-2 text-green">Check-in registrado</h2>
+                                <p className="text-sm text-gray mb-5">Descarga el XML del día para subirlo al portal del Ministerio.</p>
+                                <div className="flex justify-end gap-3">
+                                    <button className="rounded-full bg-gray-light px-5 py-2 text-sm font-semibold text-gray-dark" onClick={() => setShowCheckInModal(false)}>Cerrar</button>
+                                    <button className="rounded-full bg-green bg-opacity-50 px-5 py-2 text-sm font-semibold text-gray-dark" onClick={handleDownloadXml}>Descargar XML del día</button>
+                                </div>
                             </>
                         ) : (
                             <>
-                                <h2 className="text-xl font-semibold mb-4 text-orange">Error en el Check-In</h2>
+                                <h2 className="text-xl font-semibold mb-4 text-gray-dark">Confirmar Check-In</h2>
+                                <div className="mb-4 text-sm text-gray-dark space-y-1">
+                                    <p><span className="text-gray">Entrada: </span>{booking && new Date(booking.check_in).toLocaleDateString('es-ES')}</p>
+                                    <p><span className="text-gray">Salida: </span>{booking && new Date(booking.check_out).toLocaleDateString('es-ES')}</p>
+                                </div>
+                                <h3 className="text-xs text-gray uppercase tracking-wide font-semibold mb-2">Huéspedes</h3>
+                                {clients && clients.length > 0 ? (() => {
+                                    const hasErrors = clients.some(c => validateClientForCheckin(c).length > 0);
+                                    return (
+                                        <>
+                                            <ul className="mb-3 space-y-2 max-h-64 overflow-y-auto">
+                                                {clients.map(c => {
+                                                    const errs = validateClientForCheckin(c);
+                                                    return (
+                                                        <li key={c.client_id} className={`rounded-lg px-3 py-2 text-sm ${errs.length > 0 ? 'border border-orange bg-orange bg-opacity-5' : 'bg-gray-light bg-opacity-30'}`}>
+                                                            <div className="flex items-start justify-between gap-2">
+                                                                <div>
+                                                                    <p className="font-semibold text-gray-dark">{c.name} {c.firstSurname} {c.secondSurname}</p>
+                                                                    <p className="text-xs text-gray">{c.document_type} · {c.document_number}</p>
+                                                                    {errs.length > 0 && (
+                                                                        <ul className="mt-1 space-y-0.5">
+                                                                            {errs.map((e, i) => <li key={i} className="text-xs text-orange">· {e}</li>)}
+                                                                        </ul>
+                                                                    )}
+                                                                </div>
+                                                                <Link href={`/client/update-client/${c.client_id}`} className="text-xs text-gray underline shrink-0 mt-0.5">Editar</Link>
+                                                            </div>
+                                                        </li>
+                                                    );
+                                                })}
+                                            </ul>
+                                            {hasErrors && <p className="text-xs text-orange mb-3">Corrige los campos marcados antes de confirmar.</p>}
+                                            {checkInError && <p className="text-sm text-orange mb-3">{checkInError}</p>}
+                                            <div className="flex justify-end gap-3">
+                                                <button className="rounded-full bg-gray-light px-5 py-2 text-sm font-semibold text-gray-dark" onClick={() => { setShowCheckInModal(false); setCheckInError(null); }} disabled={checkInLoading}>Cancelar</button>
+                                                <button
+                                                    className="rounded-full bg-green bg-opacity-50 px-5 py-2 text-sm font-semibold text-gray-dark disabled:opacity-40"
+                                                    onClick={handleConfirmCheckIn}
+                                                    disabled={checkInLoading || hasErrors}
+                                                >
+                                                    {checkInLoading ? 'Registrando...' : 'Confirmar'}
+                                                </button>
+                                            </div>
+                                        </>
+                                    );
+                                })() : (
+                                    <>
+                                        <p className="text-sm text-orange mb-4">No hay huéspedes registrados en esta reserva.</p>
+                                        {checkInError && <p className="text-sm text-orange mb-3">{checkInError}</p>}
+                                        <div className="flex justify-end">
+                                            <button className="rounded-full bg-gray-light px-5 py-2 text-sm font-semibold text-gray-dark" onClick={() => setShowCheckInModal(false)}>Cerrar</button>
+                                        </div>
+                                    </>
+                                )}
                             </>
                         )}
-                        <Button onClick={() => setShowSuccessModal(false)}>Cerrar</Button>
                     </div>
                 </div>
             )}
