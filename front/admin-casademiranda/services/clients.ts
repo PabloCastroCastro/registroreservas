@@ -2,6 +2,39 @@ import type { Client, ClientDTO } from "@/interfaces/client";
 import { getToken } from '../auth/auth';
 import { API_HOST } from './config';
 
+export interface DniScanResult {
+    nombre: string;
+    apellido1: string;
+    apellido2: string;
+    documentNumber: string;
+    supportDocument: string;
+    birthDate: string | null;
+    expirationDate: string | null;
+    expeditionDate: string | null;
+    sex: string;
+    nationality: string;
+    domicilio: string | null;
+    municipio: string | null;
+    provincia: string | null;
+}
+
+export async function parseDNI(back: File, front?: File): Promise<DniScanResult> {
+    const token = getToken();
+    const formData = new FormData();
+    formData.append('back', back);
+    if (front) formData.append('front', front);
+    const res = await fetch(`${API_HOST}/parse-dni`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+    });
+    if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? `HTTP ${res.status}`);
+    }
+    return res.json();
+}
+
 const API_URL = `${API_HOST}/cliente`;
 
 
@@ -135,7 +168,7 @@ async function processResultList(data: ClientDTO[]) {
     client_id: clientResult.customer_id,
     check_in: clientResult.check_in,
     nacionality: clientResult.nacionality,
-    document_type: clientResult.document_type,
+    document_type: clientResult.document_type ?? '',
     document_number: clientResult.identifier,
     support_document: clientResult.support_document,
     expedition_date: clientResult.expedition_date,
@@ -167,7 +200,7 @@ async function processResult(clientResult: ClientDTO) {
     client_id: clientResult.customer_id,
     check_in: clientResult.check_in,
     nacionality: clientResult.nacionality,
-    document_type: clientResult.document_type,
+    document_type: clientResult.document_type ?? '',
     document_number: clientResult.identifier,
     support_document: clientResult.support_document,
     expedition_date: clientResult.expedition_date,

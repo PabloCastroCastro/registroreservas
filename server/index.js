@@ -19,7 +19,7 @@ import { save, update } from './clients/saveClient.js';
 import { listAllCustomers, listCustomerById, listCustomerByBookingId, listCustomerByIdentifier } from './clients/listClient.js';
 import { getUserByUsername } from './users/getUser.js'
 import { createUser } from './users/saveUser.js'
-import { saveCheckIn } from './bookings/savecheckIn.js'
+import { saveCheckIn, buildComunicacionXml, buildDailyXml } from './bookings/savecheckIn.js'
 
 import getBookingNumber from './bookings/getBookingNumber.js';
 import readProperty from './configuration/readConfiguration.js';
@@ -30,6 +30,7 @@ import { listBasePrices, updateBasePrice, updateSeasonConfig, getPriceForRoomAnd
 import { listBookingDishes, addBookingDish, removeBookingDish } from './bookings/bookingDishes.js';
 import { checkAllRoomsAvailability } from './bookings/checkAvailability.js';
 import { buildMenuPDF } from './menu/menuPDF.js';
+import { parseDNIFromImage, parseExpeditionDate } from './dni/parseDNI.js';
 
 const app = express();
 const SECRET_KEY = readProperty("server.secretKey");
@@ -121,11 +122,51 @@ app.post('/booking-sync/mark-read', async (req, res) => {
         const pass = readProperty('mail.gmail.imap.password');
         if (!user || !pass) return res.status(500).json({ error: 'Gmail IMAP no configurado' });
         const count = await markBookingEmailsRead(user, pass);
+        const now = new Date().toISOString();
+        await executeQuery(
+            'INSERT INTO casademiranda.app_settings (`key`, `value`) VALUES (?, ?),(?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)',
+            ['last_booking_sync', now, 'booking_sync_forced_red', 'false']
+        );
         res.json({ markedRead: count });
     } catch (err) {
         console.error('Error marking emails read:', err);
         res.status(500).json({ error: err.message });
     }
+});
+
+app.get('/booking-sync/last-sync', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    try {
+        const rows = await executeQuery(
+            'SELECT `key`, `value` FROM casademiranda.app_settings WHERE `key` IN (?, ?)',
+            ['last_booking_sync', 'booking_sync_forced_red']
+        );
+        const map = Object.fromEntries((rows ?? []).map(r => [r.key, r.value]));
+        res.json({
+            lastSyncAt: map['last_booking_sync'] ?? null,
+            forcedRed: map['booking_sync_forced_red'] === 'true',
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/booking-sync/force-red', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    await executeQuery(
+        'INSERT INTO casademiranda.app_settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)',
+        ['booking_sync_forced_red', 'true']
+    );
+    res.sendStatus(204);
+});
+
+app.delete('/booking-sync/force-red', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    await executeQuery(
+        'INSERT INTO casademiranda.app_settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)',
+        ['booking_sync_forced_red', 'false']
+    );
+    res.sendStatus(204);
 });
 
 app.post('/upload-booking', upload.single("excelFile"), async function (req, res) {
@@ -203,6 +244,10 @@ app.post('/upload-booking', upload.single("excelFile"), async function (req, res
             }
         }
 
+        await executeQuery(
+            'INSERT INTO casademiranda.app_settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)',
+            ['last_booking_sync', new Date().toISOString()]
+        );
         res.json({
             message: "Archivo procesado correctamente",
             reservasCreadas,
@@ -491,10 +536,87 @@ app.post('/reserva/:id/check-in', async (req, res) => {
         return res.sendStatus(400);
     }
 
-    const registerCheckIn = await saveCheckIn(bookings, customers);
+    await saveCheckIn(bookings, customers);
+    await executeQuery(
+        'UPDATE casademiranda.bookings SET checked_in_at = NOW() WHERE booking_id = ?',
+        [bookings.booking_id]
+    );
 
     res.sendStatus(204);
 })
+
+app.get('/checkin-preview', async (req, res) => {
+    if (!authGuard(req, res)) return;
+
+    const fecha = req.query.fecha ?? new Date().toISOString().split('T')[0];
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+        return res.status(400).json({ error: 'fecha debe tener formato YYYY-MM-DD' });
+    }
+
+    const rows = await executeQuery(
+        'SELECT booking_id FROM casademiranda.bookings WHERE DATE(checked_in_at) = ?',
+        [fecha]
+    );
+
+    if (!rows || rows.length === 0) {
+        return res.json({ fecha, total: 0, comunicaciones: [] });
+    }
+
+    const comunicaciones = [];
+    for (const row of rows) {
+        const booking = await listBookingById(row.booking_id);
+        const customers = await listCustomerByBookingId(row.booking_id);
+        if (booking && customers) {
+            comunicaciones.push({
+                referencia: booking.confirmation_number,
+                check_in: booking.check_in,
+                check_out: booking.check_out,
+                habitaciones: booking.rooms?.length ?? 0,
+                personas: customers.map(c => ({
+                    nombre: c.name,
+                    apellido1: c.surname,
+                    apellido2: c.surname2 ?? null,
+                    tipoDocumento: c.document_type,
+                    numeroDocumento: c.identifier,
+                })),
+            });
+        }
+    }
+
+    res.json({ fecha, total: comunicaciones.length, comunicaciones });
+});
+
+app.get('/checkin-xml', async (req, res) => {
+    if (!authGuard(req, res)) return;
+
+    const fecha = req.query.fecha ?? new Date().toISOString().split('T')[0];
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+        return res.status(400).json({ error: 'fecha debe tener formato YYYY-MM-DD' });
+    }
+
+    const rows = await executeQuery(
+        'SELECT booking_id FROM casademiranda.bookings WHERE DATE(checked_in_at) = ?',
+        [fecha]
+    );
+
+    if (!rows || rows.length === 0) {
+        return res.status(404).json({ error: `No hay check-ins registrados para ${fecha}` });
+    }
+
+    const comunicaciones = [];
+    for (const row of rows) {
+        const booking = await listBookingById(row.booking_id);
+        const customers = await listCustomerByBookingId(row.booking_id);
+        if (booking && customers) {
+            comunicaciones.push(buildComunicacionXml(booking, customers));
+        }
+    }
+
+    const xml = buildDailyXml(comunicaciones);
+    res.setHeader('Content-Type', 'application/xml; charset=UTF-8');
+    res.setHeader('Content-Disposition', `attachment; filename="checkin_${fecha}.xml"`);
+    res.send(xml);
+});
 
 app.patch('/reserva/:id/cancel', async (req, res) => {
     const authHeader = req.headers['authorization'];
@@ -808,6 +930,24 @@ app.delete('/menu/:id', async (req, res) => {
     if (!authGuard(req, res)) return;
     await deleteDish(parseInt(req.params.id));
     res.sendStatus(200);
+});
+
+// --- Parseo DNI ---
+
+app.post('/parse-dni', upload.fields([{ name: 'back', maxCount: 1 }, { name: 'front', maxCount: 1 }]), async (req, res) => {
+    if (!authGuard(req, res)) return;
+    const files = req.files ?? {};
+    if (!files.back?.[0]) return res.status(400).json({ error: 'No se recibió la imagen de la cara trasera' });
+    try {
+        const result = await parseDNIFromImage(files.back[0].buffer);
+        if (files.front?.[0]) {
+            result.expeditionDate = await parseExpeditionDate(files.front[0].buffer);
+        }
+        res.json(result);
+    } catch (err) {
+        console.error('Error parsing DNI:', err.message);
+        res.status(422).json({ error: err.message });
+    }
 });
 
 // --- Gestión de usuarios (solo admin) ---

@@ -110,6 +110,49 @@ export async function postRegisterCheckIn(bookingId: String) {
   }
 }
 
+export type CheckInPreviewPersona = {
+    nombre: string;
+    apellido1: string;
+    apellido2: string | null;
+    tipoDocumento: string;
+    numeroDocumento: string;
+};
+
+export type CheckInPreviewComunicacion = {
+    referencia: string;
+    check_in: string;
+    check_out: string;
+    habitaciones: number;
+    personas: CheckInPreviewPersona[];
+};
+
+export type CheckInPreview = {
+    fecha: string;
+    total: number;
+    comunicaciones: CheckInPreviewComunicacion[];
+};
+
+export async function getCheckInPreview(fecha: string): Promise<CheckInPreview> {
+    const token = getToken();
+    const response = await fetch(`${API_HOST}/checkin-preview?fecha=${fecha}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!response.ok) throw new Error(`Error ${response.status}`);
+    return response.json();
+}
+
+export async function downloadCheckInXml(fecha: string): Promise<Blob> {
+  const token = getToken();
+  const response = await fetch(`${API_HOST}/checkin-xml?fecha=${fecha}`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ error: `Error ${response.status}` }));
+    throw new Error(err.error ?? `Error ${response.status}`);
+  }
+  return response.blob();
+}
+
 export async function updateBooking(bookingId: string, booking: RequestUpdateBooking) {
   const token = getToken();
   const response = await fetch(`${API_URL}/${bookingId}`, {
@@ -172,6 +215,31 @@ export async function markBookingSyncRead() {
     headers: { 'Authorization': `Bearer ${token}` }
   });
   return response.json();
+}
+
+export async function getLastBookingSync(): Promise<{ lastSyncAt: string | null; forcedRed: boolean }> {
+  const token = getToken();
+  const response = await fetch(`${API_HOST}/booking-sync/last-sync`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) return { lastSyncAt: null, forcedRed: false };
+  return response.json();
+}
+
+export async function setForcedRedSync(): Promise<void> {
+  const token = getToken();
+  await fetch(`${API_HOST}/booking-sync/force-red`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+}
+
+export async function clearForcedRedSync(): Promise<void> {
+  const token = getToken();
+  await fetch(`${API_HOST}/booking-sync/force-red`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
 }
 
 export async function loadBookingBatch(file: File) {

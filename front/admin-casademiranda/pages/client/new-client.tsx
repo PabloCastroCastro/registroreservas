@@ -5,8 +5,10 @@ import "@/app/globals.css";
 import { useEffect, useState } from 'react';
 import Navbar from '@/components/navbar/navbar';
 import * as APIClient from '@/services/clients';
+import { parseDNI } from '@/services/clients';
 import type { Address, Client } from '@/interfaces/client';
 import { useRouter } from 'next/router';
+import { findMunicipioByName } from '@/utils/municipioSearch';
 
 type Country = {
     pais: string;
@@ -50,10 +52,43 @@ export default function NewClient() {
     const [countryCodeSelected, setCountryCodeSelected] = useState("");
     const [younger, setYounger] = useState(false);
     const [client, setClient] = useState<Client>();
+    const [scanning, setScanning] = useState(false);
+    const [scanError, setScanError] = useState('');
+    const [backFile, setBackFile] = useState<File | null>(null);
+    const [frontFile, setFrontFile] = useState<File | null>(null);
 
     const validData = (client: Client) => {
         return true;
     }
+
+    const handleScanDNI = async () => {
+        if (!backFile) return;
+        setScanning(true);
+        setScanError('');
+        try {
+            const result = await parseDNI(backFile, frontFile ?? undefined);
+            setName(result.nombre);
+            setFistSurname(result.apellido1);
+            setSecondSurname(result.apellido2);
+            setDocumentNumber(result.documentNumber);
+            setSupportDocument(result.supportDocument);
+            setDocumentType('NIF');
+            setGender(result.sex);
+            setNacionality(result.nationality);
+            if (result.birthDate) setBirthdate(result.birthDate);
+            if (result.expeditionDate) setExpeditionDate(result.expeditionDate);
+            if (result.domicilio) setLine(result.domicilio);
+            if (result.municipio) {
+                const match = findMunicipioByName(result.municipio, municipios);
+                setLocation(match ? match.codigo : result.municipio);
+            }
+            if (result.provincia) setProvince(result.provincia);
+        } catch (err: any) {
+            setScanError(err.message);
+        } finally {
+            setScanning(false);
+        }
+    };
 
     const isYounger = (fecha: string): boolean => {
         if (!fecha) return false;
@@ -129,6 +164,59 @@ export default function NewClient() {
             </div>
             <div id="datos-cliente" className='mt-5 px-4 md:px-10 grid grid-cols-1 gap-2'>
                 <form id="mi-formulario" onSubmit={handleSubmit}>
+                    {/* Escanear DNI */}
+                    <div className="mb-4 border border-gray-light rounded-lg p-3 flex flex-col gap-3 max-w-lg">
+                        <p className="text-xs text-gray uppercase tracking-wide font-semibold">Escanear DNI</p>
+
+                        {/* Instrucciones de fotografía */}
+                        <div className="bg-gray-light bg-opacity-30 rounded-lg p-3 flex gap-3">
+                            {/* Ilustración cara trasera */}
+                            <div className="flex-shrink-0 flex flex-col items-center gap-1">
+                                <div className="w-16 h-10 rounded border-2 border-gray flex flex-col justify-end overflow-hidden">
+                                    <div className="w-full px-1 pb-0.5 flex flex-col gap-px">
+                                        <div className="h-px bg-gray opacity-70 w-full"></div>
+                                        <div className="h-px bg-gray opacity-70 w-full"></div>
+                                        <div className="h-px bg-gray opacity-70 w-full"></div>
+                                    </div>
+                                </div>
+                                <span className="text-xs text-gray">Cara trasera</span>
+                            </div>
+                            <ul className="text-xs text-gray-dark space-y-1">
+                                <li>· Coloca el DNI sobre una superficie oscura</li>
+                                <li>· Las 3 líneas de código deben verse al fondo</li>
+                                <li>· El DNI debe ocupar casi toda la foto</li>
+                                <li>· Buena luz, sin reflejos ni sombras</li>
+                            </ul>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            <label className="flex-1 flex items-center gap-2 cursor-pointer rounded-lg px-3 py-2 text-sm text-gray-dark border border-gray-light hover:border-gray transition-colors">
+                                <span className="text-xs text-gray whitespace-nowrap">Cara trasera *</span>
+                                <span className="text-xs font-medium truncate">{backFile ? backFile.name : 'Seleccionar'}</span>
+                                <input type="file" accept="image/*" capture="environment" className="hidden"
+                                    onChange={e => { setBackFile(e.target.files?.[0] ?? null); e.target.value = ''; }} />
+                            </label>
+                            <label className="flex-1 flex items-center gap-2 cursor-pointer rounded-lg px-3 py-2 text-sm text-gray-dark border border-gray-light hover:border-gray transition-colors">
+                                <span className="text-xs text-gray whitespace-nowrap">Cara delantera</span>
+                                <span className="text-xs font-medium truncate">{frontFile ? frontFile.name : 'Opcional'}</span>
+                                <input type="file" accept="image/*" capture="environment" className="hidden"
+                                    onChange={e => { setFrontFile(e.target.files?.[0] ?? null); e.target.value = ''; }} />
+                            </label>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button type="button" onClick={handleScanDNI} disabled={!backFile || scanning}
+                                className="inline-flex items-center gap-2 rounded-full bg-gray-light px-4 py-1.5 text-sm font-semibold text-gray-dark disabled:opacity-40">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+                                </svg>
+                                {scanning ? 'Procesando...' : 'Escanear'}
+                            </button>
+                            {scanning && <span className="text-xs text-gray">Puede tardar unos segundos...</span>}
+                            {scanError && <span className="text-xs text-orange">{scanError}</span>}
+                        </div>
+                    </div>
+
                     <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>
                         <div className="grid grid-cols-1">
                             <label className='text-gray-dark text-opacity-75' id="fecha-checkin">Fecha de check-in:</label>
@@ -152,6 +240,7 @@ export default function NewClient() {
                         <div className="grid grid-cols-1">
                             <label className='text-gray-dark text-opacity-75' id="documentType">Tipo documento:</label>
                             <select name="documentType" id="documentType" className='rounded-full' onChange={e => { setDocumentType(e.target.value); }} value={documentType} required>
+                                <option value="">- Seleccionar -</option>
                                 <option value="NIF">NIF - Número de Identificación Fiscal</option>
                                 <option value="NIE">NIE - Número de Identidad de Extranjero</option>
                                 <option value="PAS">PAS - Número de pasaporte</option>
