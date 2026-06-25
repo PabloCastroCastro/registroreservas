@@ -171,13 +171,7 @@ app.delete('/booking-sync/force-red', async (req, res) => {
 });
 
 app.post('/upload-booking', upload.single("excelFile"), async function (req, res) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.sendStatus(401);
-
-    jwt.verify(token, SECRET_KEY, (err) => {
-        if (err) return res.sendStatus(403);
-    });
+    if (!authGuard(req, res)) return;
 
     if (!req.file) {
         return res.status(400).json({ message: "Archivo no encontrado" });
@@ -308,16 +302,9 @@ app.post('/loginuser', async (req, res) => {
 });
 
 app.post('/cliente', async (req, res) => {
-
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.sendStatus(401);
+    if (!authGuard(req, res)) return;
 
     console.log('query: ', JSON.stringify(req.query));
-
-    jwt.verify(token, SECRET_KEY, (err, user) => {
-        if (err) return res.sendStatus(403);
-    });
 
 
     const reserva = req.body.booking_id;
@@ -420,16 +407,9 @@ app.get('/cliente', async (req, res) => {
 })
 
 app.get('/cliente/:id', async (req, res) => {
-
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.sendStatus(401);
+    if (!authGuard(req, res)) return;
 
     console.log('query: ', JSON.stringify(req.query));
-
-    jwt.verify(token, SECRET_KEY, (err, user) => {
-        if (err) return res.sendStatus(403);
-    });
 
 
     let client_id = req.params['id'];
@@ -484,16 +464,9 @@ app.get('/reserva', async (req, res) => {
 })
 
 app.get('/reserva/:id', async (req, res) => {
-
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.sendStatus(401);
+    if (!authGuard(req, res)) return;
 
     console.log('query: ', JSON.stringify(req.query));
-
-    jwt.verify(token, SECRET_KEY, (err, user) => {
-        if (err) return res.sendStatus(403);
-    });
 
 
     let identifier = req.params['id'];
@@ -507,16 +480,9 @@ app.get('/reserva/:id', async (req, res) => {
 })
 
 app.post('/reserva/:id/check-in', async (req, res) => {
-
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.sendStatus(401);
+    if (!authGuard(req, res)) return;
 
     console.log('query: ', JSON.stringify(req.query));
-
-    jwt.verify(token, SECRET_KEY, (err, user) => {
-        if (err) return res.sendStatus(403);
-    });
 
 
     let identifier = req.params['id'];
@@ -657,10 +623,7 @@ app.post('/checkin-xml/email', async (req, res) => {
 });
 
 app.patch('/reserva/:id/cancel', async (req, res) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.sendStatus(401);
-    jwt.verify(token, SECRET_KEY, (err) => { if (err) return res.sendStatus(403); });
+    if (!authGuard(req, res)) return;
 
     const id = req.params['id'];
     await executeQuery('UPDATE casademiranda.bookings SET state = ? WHERE booking_id = ?', ['cancelada', id]);
@@ -668,10 +631,7 @@ app.patch('/reserva/:id/cancel', async (req, res) => {
 });
 
 app.delete('/reserva/:id', async (req, res) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.sendStatus(401);
-    jwt.verify(token, SECRET_KEY, (err) => { if (err) return res.sendStatus(403); });
+    if (!authGuard(req, res)) return;
 
     const id = req.params['id'];
     const rooms = await executeQuery('SELECT booking_room_id FROM casademiranda.booking_room WHERE booking_id = ?', [id]);
@@ -696,13 +656,7 @@ function toIsoDateString(date) {
 }
 
 app.put('/reserva/:id', async (req, res) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.sendStatus(401);
-
-    jwt.verify(token, SECRET_KEY, (err, user) => {
-        if (err) return res.sendStatus(403);
-    });
+    if (!authGuard(req, res)) return;
 
     const bookingId = req.params['id'];
     try {
@@ -715,16 +669,9 @@ app.put('/reserva/:id', async (req, res) => {
 });
 
 app.post('/reserva', async (req, res) => {
-
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.sendStatus(401);
+    if (!authGuard(req, res)) return;
 
     console.log('query: ', JSON.stringify(req.query));
-
-    jwt.verify(token, SECRET_KEY, (err, user) => {
-        if (err) return res.sendStatus(403);
-    });
 
 
     console.log(JSON.stringify(req.body))
