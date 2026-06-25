@@ -141,6 +141,18 @@ export async function getCheckInPreview(fecha: string): Promise<CheckInPreview> 
     return response.json();
 }
 
+export async function sendCheckInXmlByEmail(fecha: string): Promise<void> {
+  const token = getToken();
+  const response = await fetch(`${API_HOST}/checkin-xml/email?fecha=${fecha}`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ error: `Error ${response.status}` }));
+    throw new Error(err.error ?? `Error ${response.status}`);
+  }
+}
+
 export async function downloadCheckInXml(fecha: string): Promise<Blob> {
   const token = getToken();
   const response = await fetch(`${API_HOST}/checkin-xml?fecha=${fecha}`, {
