@@ -46,6 +46,9 @@ export default function CheckInXmlPage() {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+            APIBooking.sendCheckInXmlByEmail(fecha).catch(err =>
+                console.error('[sendCheckInEmail]', err)
+            );
         } catch (err: any) {
             setError(err.message ?? 'Error al descargar');
         } finally {

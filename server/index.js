@@ -20,6 +20,7 @@ import { listAllCustomers, listCustomerById, listCustomerByBookingId, listCustom
 import { getUserByUsername } from './users/getUser.js'
 import { createUser } from './users/saveUser.js'
 import { saveCheckIn, buildComunicacionXml, buildDailyXml } from './bookings/savecheckIn.js'
+import { sendCheckInMail } from './mail/sendCheckInMail.js'
 
 import getBookingNumber from './bookings/getBookingNumber.js';
 import readProperty from './configuration/readConfiguration.js';
@@ -616,6 +617,43 @@ app.get('/checkin-xml', async (req, res) => {
     res.setHeader('Content-Type', 'application/xml; charset=UTF-8');
     res.setHeader('Content-Disposition', `attachment; filename="checkin_${fecha}.xml"`);
     res.send(xml);
+});
+
+app.post('/checkin-xml/email', async (req, res) => {
+    if (!authGuard(req, res)) return;
+
+    const fecha = req.query.fecha ?? new Date().toISOString().split('T')[0];
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+        return res.status(400).json({ error: 'fecha debe tener formato YYYY-MM-DD' });
+    }
+
+    const rows = await executeQuery(
+        'SELECT booking_id FROM casademiranda.bookings WHERE DATE(checked_in_at) = ?',
+        [fecha]
+    );
+
+    if (!rows || rows.length === 0) {
+        return res.status(404).json({ error: `No hay check-ins registrados para ${fecha}` });
+    }
+
+    const comunicaciones = [];
+    for (const row of rows) {
+        const booking = await listBookingById(row.booking_id);
+        const customers = await listCustomerByBookingId(row.booking_id);
+        if (booking && customers) {
+            comunicaciones.push(buildComunicacionXml(booking, customers));
+        }
+    }
+
+    const xml = buildDailyXml(comunicaciones);
+
+    try {
+        await sendCheckInMail(fecha, xml, rows.length);
+        res.sendStatus(204);
+    } catch (err) {
+        console.error('[checkin-xml/email] Error enviando email:', err.message);
+        res.status(500).json({ error: 'Error al enviar el email' });
+    }
 });
 
 app.patch('/reserva/:id/cancel', async (req, res) => {
