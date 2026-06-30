@@ -1,6 +1,6 @@
 export type Municipio = { codigo: string; municipio: string };
 
-function normalize(s: string): string {
+export function normalize(s: string): string {
     return s
         .toLowerCase()
         .normalize('NFD')
