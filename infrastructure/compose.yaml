@@ -30,8 +30,6 @@ services:
   frontend:
     build:
       context: ../front/admin-casademiranda
-      args:
-        - NEXT_PUBLIC_API_HOST=${API_HOST}
     ports:
       - 3000:3000
     volumes:
