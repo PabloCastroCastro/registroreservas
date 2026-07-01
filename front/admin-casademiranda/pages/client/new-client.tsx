@@ -87,7 +87,14 @@ export default function NewClient() {
             }
             if (result.provincia) setProvince(result.provincia);
         } catch (err: any) {
-            setScanError(err.message);
+            const isPhotoError = /MRZ|líneas MRZ/i.test(err.message);
+            if (isPhotoError) {
+                setScanError('No se pudo leer el DNI. Comprueba que la foto sea nítida, el DNI ocupe casi toda la imagen y las 3 líneas de código del fondo sean visibles. Selecciona una nueva foto e inténtalo de nuevo.');
+                setBackFile(null);
+                setFrontFile(null);
+            } else {
+                setScanError(err.message);
+            }
         } finally {
             setScanning(false);
         }
