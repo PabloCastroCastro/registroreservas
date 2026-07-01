@@ -9,6 +9,7 @@ import { parseDNI } from '@/services/clients';
 import type { Address, Client } from '@/interfaces/client';
 import { useRouter } from 'next/router';
 import { findMunicipioByName } from '@/utils/municipioSearch';
+import { MunicipioSelector } from '@/components/clients/MunicipioSelector';
 
 type Country = {
     pais: string;
@@ -378,17 +379,11 @@ export default function NewClient() {
                         {country === "ESP" ? (
                             <div className="grid grid-cols-1">
                                 <label className='text-gray-dark text-opacity-75' id="location">Municipio:</label>
-                                <select
-                                    className="rounded-full"
-                                    id="selector-location"
-                                    value={location || ''}
-                                    onChange={(e) => setLocation(e.target.value)}
-                                >
-                                    <option value="">-- Elige un municipio --</option>
-                                    {municipios.map(p => (
-                                        <option key={p.codigo} value={p.codigo}>{p.municipio}</option>
-                                    ))}
-                                </select>
+                                <MunicipioSelector
+                                    municipios={municipios}
+                                    value={location}
+                                    onChange={setLocation}
+                                />
                             </div>
                         ) : (
                             <div className="grid grid-cols-1">

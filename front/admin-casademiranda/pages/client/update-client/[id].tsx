@@ -8,6 +8,7 @@ import { parseDNI } from '@/services/clients';
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { findMunicipioByName } from '@/utils/municipioSearch';
+import { MunicipioSelector } from '@/components/clients/MunicipioSelector';
 
 type Country = {
     pais: string;
@@ -340,17 +341,11 @@ export default function UpdateClient() {
                             {client.address?.country === "ESP" ? (
                                 <div className="grid grid-cols-1">
                                     <label className='text-gray-dark text-opacity-75' id="location">Municipio:</label>
-                                    <select
-                                        className="rounded-full"
-                                        id="selector-location"
+                                    <MunicipioSelector
+                                        municipios={municipios}
                                         value={client.address?.location || ''}
-                                        onChange={(e) => setClient({ ...client, address: { ...client.address, location: e.target.value } })}
-                                    >
-                                        <option value="">-- Elige un municipio --</option>
-                                        {municipios.map(p => (
-                                            <option key={p.codigo} value={p.codigo}>{p.municipio}</option>
-                                        ))}
-                                    </select>
+                                        onChange={(codigo) => setClient({ ...client, address: { ...client.address, location: codigo } })}
+                                    />
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1">

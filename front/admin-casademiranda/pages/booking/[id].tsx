@@ -247,6 +247,9 @@ export default function BookingPage() {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+            APIBooking.sendCheckInXmlByEmail(fecha).catch(err =>
+                console.error('[sendCheckInEmail]', err)
+            );
         } catch (err: any) {
             console.error('[downloadXml]', err);
         }
