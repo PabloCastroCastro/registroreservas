@@ -27,7 +27,7 @@ nginx (80→443 redirect, SSL termination)
 
 ## Despliegue (Raspberry Pi)
 
-- **IP estática**: `192.168.1.182` (configurada con nmcli, usuario: `pablo`, hostname: `genzo`)
+- **IP estática**: `192.168.1.171` (configurada con nmcli, usuario: `pablo`, hostname: `genzo`)
 - **Rama de producción**: `main`
 - **Arranque**: `infrastructure/launch-docker.sh` (hace `docker compose build frontend` antes que el resto para que nginx pueda copiar los estáticos)
 - **Base de datos**: exportar con `infrastructure/db-export.ps1` desde Windows, copiar con `scp` e importar con `infrastructure/db-import.sh`
