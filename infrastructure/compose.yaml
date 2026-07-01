@@ -50,6 +50,7 @@ services:
     restart: always
     tty: true
     environment:
+      - ENVIRONMENT=${ENVIRONMENT}
       - API_HOST=${API_HOST}
       - TAILSCALE_HOSTNAME=${TAILSCALE_HOSTNAME}
     ports:
