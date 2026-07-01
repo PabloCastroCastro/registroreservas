@@ -51,13 +51,15 @@ services:
     tty: true
     environment:
       - API_HOST=${API_HOST}
+      - TAILSCALE_HOSTNAME=${TAILSCALE_HOSTNAME}
     ports:
       - "80:80"
       - "443:443"
-    networks: 
+    networks:
       - node-network
-    volumes: 
+    volumes:
       - ./certs:/etc/nginx/infrastructure/certs
+      - ./tailscale-certs:/etc/nginx/tailscale-certs:ro
     depends_on:
        - backend
        - frontend
