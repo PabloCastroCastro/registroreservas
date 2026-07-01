@@ -10,6 +10,7 @@ import type { Address, Client } from '@/interfaces/client';
 import { useRouter } from 'next/router';
 import { findMunicipioByName } from '@/utils/municipioSearch';
 import { MunicipioSelector } from '@/components/clients/MunicipioSelector';
+import { PostalCodeSelector } from '@/components/clients/PostalCodeSelector';
 
 type Country = {
     pais: string;
@@ -49,6 +50,7 @@ export default function NewClient() {
     const [bookingId, setBookingId] = useState(query !== undefined && query.booking_id !== undefined && typeof (query.booking_id) === "string" ? query.booking_id : "");
     const [municipios, setMunicipios] = useState<Location[]>([]);
     const [municipioSelectedCodigo, setMunicipioSelectedCodigo] = useState("");
+    const [postalCodesByMunicipio, setPostalCodesByMunicipio] = useState<Record<string, string[]>>({});
     const [paises, setPaises] = useState<Country[]>([]);
     const [countryCodeSelected, setCountryCodeSelected] = useState("");
     const [younger, setYounger] = useState(false);
@@ -85,7 +87,14 @@ export default function NewClient() {
             }
             if (result.provincia) setProvince(result.provincia);
         } catch (err: any) {
-            setScanError(err.message);
+            const isPhotoError = /MRZ|líneas MRZ/i.test(err.message);
+            if (isPhotoError) {
+                setScanError('No se pudo leer el DNI. Comprueba que la foto sea nítida, el DNI ocupe casi toda la imagen y las 3 líneas de código del fondo sean visibles. Selecciona una nueva foto e inténtalo de nuevo.');
+                setBackFile(null);
+                setFrontFile(null);
+            } else {
+                setScanError(err.message);
+            }
         } finally {
             setScanning(false);
         }
@@ -155,6 +164,10 @@ export default function NewClient() {
             .then((res) => res.json())
             .then((data) => setPaises(data))
             .catch((error) => console.error("Error cargando países:", error));
+        fetch("/postalCodes.json")
+            .then((res) => res.json())
+            .then((data) => setPostalCodesByMunicipio(data))
+            .catch((error) => console.error("Error cargando códigos postales:", error));
     }, []);
 
     return (
@@ -382,7 +395,7 @@ export default function NewClient() {
                                 <MunicipioSelector
                                     municipios={municipios}
                                     value={location}
-                                    onChange={setLocation}
+                                    onChange={(codigo) => { setLocation(codigo); setPostalCode(''); }}
                                 />
                             </div>
                         ) : (
@@ -398,7 +411,16 @@ export default function NewClient() {
 
                         <div className="grid grid-cols-1">
                             <label className='text-gray-dark text-opacity-75' id="postalCode">Código postal:</label>
-                            <input type="number" className='rounded-full' id="postalCode" name="postalCode" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
+                            {country === "ESP" ? (
+                                <PostalCodeSelector
+                                    postalCodesByMunicipio={postalCodesByMunicipio}
+                                    municipioCodigo={location}
+                                    value={postalCode}
+                                    onChange={setPostalCode}
+                                />
+                            ) : (
+                                <input type="text" className='rounded-full' id="postalCode" name="postalCode" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
+                            )}
                         </div>
 
 

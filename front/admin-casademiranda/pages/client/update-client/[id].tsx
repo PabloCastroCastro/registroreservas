@@ -9,6 +9,7 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { findMunicipioByName } from '@/utils/municipioSearch';
 import { MunicipioSelector } from '@/components/clients/MunicipioSelector';
+import { PostalCodeSelector } from '@/components/clients/PostalCodeSelector';
 
 type Country = {
     pais: string;
@@ -32,6 +33,7 @@ export default function UpdateClient() {
     const [clientId, setClientId] = useState(query !== undefined && query.id !== undefined && typeof (query.id) === "string" ? query.id : "");
     const [municipios, setMunicipios] = useState<Location[]>([]);
     const [municipioSelectedCodigo, setMunicipioSelectedCodigo] = useState("");
+    const [postalCodesByMunicipio, setPostalCodesByMunicipio] = useState<Record<string, string[]>>({});
     const [paises, setPaises] = useState<Country[]>([]);
     const [countryCodeSelected, setCountryCodeSelected] = useState("");
     const [younger, setYounger] = useState(false);
@@ -52,6 +54,10 @@ export default function UpdateClient() {
             .then((res) => res.json())
             .then((data) => setPaises(data))
             .catch((error) => console.error("Error cargando países:", error));
+        fetch("/postalCodes.json")
+            .then((res) => res.json())
+            .then((data) => setPostalCodesByMunicipio(data))
+            .catch((error) => console.error("Error cargando códigos postales:", error));
     }, []);
 
     const handleScanDNI = async () => {
@@ -80,7 +86,14 @@ export default function UpdateClient() {
                 },
             });
         } catch (err: any) {
-            setScanError(err.message);
+            const isPhotoError = /MRZ|líneas MRZ/i.test(err.message);
+            if (isPhotoError) {
+                setScanError('No se pudo leer el DNI. Comprueba que la foto sea nítida, el DNI ocupe casi toda la imagen y las 3 líneas de código del fondo sean visibles. Selecciona una nueva foto e inténtalo de nuevo.');
+                setBackFile(null);
+                setFrontFile(null);
+            } else {
+                setScanError(err.message);
+            }
         } finally {
             setScanning(false);
         }
@@ -356,7 +369,16 @@ export default function UpdateClient() {
 
                             <div className="grid grid-cols-1">
                                 <label className='text-gray-dark text-opacity-75' id="postalCode">Código postal:</label>
-                                <input type="number" className='rounded-full' id="postalCode" name="postalCode" value={client.address?.postalCode || ''} onChange={(e) => setClient({ ...client, address: { ...client.address, postalCode: Number(e.target.value) } })} required />
+                                {client.address?.country === "ESP" ? (
+                                    <PostalCodeSelector
+                                        postalCodesByMunicipio={postalCodesByMunicipio}
+                                        municipioCodigo={client.address?.location || ''}
+                                        value={String(client.address?.postalCode || '')}
+                                        onChange={(cp) => setClient({ ...client, address: { ...client.address, postalCode: Number(cp) } })}
+                                    />
+                                ) : (
+                                    <input type="text" className='rounded-full' id="postalCode" name="postalCode" value={client.address?.postalCode || ''} onChange={(e) => setClient({ ...client, address: { ...client.address, postalCode: Number(e.target.value) } })} required />
+                                )}
                             </div>
                         </div>
                         <div className="mt-10" id="boton-enviar">
