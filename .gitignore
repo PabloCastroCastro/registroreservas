@@ -1,5 +1,6 @@
 /server/facturas-cliente
 /infrastructure/tailscale-certs/
+/infrastructure/launch-docker.exe
 /server/node_modules
 /server/configuration/password.json
 /server/password.txt
