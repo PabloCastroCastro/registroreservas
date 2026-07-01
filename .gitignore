@@ -1,4 +1,5 @@
 /server/facturas-cliente
+/infrastructure/tailscale-certs/
 /server/node_modules
 /server/configuration/password.json
 /server/password.txt
