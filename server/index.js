@@ -1,4 +1,4 @@
-import express, { response } from 'express';
+import express from 'express';
 import multer from "multer";
 import XLSX from "xlsx";
 import https from 'https';
@@ -25,7 +25,6 @@ import { sendCheckInMail } from './mail/sendCheckInMail.js'
 import getBookingNumber from './bookings/getBookingNumber.js';
 import readProperty from './configuration/readConfiguration.js';
 import executeQuery from './sql/sqlUtils.js';
-import e from 'express';
 import { listDishes, listPublicDishes, createDish, updateDish, deleteDish } from './menu/menuDishes.js';
 import { listBasePrices, updateBasePrice, updateSeasonConfig, getPriceForRoomAndDate } from './rooms/roomPrices.js';
 import { listBookingDishes, addBookingDish, removeBookingDish } from './bookings/bookingDishes.js';
