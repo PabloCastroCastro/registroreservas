@@ -1,10 +1,13 @@
 import { Client } from '@/interfaces/client'
 import Link from 'next/link'
 import DateComponent from '@/components/dates/dateComponent'
+import { useEffect, useState } from 'react'
 
 type ClientProps = {
     client: Client
 }
+
+type Municipio = { codigo: string; municipio: string };
 
 function Field({ label, value }: { label: string; value?: string | number | null }) {
     return (
@@ -16,6 +19,15 @@ function Field({ label, value }: { label: string; value?: string | number | null
 }
 
 export default function ClientComponent({ client }: ClientProps) {
+    const [municipios, setMunicipios] = useState<Municipio[]>([]);
+
+    useEffect(() => {
+        fetch('/municipios.json').then(r => r.json()).then(setMunicipios).catch(() => {});
+    }, []);
+
+    const municipioNombre = municipios.find(m => m.codigo === client.address?.location)?.municipio
+        ?? client.address?.location;
+
     return (
         <div className="border border-gray-light rounded-lg p-4 mb-3">
 
@@ -78,7 +90,7 @@ export default function ClientComponent({ client }: ClientProps) {
                 <Field label="Dir. adicional" value={client.address?.line2} />
                 <Field label="País" value={client.address?.country} />
                 <Field label="Provincia" value={client.address?.province} />
-                <Field label="Municipio" value={client.address?.location} />
+                <Field label="Municipio" value={municipioNombre} />
                 <Field label="Código postal" value={client.address?.postalCode} />
             </div>
 
