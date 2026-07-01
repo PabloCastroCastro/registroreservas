@@ -77,6 +77,7 @@ router.post('/upload-booking', upload.single("excelFile"), async function (req, 
 
         let reservasCreadas = 0;
         let reservasOmitidas = 0;
+        let reservasActualizadas = 0;
         const errores = [];
 
         for (const row of data) {
@@ -117,8 +118,19 @@ router.post('/upload-booking', upload.single("excelFile"), async function (req, 
                     'SELECT booking_id FROM casademiranda.bookings WHERE other_platform_reference = ?',
                     [referencia]
                 );
+                const estadoExcel = (row['Estado'] ?? '').toLowerCase().trim();
+                const esCancelada = ['cancelled', 'cancelada', 'cancelado', 'canceled'].includes(estadoExcel);
+
                 if (existing.length > 0) {
-                    reservasOmitidas++;
+                    if (esCancelada) {
+                        await executeQuery(
+                            "UPDATE casademiranda.bookings SET state = 'cancelada' WHERE other_platform_reference = ?",
+                            [referencia]
+                        );
+                        reservasActualizadas++;
+                    } else {
+                        reservasOmitidas++;
+                    }
                 } else {
                     await saveBooking(reserva, cliente);
                     reservasCreadas++;
@@ -137,6 +149,7 @@ router.post('/upload-booking', upload.single("excelFile"), async function (req, 
             message: "Archivo procesado correctamente",
             reservasCreadas,
             reservasOmitidas,
+            reservasActualizadas,
             errores,
         });
     } catch (err) {
