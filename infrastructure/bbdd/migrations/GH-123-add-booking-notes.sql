@@ -1,0 +1,2 @@
+ALTER TABLE casademiranda.bookings
+  ADD COLUMN notes VARCHAR(200) NULL DEFAULT NULL;

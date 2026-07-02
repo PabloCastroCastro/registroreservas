@@ -30,11 +30,16 @@ export default function Bookings() {
     const [viewMode, setViewMode] = useState<'list' | 'calendar'>(
         () => (localStorage.getItem('bookings_viewMode') as 'list' | 'calendar') ?? 'list'
     );
+    const [confirmationFilter, setConfirmationFilter] = useState('');
 
     // Derivado reactivamente — nunca hay stale closures
-    const sourceData = searchResults ?? allBookings;
+    const sourceData = confirmationFilter ? allBookings : (searchResults ?? allBookings);
     const bookings = sourceData
         .filter(b => {
+            if (confirmationFilter) {
+                if (!b.confirmation_number.toLowerCase().includes(confirmationFilter.toLowerCase())) return false;
+                return b.state === 'ok' || showCancelled;
+            }
             if (b.state !== 'ok') return showCancelled;
             const checkIn = new Date(b.check_in);
             const baseDate = new Date(filterDate);
@@ -81,6 +86,29 @@ export default function Bookings() {
                             onClick={() => setSearchResults(null)}
                             className="rounded-lg bg-gray-light px-3 py-2 text-sm font-semibold text-gray"
                             title="Limpiar búsqueda"
+                        >
+                            ✕
+                        </button>
+                    )}
+                </div>
+
+                {/* Separador vertical (solo desktop) */}
+                <div className="hidden md:block w-px h-8 bg-gray-light self-center" />
+
+                {/* Búsqueda por número de reserva */}
+                <div className="flex gap-2 flex-1 min-w-0">
+                    <input
+                        type="text"
+                        placeholder="Nº reserva..."
+                        value={confirmationFilter}
+                        onChange={e => setConfirmationFilter(e.target.value)}
+                        className="flex-1 min-w-0 border border-gray-light rounded-lg px-3 py-2 text-sm text-gray-dark focus:outline-none focus:border-gray"
+                    />
+                    {confirmationFilter && (
+                        <button
+                            onClick={() => setConfirmationFilter('')}
+                            className="rounded-lg bg-gray-light px-3 py-2 text-sm font-semibold text-gray"
+                            title="Limpiar"
                         >
                             ✕
                         </button>
