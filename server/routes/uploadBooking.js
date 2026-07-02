@@ -119,7 +119,14 @@ router.post('/upload-booking', upload.single("excelFile"), async function (req, 
                     [referencia]
                 );
                 const estadoExcel = (row['Estado'] ?? '').toLowerCase().trim();
-                const esCancelada = estadoExcel.startsWith('cancel');
+                const esCancelada = [
+                    'cancelled',
+                    'canceled',
+                    'cancelled_by_guest',
+                    'cancelled_by_hotel',
+                    'cancelled_by_ota',
+                    'no_show',
+                ].includes(estadoExcel);
 
                 if (existing.length > 0) {
                     if (esCancelada) {
