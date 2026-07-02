@@ -85,7 +85,7 @@ cd infrastructure/bbdd
 docker compose up -d
 ```
 
-Esto levanta MySQL 8.0 en `localhost:3306` (usuario `root`, contraseña `password`).
+Esto levanta MySQL 8.0 en `localhost:3306` (usuario `root`).
 
 Importar el dump si tienes uno:
 
