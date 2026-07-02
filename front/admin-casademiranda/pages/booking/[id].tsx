@@ -11,9 +11,12 @@ import * as APIBilling from "../../services/bills";
 import * as APIClient from "@/services/clients";
 import * as APIBookingDishes from "@/services/bookingDishes";
 import * as APIMenu from "@/services/menu";
+import * as APIRoomPrices from "@/services/roomPrices";
 import { useState, useEffect } from 'react';
 import { Button } from 'flowbite-react';
 import { RequestRoom } from '@/interfaces/room';
+
+const ALL_ROOMS = ['A Fonte', 'O Carpinteiro', 'O Cuberto', 'O Faiado'];
 import Link from 'next/link'
 import { Client } from '@/interfaces/client';
 import ClientComponent from '@/components/clients/clientComponent';
@@ -75,6 +78,12 @@ export default function BookingPage() {
     const [editCheckOut, setEditCheckOut] = useState('');
     const [editPaymentType, setEditPaymentType] = useState('');
     const [editPlatformRef, setEditPlatformRef] = useState('');
+    const [editRooms, setEditRooms] = useState<RequestRoom[]>([]);
+    const [editSelectedRoom, setEditSelectedRoom] = useState('');
+    const [editPriceRoom, setEditPriceRoom] = useState('');
+    const [editNumExtraBed, setEditNumExtraBed] = useState('');
+    const [editPriceExtraBed, setEditPriceExtraBed] = useState('');
+    const [editAvailability, setEditAvailability] = useState<Record<string, boolean>>({});
 
     // Cenas state
     const [cenas, setCenas] = useState<BookingDish[]>([]);
@@ -261,11 +270,55 @@ export default function BookingPage() {
         setEditName(booking.name);
         setEditSurname(booking.surname);
         setEditIdentifier(booking.identifier);
-        setEditCheckIn(new Date(booking.check_in).toISOString().split('T')[0]);
-        setEditCheckOut(new Date(booking.check_out).toISOString().split('T')[0]);
+        const ci = new Date(booking.check_in).toISOString().split('T')[0];
+        const co = new Date(booking.check_out).toISOString().split('T')[0];
+        setEditCheckIn(ci);
+        setEditCheckOut(co);
         setEditPaymentType(booking.payment_type ?? 'OTRO');
         setEditPlatformRef(booking.other_platform_reference ?? '');
+        setEditRooms(booking.rooms.map(r => ({
+            habitacion: r.name,
+            precio: r.price,
+            supletorias: r.extra_beds ?? 0,
+            precioSupletoria: r.price_extra_bed ?? 0,
+        })));
+        setEditSelectedRoom('');
+        setEditPriceRoom('');
+        setEditNumExtraBed('');
+        setEditPriceExtraBed('');
+        APIBooking.getRoomsAvailability(ci, co, booking.booking_id).then(setEditAvailability);
         setShowEditModal(true);
+    }
+
+    async function handleEditRoomChange(room: string) {
+        setEditSelectedRoom(room);
+        if (!room || !editCheckIn) return;
+        const priceResult = await APIRoomPrices.getPriceForRoom(room, editCheckIn);
+        if (priceResult) {
+            setEditPriceRoom(String(priceResult.price));
+            if (parseInt(editNumExtraBed) > 0 && priceResult.priceExtraBed) {
+                setEditPriceExtraBed(String(priceResult.priceExtraBed));
+            }
+        }
+    }
+
+    function addEditRoom() {
+        if (!editSelectedRoom || !editPriceRoom || parseFloat(editPriceRoom) <= 0) return;
+        const extraBeds = parseInt(editNumExtraBed) || 0;
+        setEditRooms(prev => [...prev, {
+            habitacion: editSelectedRoom,
+            precio: parseFloat(editPriceRoom),
+            supletorias: extraBeds,
+            precioSupletoria: extraBeds > 0 ? parseFloat(editPriceExtraBed) || 0 : 0,
+        }]);
+        setEditSelectedRoom('');
+        setEditPriceRoom('');
+        setEditNumExtraBed('');
+        setEditPriceExtraBed('');
+    }
+
+    function removeEditRoom(index: number) {
+        setEditRooms(prev => prev.filter((_, i) => i !== index));
     }
 
     async function handleUpdate() {
@@ -277,7 +330,8 @@ export default function BookingPage() {
             checkInDate: editCheckIn,
             checkOutDate: editCheckOut,
             tipo_pago: editPaymentType,
-            referenciaOtraPlataforma: editPlatformRef
+            referenciaOtraPlataforma: editPlatformRef,
+            habitaciones: editRooms,
         };
         const status = await APIBooking.updateBooking(query.id, update);
         if (status === 200) {
@@ -667,17 +721,82 @@ export default function BookingPage() {
                             </div>
                             <div>
                                 <label className="text-gray-dark text-sm">Fecha check-in</label>
-                                <input className="rounded w-full border border-gray-light p-1 text-sm" type="date" value={editCheckIn} onChange={e => setEditCheckIn(e.target.value)} />
+                                <input className="rounded w-full border border-gray-light p-1 text-sm" type="date" value={editCheckIn} onChange={e => {
+                                    setEditCheckIn(e.target.value);
+                                    if (editCheckOut) APIBooking.getRoomsAvailability(e.target.value, editCheckOut, query.id as string).then(setEditAvailability);
+                                }} />
                             </div>
                             <div>
                                 <label className="text-gray-dark text-sm">Fecha check-out</label>
-                                <input className="rounded w-full border border-gray-light p-1 text-sm" type="date" value={editCheckOut} onChange={e => setEditCheckOut(e.target.value)} />
+                                <input className="rounded w-full border border-gray-light p-1 text-sm" type="date" value={editCheckOut} onChange={e => {
+                                    setEditCheckOut(e.target.value);
+                                    if (editCheckIn) APIBooking.getRoomsAvailability(editCheckIn, e.target.value, query.id as string).then(setEditAvailability);
+                                }} />
                             </div>
                             <div className="col-span-2">
                                 <label className="text-gray-dark text-sm">Código otra plataforma</label>
                                 <input className="rounded w-full border border-gray-light p-1 text-sm" value={editPlatformRef} onChange={e => setEditPlatformRef(e.target.value)} />
                             </div>
                         </div>
+
+                        {/* Habitaciones */}
+                        <div className="mt-4">
+                            <h3 className={labelClass}>Habitaciones</h3>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2 items-end">
+                                <div>
+                                    <label className={labelClass}>Habitación</label>
+                                    <select className="rounded w-full border border-gray-light p-1 text-sm text-gray-dark" value={editSelectedRoom} onChange={e => handleEditRoomChange(e.target.value)}>
+                                        <option value="">-- Selecciona --</option>
+                                        {ALL_ROOMS.map(r => (
+                                            <option key={r} value={r} disabled={editAvailability[r] === false && !editRooms.some(er => er.habitacion === r)}>
+                                                {r}{editAvailability[r] === false && !editRooms.some(er => er.habitacion === r) ? ' (no disponible)' : ''}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Precio (€)</label>
+                                    <input className={inputClass} type="number" min="0" step="0.01" value={editPriceRoom} onChange={e => setEditPriceRoom(e.target.value)} disabled={!editSelectedRoom} />
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Supletorias</label>
+                                    <input className={inputClass} type="number" min="0" value={editNumExtraBed} onChange={async e => {
+                                        setEditNumExtraBed(e.target.value);
+                                        const n = parseInt(e.target.value) || 0;
+                                        if (n > 0 && editSelectedRoom && editCheckIn) {
+                                            const result = await APIRoomPrices.getPriceForRoom(editSelectedRoom, editCheckIn);
+                                            if (result?.priceExtraBed) setEditPriceExtraBed(String(result.priceExtraBed));
+                                        } else if (n === 0) {
+                                            setEditPriceExtraBed('');
+                                        }
+                                    }} disabled={!editSelectedRoom} />
+                                </div>
+                                <div>
+                                    <label className={labelClass}>Precio supletoria</label>
+                                    <input className={inputClass} type="number" min="0" step="0.01" value={editPriceExtraBed} onChange={e => setEditPriceExtraBed(e.target.value)} disabled={!editSelectedRoom} />
+                                </div>
+                            </div>
+                            <button type="button" onClick={addEditRoom} disabled={!editSelectedRoom || !editPriceRoom || parseFloat(editPriceRoom) <= 0}
+                                className="mt-2 inline-flex items-center gap-1 rounded-full bg-green bg-opacity-50 px-3 py-1 text-xs font-semibold text-gray-dark disabled:opacity-40">
+                                + Añadir habitación
+                            </button>
+                            {editRooms.length > 0 ? (
+                                <div className="mt-2 flex flex-col gap-1">
+                                    {editRooms.map((r, i) => (
+                                        <div key={i} className="flex items-center justify-between border border-gray-light rounded-lg px-3 py-2">
+                                            <div>
+                                                <p className="text-sm text-gray-dark font-medium">{r.habitacion}</p>
+                                                <p className="text-xs text-gray">{r.precio} € {r.supletorias > 0 ? `· ${r.supletorias} supletoria(s)` : ''}</p>
+                                            </div>
+                                            <button type="button" onClick={() => removeEditRoom(i)} className="text-orange text-xs font-semibold px-2">✕</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="mt-2 text-xs text-gray">Sin habitaciones</p>
+                            )}
+                        </div>
+
                         <div className="flex justify-end gap-3 mt-5">
                             <Button className='bg-gray-light text-gray-dark text-opacity-75' onClick={() => setShowEditModal(false)}>Cancelar</Button>
                             <Button className='bg-green bg-opacity-50 text-gray-dark text-opacity-75' onClick={handleUpdate}>Guardar</Button>

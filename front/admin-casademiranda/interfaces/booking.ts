@@ -22,6 +22,7 @@ export type Booking = {
     checkOutDate: string
     tipo_pago: string
     referenciaOtraPlataforma: string
+    habitaciones?: RequestRoom[]
   }
   
   export type RequestBooking = {
