@@ -16,6 +16,7 @@ const NAV_LINKS = [
     { href: '/checkin-xml', label: 'Check-in XML', adminOnly: false },
     { href: '/precios-base', label: 'Precios base', adminOnly: false },
     { href: '/usuarios', label: 'Usuarios', adminOnly: true },
+    { href: '/contabilidad', label: 'Contabilidad', adminOnly: true },
 ];
 
 export default function DefaultNavbar() {
