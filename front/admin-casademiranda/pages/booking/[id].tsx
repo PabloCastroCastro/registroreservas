@@ -78,6 +78,7 @@ export default function BookingPage() {
     const [editCheckOut, setEditCheckOut] = useState('');
     const [editPaymentType, setEditPaymentType] = useState('');
     const [editPlatformRef, setEditPlatformRef] = useState('');
+    const [editNotes, setEditNotes] = useState('');
     const [editRooms, setEditRooms] = useState<RequestRoom[]>([]);
     const [editSelectedRoom, setEditSelectedRoom] = useState('');
     const [editPriceRoom, setEditPriceRoom] = useState('');
@@ -276,6 +277,7 @@ export default function BookingPage() {
         setEditCheckOut(co);
         setEditPaymentType(booking.payment_type ?? 'OTRO');
         setEditPlatformRef(booking.other_platform_reference ?? '');
+        setEditNotes(booking.notes ?? '');
         setEditRooms(booking.rooms.map(r => ({
             habitacion: r.name,
             precio: r.price,
@@ -331,6 +333,7 @@ export default function BookingPage() {
             checkOutDate: editCheckOut,
             tipo_pago: editPaymentType,
             referenciaOtraPlataforma: editPlatformRef,
+            notes: editNotes || null,
             habitaciones: editRooms,
         };
         const status = await APIBooking.updateBooking(query.id, update);
@@ -392,6 +395,12 @@ export default function BookingPage() {
                             <div>
                                 <p className="text-xs text-gray uppercase tracking-wide">Código otra plataforma</p>
                                 <p className="text-gray-dark font-medium">{booking.other_platform_reference}</p>
+                            </div>
+                        )}
+                        {booking?.notes && (
+                            <div className="col-span-2 md:col-span-3">
+                                <p className="text-xs text-gray uppercase tracking-wide">Notas</p>
+                                <p className="text-gray-dark font-medium">{booking.notes}</p>
                             </div>
                         )}
                     </div>
@@ -736,6 +745,18 @@ export default function BookingPage() {
                             <div className="col-span-2">
                                 <label className="text-gray-dark text-sm">Código otra plataforma</label>
                                 <input className="rounded w-full border border-gray-light p-1 text-sm" value={editPlatformRef} onChange={e => setEditPlatformRef(e.target.value)} />
+                            </div>
+                            <div className="col-span-2">
+                                <label className="text-gray-dark text-sm">Notas</label>
+                                <textarea
+                                    className="rounded w-full border border-gray-light p-1 text-sm resize-none"
+                                    rows={2}
+                                    maxLength={200}
+                                    value={editNotes}
+                                    onChange={e => setEditNotes(e.target.value)}
+                                    placeholder="Ej: llegada a las 14:00, camas individuales..."
+                                />
+                                <p className="text-xs text-gray text-right">{editNotes.length}/200</p>
                             </div>
                         </div>
 
