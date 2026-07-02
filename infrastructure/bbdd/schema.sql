@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS `casademiranda`.`bookings` (
   `state` VARCHAR(45) NULL DEFAULT NULL,
   `payment_type` VARCHAR(45) NULL DEFAULT NULL,
   `confirmation_number` VARCHAR(45) NULL DEFAULT NULL,
-  `other_platform_reference` VARCHAR(45) NULL DEFAULT NULL, 
+  `other_platform_reference` VARCHAR(45) NULL DEFAULT NULL,
+  `notes` VARCHAR(200) NULL DEFAULT NULL,
   PRIMARY KEY (`booking_id`))
   DEFAULT CHARACTER SET = utf8
   COLLATE = utf8_general_ci;

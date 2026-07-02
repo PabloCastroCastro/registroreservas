@@ -2,8 +2,8 @@ import executeQuery from '../sql/sqlUtils.js';
 
 const updateBookingById = async (bookingId, booking) => {
     await executeQuery(
-        'UPDATE casademiranda.bookings SET check_in = ?, check_out = ?, payment_type = ?, other_platform_reference = ? WHERE booking_id = ?',
-        [booking.checkInDate, booking.checkOutDate, booking.tipo_pago, booking.referenciaOtraPlataforma ?? null, bookingId]
+        'UPDATE casademiranda.bookings SET check_in = ?, check_out = ?, payment_type = ?, other_platform_reference = ?, notes = ? WHERE booking_id = ?',
+        [booking.checkInDate, booking.checkOutDate, booking.tipo_pago, booking.referenciaOtraPlataforma ?? null, booking.notes ?? null, bookingId]
     );
 
     const customers = await executeQuery(
