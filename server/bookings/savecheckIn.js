@@ -55,13 +55,19 @@ function mapSexo(gender) {
     return gender;
 }
 
-// DB stores EFECTIVO/TARJETA; SES requires String(5) codes.
+// DB stores EFECTIVO/TARJETA/BIZUM/TRANSFERENCIA/OTRO; SES requires one of
+// [DESTI, EFECT, TARJT, PLATF, TRANS, MOVIL, TREG, OTRO].
 const PAGO_MAP = {
     EFECTIVO: 'EFECT',
     TARJETA:  'TARJT',
+    BIZUM: 'MOVIL',
+    TRANSFERENCIA: 'TRANS',
+    OTRO: 'OTRO',
 };
+// tipoPago is a required field in <pago>; fall back to OTRO rather than
+// emitting an empty <pago> block, which SES rejects (cvc-complex-type.2.4.b).
 function mapTipoPago(tipoPago) {
-    return PAGO_MAP[tipoPago] ?? tipoPago;
+    return PAGO_MAP[tipoPago] ?? 'OTRO';
 }
 
 // codigoMunicipio requires a 5-digit INE code (Spain only).
