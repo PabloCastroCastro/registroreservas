@@ -11,6 +11,7 @@ import { useRouter } from 'next/router';
 import { findMunicipioByName } from '@/utils/municipioSearch';
 import { MunicipioSelector } from '@/components/clients/MunicipioSelector';
 import { PostalCodeSelector } from '@/components/clients/PostalCodeSelector';
+import { PaisSelector } from '@/components/clients/PaisSelector';
 
 type Country = {
     pais: string;
@@ -238,17 +239,11 @@ export default function NewClient() {
                         </div>
                         <div className="grid grid-cols-1">
                             <label className='rounded-full text-gray-dark text-opacity-75' id="nacionality">Nacionalidad:</label>
-                            <select
-                                className="rounded-full"
-                                id="selector-nacionality"
-                                value={nacionality || ''}
-                                onChange={(e) => setNacionality(e.target.value)}
-                            >
-                                <option value="">-- Elige un país --</option>
-                                {paises.map(p => (
-                                    <option key={p.codigo} value={p.codigo}>{p.pais}</option>
-                                ))}
-                            </select>
+                            <PaisSelector
+                                paises={paises}
+                                value={nacionality}
+                                onChange={setNacionality}
+                            />
                         </div>
 
                         <div className="grid grid-cols-1">
@@ -377,17 +372,11 @@ export default function NewClient() {
 
                         <div className="grid grid-cols-1">
                             <label className='rounded-full text-gray-dark text-opacity-75' id="country">Pais:</label>
-                            <select
-                                className="rounded-full"
-                                id="selector-country"
-                                value={country || ''}
-                                onChange={(e) => setCountry(e.target.value)}
-                            >
-                                <option value="">-- Elige un país --</option>
-                                {paises.map(p => (
-                                    <option key={p.codigo} value={p.codigo}>{p.pais}</option>
-                                ))}
-                            </select>
+                            <PaisSelector
+                                paises={paises}
+                                value={country}
+                                onChange={setCountry}
+                            />
                         </div>
                         {country === "ESP" ? (
                             <div className="grid grid-cols-1">
