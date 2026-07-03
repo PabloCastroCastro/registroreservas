@@ -101,7 +101,7 @@ router.post('/upload-booking', upload.single("excelFile"), async function (req, 
                     checkOutDate: formatDateToMySQL(row['Salida']),
                     dias,
                     habitaciones,
-                    tipo_pago: '',
+                    tipo_pago: 'OTRO',
                     referenciaOtraPlataforma: referencia,
                     estado: row['Estado']
                 };
