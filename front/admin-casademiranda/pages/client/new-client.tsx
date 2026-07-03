@@ -274,7 +274,7 @@ export default function NewClient() {
 
                         <div className="grid grid-cols-1">
                             <label className='text-gray-dark text-opacity-75' id="expeditionDate">Fecha de expedición:</label>
-                            <input type="date" className='rounded-full' id="expeditionDate" name="expeditionDate" value={expeditionDate} onChange={(e) => setExpeditionDate(e.target.value)} required />
+                            <input type="date" className='rounded-full' id="expeditionDate" name="expeditionDate" value={expeditionDate} onChange={(e) => setExpeditionDate(e.target.value)} />
                         </div>
 
                         <div className="grid grid-cols-1">
