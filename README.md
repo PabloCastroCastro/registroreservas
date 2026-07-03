@@ -126,8 +126,8 @@ La app estará disponible en `http://localhost:3000`. En producción, en `https:
 ### Ciclo de una feature
 
 ```
-1. Partir siempre de main actualizado
-   git checkout main && git pull
+1. Partir siempre de develop actualizado
+   git checkout develop && git pull
 
 2. Crear rama de feature
    git checkout -b feature/GH-XX
