@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { findMunicipioByName } from '@/utils/municipioSearch';
 import { MunicipioSelector } from '@/components/clients/MunicipioSelector';
 import { PostalCodeSelector } from '@/components/clients/PostalCodeSelector';
+import { PaisSelector } from '@/components/clients/PaisSelector';
 
 type Country = {
     pais: string;
@@ -204,17 +205,11 @@ export default function UpdateClient() {
 
                             <div className="grid grid-cols-1">
                                 <label className='rounded-full text-gray-dark text-opacity-75' id="nacionality">Nacionalidad:</label>
-                                <select
-                                    className="rounded-full"
-                                    id="selector-nacionality"
+                                <PaisSelector
+                                    paises={paises}
                                     value={client.nacionality || ''}
-                                    onChange={(e) => setClient({ ...client, nacionality: e.target.value })}
-                                >
-                                    <option value="">-- Elige un país --</option>
-                                    {paises.map(p => (
-                                        <option key={p.codigo} value={p.codigo}>{p.pais}</option>
-                                    ))}
-                                </select>
+                                    onChange={(codigo) => setClient({ ...client, nacionality: codigo })}
+                                />
                             </div>
                             <div className="grid grid-cols-1">
                                 <label className='text-gray-dark text-opacity-75' id="documentType">Tipo documento:</label>
@@ -333,18 +328,11 @@ export default function UpdateClient() {
 
                             <div className="grid grid-cols-1">
                                 <label className='rounded-full text-gray-dark text-opacity-75' id="country">Pais:</label>
-                                <select
-                                    className="rounded-full"
-                                    id="selector-country"
+                                <PaisSelector
+                                    paises={paises}
                                     value={client.address?.country || ''}
-                                    onChange={(e) => setClient({ ...client, address: { ...client.address, country: e.target.value } })}
-
-                                >
-                                    <option value="">-- Elige un país --</option>
-                                    {paises.map(p => (
-                                        <option key={p.codigo} value={p.codigo}>{p.pais}</option>
-                                    ))}
-                                </select>
+                                    onChange={(codigo) => setClient({ ...client, address: { ...client.address, country: codigo } })}
+                                />
                             </div>
 
                             <div className="grid grid-cols-1">
