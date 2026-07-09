@@ -1,8 +1,9 @@
-import type { BasePricesResponse } from '../interfaces/roomPrice';
+import type { BasePricesResponse, BookingRoomPrice } from '../interfaces/roomPrice';
 import { getToken } from '../auth/auth';
 import { API_HOST } from './config';
 
 const API_URL = `${API_HOST}/precios-base`;
+const BOOKING_API_URL = `${API_HOST}/precios-booking`;
 
 function headers() {
     return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` };
@@ -34,4 +35,17 @@ export async function getPriceForRoom(room: string, date: string): Promise<{ pri
     if (!res.ok) return null;
     const data = await res.json();
     return { price: data.price, priceExtraBed: data.priceExtraBed, season: data.season };
+}
+
+export async function getBookingRoomPrices(): Promise<BookingRoomPrice[]> {
+    const res = await fetch(BOOKING_API_URL, { headers: headers() });
+    return res.json();
+}
+
+export async function updateBookingRoomPrice(id: number, price: number): Promise<void> {
+    await fetch(`${BOOKING_API_URL}/${id}`, {
+        method: 'PUT',
+        headers: headers(),
+        body: JSON.stringify({ price }),
+    });
 }

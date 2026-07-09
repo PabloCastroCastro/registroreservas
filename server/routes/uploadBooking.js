@@ -3,7 +3,8 @@ import multer from 'multer';
 import XLSX from 'xlsx';
 import { authGuard } from '../middleware/auth.js';
 import getInvoiceNumber from '../invoices/getInvoiceNumber.js';
-import saveBooking from '../bookings/saveBooking.js';
+import saveBooking, { updateBookingRooms } from '../bookings/saveBooking.js';
+import { getBookingPriceForRoomAndDate } from '../rooms/bookingRoomPrices.js';
 import executeQuery from '../sql/sqlUtils.js';
 
 const router = express.Router();
@@ -30,7 +31,7 @@ function formatDateToMySQL(dateStr) {
     return `${year}-${month}-${day}`;
 }
 
-function buildHabitaciones(row) {
+async function buildHabitaciones(row) {
     const tipoUnidad = row['Tipo de unidad'];
     const numHabitaciones = parseInt(row['Habitaciones']) || 0;
     const dias = parseInt(row['Duración (noches)']) || 1;
@@ -52,11 +53,20 @@ function buildHabitaciones(row) {
         throw new Error('Datos inválidos: el número de tipos de unidad no coincide con el número de habitaciones');
     }
 
-    const precioUnitario = precioTotal / (numHabitaciones * dias);
+    const nombres = tipos.map(getRoomName);
+    // Reparto proporcional al precio de referencia de Booking de cada habitación (solo informativo,
+    // no se usa para crear reservas), en vez de repartir el total a partes iguales entre habitaciones.
+    const pesos = await Promise.all(nombres.map(nombre => getBookingPriceForRoomAndDate(nombre, row['Entrada'])));
+    const pesoTotal = pesos.reduce((sum, p) => sum + (p ?? 0), 0);
 
-    return tipos.map(tipo => ({
-        habitacion: getRoomName(tipo),
-        precio: precioUnitario
+    if (pesos.some(p => p == null) || pesoTotal === 0) {
+        const precioUnitario = precioTotal / (numHabitaciones * dias);
+        return nombres.map(habitacion => ({ habitacion, precio: precioUnitario }));
+    }
+
+    return nombres.map((habitacion, i) => ({
+        habitacion,
+        precio: (precioTotal * (pesos[i] / pesoTotal)) / dias
     }));
 }
 
@@ -92,7 +102,7 @@ router.post('/upload-booking', upload.single("excelFile"), async function (req, 
 
                 const numeroConfirmacion = await getInvoiceNumber(row['Salida']);
                 const dias = parseInt(row['Duración (noches)']) || 1;
-                const habitaciones = buildHabitaciones(row);
+                const habitaciones = await buildHabitaciones(row);
 
                 const reserva = {
                     numeroConfirmacion,
@@ -136,7 +146,25 @@ router.post('/upload-booking', upload.single("excelFile"), async function (req, 
                         );
                         reservasActualizadas++;
                     } else {
-                        reservasOmitidas++;
+                        const bookingId = existing[0].booking_id;
+                        const currentRooms = await executeQuery(
+                            `SELECT r.name AS habitacion, br.price AS precio
+                             FROM casademiranda.booking_room br
+                             INNER JOIN casademiranda.rooms r ON br.room_id = r.room_id
+                             WHERE br.booking_id = ?`,
+                            [bookingId]
+                        );
+                        const clave = h => `${h.habitacion}:${Number(h.precio).toFixed(2)}`;
+                        const actuales = currentRooms.map(clave).sort();
+                        const nuevas = habitaciones.map(clave).sort();
+                        const hanCambiado = JSON.stringify(actuales) !== JSON.stringify(nuevas);
+
+                        if (hanCambiado) {
+                            await updateBookingRooms(bookingId, habitaciones);
+                            reservasActualizadas++;
+                        } else {
+                            reservasOmitidas++;
+                        }
                     }
                 } else {
                     await saveBooking(reserva, cliente);

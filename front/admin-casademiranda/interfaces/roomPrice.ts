@@ -15,3 +15,10 @@ export type BasePricesResponse = {
   prices: RoomBasePrice[]
   seasonConfig: SeasonConfig
 }
+
+export type BookingRoomPrice = {
+  id: number
+  room_name: string
+  season: 'low' | 'high'
+  price: number
+}
