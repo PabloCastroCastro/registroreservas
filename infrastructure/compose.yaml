@@ -16,10 +16,12 @@ services:
       context: ../server
     networks: 
       - node-network
-    volumes: 
+    volumes:
       - /project/node_modules
       - ./certs:/infrastructure/certs
       - ./check-in:/server/check-in
+      - ./facturas-proveedor:/server/facturas-proveedor
+      - ./facturas-cliente:/server/facturas-cliente
     tty: true
     ports: 
       - "3003:3003"

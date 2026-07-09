@@ -10,6 +10,7 @@ export interface SupplierInvoice {
     totalAmount: number;
     reference: string | null;
     notes: string | null;
+    filePath: string | null;
 }
 
 export interface SupplierInvoiceInput {
@@ -24,6 +25,7 @@ export interface SupplierInvoiceInput {
     reference?: string | null;
     notes?: string | null;
     emailUid?: number;
+    file?: File | null;
 }
 
 export interface PendingSupplierEmail {
@@ -32,4 +34,5 @@ export interface PendingSupplierEmail {
     from: string;
     date: string;
     supplierName: string;
+    hasAttachment: boolean;
 }

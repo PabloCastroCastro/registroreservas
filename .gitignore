@@ -1,4 +1,5 @@
 /server/facturas-cliente
+/server/facturas-proveedor
 /infrastructure/tailscale-certs/
 /infrastructure/launch-docker.exe
 /server/node_modules
@@ -8,6 +9,8 @@
 /infrastructure/bbdd/data
 /infrastructure/bbdd/data_backup
 /infrastructure/check-in/*
+/infrastructure/facturas-proveedor/*
+/infrastructure/facturas-cliente/*
 
 # Logs
 logs

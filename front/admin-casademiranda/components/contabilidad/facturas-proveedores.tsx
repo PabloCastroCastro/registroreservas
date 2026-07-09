@@ -5,8 +5,11 @@ import {
     updateSupplierInvoice,
     deleteSupplierInvoice,
     getPendingSupplierEmails,
+    viewSupplierInvoiceFile,
+    viewPendingEmailAttachment,
 } from '@/services/supplierInvoices';
 import type { SupplierInvoice, PendingSupplierEmail } from '@/interfaces/supplierInvoice';
+import ProveedoresModal from '@/components/contabilidad/proveedores-modal';
 
 const inputClass = "mt-1 w-full border border-gray-light rounded-lg px-3 py-2 text-gray-dark text-sm focus:outline-none focus:border-gray";
 const labelClass = "text-xs text-gray uppercase tracking-wide block";
@@ -31,11 +34,15 @@ interface FormState {
     reference: string;
     notes: string;
     emailUid: number | null;
+    file: File | null;
+    hasExistingFile: boolean;
+    fromEmailAttachment: boolean;
 }
 
 const emptyForm: FormState = {
     id: null, invoiceNumber: '', nif: '', date: '', supplierName: '',
     baseAmount: '', vatPercent: '21', totalAmount: '', reference: '', notes: '', emailUid: null,
+    file: null, hasExistingFile: false, fromEmailAttachment: false,
 };
 
 export default function FacturasProveedores() {
@@ -50,7 +57,8 @@ export default function FacturasProveedores() {
     const [formError, setFormError] = useState('');
 
     const [checkingMail, setCheckingMail] = useState(false);
-    const [mailQueue, setMailQueue] = useState<PendingSupplierEmail[]>([]);
+    const [pendingEmails, setPendingEmails] = useState<PendingSupplierEmail[] | null>(null);
+    const [showSuppliers, setShowSuppliers] = useState(false);
 
     useEffect(() => { load(); }, [year, quarter]);
 
@@ -85,10 +93,14 @@ export default function FacturasProveedores() {
             reference: inv.reference ?? '',
             notes: inv.notes ?? '',
             emailUid: null,
+            file: null,
+            hasExistingFile: !!inv.filePath,
+            fromEmailAttachment: false,
         });
     }
 
-    function openFromEmail(email: PendingSupplierEmail) {
+    function handleSelectEmail(email: PendingSupplierEmail) {
+        setPendingEmails(null);
         setFormError('');
         setForm({
             ...emptyForm,
@@ -96,6 +108,7 @@ export default function FacturasProveedores() {
             supplierName: email.supplierName,
             reference: email.subject,
             emailUid: email.uid,
+            fromEmailAttachment: email.hasAttachment,
         });
     }
 
@@ -138,6 +151,7 @@ export default function FacturasProveedores() {
                 reference: form.reference || null,
                 notes: form.notes || null,
                 ...(form.emailUid ? { emailUid: form.emailUid } : {}),
+                ...(form.file ? { file: form.file } : {}),
             };
             if (form.id) {
                 await updateSupplierInvoice(form.id, payload);
@@ -146,16 +160,28 @@ export default function FacturasProveedores() {
             }
             setForm(null);
             await load();
-
-            if (mailQueue.length > 0) {
-                const [next, ...rest] = mailQueue;
-                setMailQueue(rest);
-                openFromEmail(next);
-            }
         } catch (e: any) {
             setFormError(e.message);
         } finally {
             setSaving(false);
+        }
+    }
+
+    async function handleViewFile(id: number) {
+        try {
+            const blob = await viewSupplierInvoiceFile(id);
+            window.open(URL.createObjectURL(blob), '_blank');
+        } catch (e: any) {
+            alert(`Error: ${e.message}`);
+        }
+    }
+
+    async function handleViewPendingAttachment(uid: number) {
+        try {
+            const blob = await viewPendingEmailAttachment(uid);
+            window.open(URL.createObjectURL(blob), '_blank');
+        } catch (e: any) {
+            alert(`Error: ${e.message}`);
         }
     }
 
@@ -177,9 +203,7 @@ export default function FacturasProveedores() {
                 alert('No hay correos de proveedores conocidos pendientes de leer.');
                 return;
             }
-            const [first, ...rest] = pending;
-            setMailQueue(rest);
-            openFromEmail(first);
+            setPendingEmails(pending);
         } catch (e: any) {
             alert(`Error: ${e.message}`);
         } finally {
@@ -211,6 +235,10 @@ export default function FacturasProveedores() {
                     </div>
                 </div>
                 <div className="flex gap-3">
+                    <button onClick={() => setShowSuppliers(true)}
+                        className="rounded-full border border-gray-light px-4 py-2 text-sm font-semibold text-gray-dark hover:border-gray transition-colors">
+                        Proveedores
+                    </button>
                     <button onClick={handleCheckMail} disabled={checkingMail}
                         className="rounded-full border border-gray-light px-4 py-2 text-sm font-semibold text-gray-dark hover:border-gray transition-colors disabled:opacity-40">
                         {checkingMail ? 'Comprobando...' : 'Leer correo'}
@@ -250,6 +278,12 @@ export default function FacturasProveedores() {
                                     <td className="py-2 px-3 text-right">{inv.vatRate != null ? (inv.vatRate * 100).toFixed(0) + '%' : '—'}</td>
                                     <td className="py-2 px-3 text-right">{inv.totalAmount.toFixed(2)} €</td>
                                     <td className="py-2 px-3 text-right whitespace-nowrap">
+                                        {inv.filePath && (
+                                            <button onClick={() => handleViewFile(inv.id)}
+                                                className="text-gray hover:text-gray-dark transition-colors text-xs font-semibold mr-3">
+                                                Ver factura
+                                            </button>
+                                        )}
                                         <button onClick={() => openEdit(inv)}
                                             className="text-gray hover:text-gray-dark transition-colors text-xs font-semibold mr-3">
                                             Editar
@@ -333,10 +367,27 @@ export default function FacturasProveedores() {
                                     <textarea className={inputClass} rows={2} value={form.notes}
                                         onChange={e => updateForm('notes', e.target.value)} />
                                 </div>
+                                <div className="col-span-2">
+                                    <label className={labelClass}>Factura adjunta (PDF o imagen)</label>
+                                    <input className={inputClass} type="file" accept="application/pdf,image/*"
+                                        onChange={e => updateForm('file', e.target.files?.[0] ?? null)} />
+                                    {form.fromEmailAttachment && !form.file && (
+                                        <p className="text-xs text-gray mt-1">
+                                            Este correo trae un adjunto: se guardará automáticamente si no seleccionas otro fichero.{' '}
+                                            <button type="button" onClick={() => handleViewPendingAttachment(form.emailUid!)}
+                                                className="underline hover:text-gray-dark transition-colors">
+                                                Ver adjunto
+                                            </button>
+                                        </p>
+                                    )}
+                                    {form.hasExistingFile && !form.file && (
+                                        <p className="text-xs text-gray mt-1">Ya hay un fichero adjunto. Selecciona uno nuevo para reemplazarlo.</p>
+                                    )}
+                                </div>
                             </div>
                             {formError && <p className="text-xs text-orange mb-3">{formError}</p>}
                             <div className="flex justify-end gap-3">
-                                <button type="button" onClick={() => { setForm(null); setMailQueue([]); }}
+                                <button type="button" onClick={() => setForm(null)}
                                     className="px-4 py-2 text-sm text-gray hover:text-gray-dark border border-gray-light rounded-full transition-colors">
                                     Cancelar
                                 </button>
@@ -349,6 +400,51 @@ export default function FacturasProveedores() {
                     </div>
                 </div>
             )}
+
+            {pendingEmails && (
+                <div className="fixed inset-0 bg-gray-dark bg-opacity-40 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-2xl mx-4">
+                        <h3 className="text-sm font-semibold text-gray-dark mb-4">Correos de proveedores pendientes</h3>
+                        <div className="max-h-96 overflow-y-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b border-gray-light">
+                                        <th className="text-left py-2 px-3 text-xs text-gray uppercase tracking-wide font-semibold">Proveedor</th>
+                                        <th className="text-left py-2 px-3 text-xs text-gray uppercase tracking-wide font-semibold">Asunto</th>
+                                        <th className="text-left py-2 px-3 text-xs text-gray uppercase tracking-wide font-semibold">Fecha</th>
+                                        <th className="text-left py-2 px-3 text-xs text-gray uppercase tracking-wide font-semibold">Adjunto</th>
+                                        <th className="py-2 px-3"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {pendingEmails.map(email => (
+                                        <tr key={email.uid} className="border-b border-gray-light last:border-0">
+                                            <td className="py-2 px-3 text-gray-dark font-medium">{email.supplierName}</td>
+                                            <td className="py-2 px-3">{email.subject}</td>
+                                            <td className="py-2 px-3">{new Date(email.date).toLocaleDateString('es-ES')}</td>
+                                            <td className="py-2 px-3">{email.hasAttachment ? 'Sí' : 'No'}</td>
+                                            <td className="py-2 px-3 text-right whitespace-nowrap">
+                                                <button onClick={() => handleSelectEmail(email)}
+                                                    className="text-gray hover:text-green transition-colors text-xs font-semibold">
+                                                    Registrar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="flex justify-end mt-4">
+                            <button onClick={() => setPendingEmails(null)}
+                                className="px-4 py-2 text-sm text-gray hover:text-gray-dark border border-gray-light rounded-full transition-colors">
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showSuppliers && <ProveedoresModal onClose={() => setShowSuppliers(false)} />}
         </div>
     );
 }

@@ -14,24 +14,53 @@ export async function listSupplierInvoices(year, quarter) {
     const rows = await executeQuery(
         `SELECT id, invoice_number AS invoiceNumber, nif, date, supplier_name AS supplierName,
                 base_amount AS baseAmount, vat_rate AS vatRate, vat_amount AS vatAmount,
-                total_amount AS totalAmount, reference, notes
+                total_amount AS totalAmount, reference, notes, file_path AS filePath
          FROM casademiranda.supplier_invoices
          WHERE date BETWEEN ? AND ?
          ORDER BY date, id`,
         [startDate, endDate]
     );
-    return rows ?? [];
+    // mysql2 devuelve las columnas DECIMAL como string; el frontend necesita numeros (toFixed, sumas).
+    return (rows ?? []).map(row => ({
+        ...row,
+        baseAmount: row.baseAmount != null ? Number(row.baseAmount) : null,
+        vatRate: row.vatRate != null ? Number(row.vatRate) : null,
+        vatAmount: row.vatAmount != null ? Number(row.vatAmount) : null,
+        totalAmount: Number(row.totalAmount),
+    }));
+}
+
+export async function getSupplierInvoiceFilePath(id) {
+    const rows = await executeQuery(
+        'SELECT file_path AS filePath FROM casademiranda.supplier_invoices WHERE id = ?',
+        [id]
+    );
+    return rows?.[0]?.filePath ?? null;
+}
+
+export async function setSupplierInvoiceFilePath(id, filePath) {
+    await executeQuery(
+        'UPDATE casademiranda.supplier_invoices SET file_path = ? WHERE id = ?',
+        [filePath, id]
+    );
+}
+
+export async function listRegisteredEmailUids() {
+    const rows = await executeQuery(
+        'SELECT email_uid FROM casademiranda.supplier_invoices WHERE email_uid IS NOT NULL'
+    );
+    return (rows ?? []).map(r => r.email_uid);
 }
 
 export async function createSupplierInvoice(data) {
-    const { invoiceNumber, nif, date, supplierName, baseAmount, vatRate, vatAmount, totalAmount, reference, notes } = data;
+    const { invoiceNumber, nif, date, supplierName, baseAmount, vatRate, vatAmount, totalAmount, reference, notes, emailUid } = data;
     const result = await executeQuery(
         `INSERT INTO casademiranda.supplier_invoices
-            (invoice_number, nif, date, supplier_name, base_amount, vat_rate, vat_amount, total_amount, reference, notes)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            (invoice_number, nif, date, supplier_name, base_amount, vat_rate, vat_amount, total_amount, reference, notes, email_uid)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [invoiceNumber ?? null, nif ?? null, date, supplierName,
          baseAmount ?? null, vatRate ?? null, vatAmount ?? null, totalAmount,
-         reference ?? null, notes ?? null]
+         reference ?? null, notes ?? null, emailUid ?? null]
     );
     return result.insertId;
 }
