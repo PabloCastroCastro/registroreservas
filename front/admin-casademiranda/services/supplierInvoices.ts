@@ -69,6 +69,15 @@ export async function viewSupplierInvoiceFile(id: number): Promise<Blob> {
     return res.blob();
 }
 
+export async function viewPendingEmailAttachment(uid: number): Promise<Blob> {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/email-pending/${uid}/attachment`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error(`Error HTTP ${res.status}`);
+    return res.blob();
+}
+
 export async function getPendingSupplierEmails(): Promise<PendingSupplierEmail[]> {
     const token = getToken();
     const res = await fetch(`${API_URL}/email-pending`, {

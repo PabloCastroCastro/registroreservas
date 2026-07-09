@@ -6,6 +6,7 @@ import {
     deleteSupplierInvoice,
     getPendingSupplierEmails,
     viewSupplierInvoiceFile,
+    viewPendingEmailAttachment,
 } from '@/services/supplierInvoices';
 import type { SupplierInvoice, PendingSupplierEmail } from '@/interfaces/supplierInvoice';
 import ProveedoresModal from '@/components/contabilidad/proveedores-modal';
@@ -169,6 +170,15 @@ export default function FacturasProveedores() {
     async function handleViewFile(id: number) {
         try {
             const blob = await viewSupplierInvoiceFile(id);
+            window.open(URL.createObjectURL(blob), '_blank');
+        } catch (e: any) {
+            alert(`Error: ${e.message}`);
+        }
+    }
+
+    async function handleViewPendingAttachment(uid: number) {
+        try {
+            const blob = await viewPendingEmailAttachment(uid);
             window.open(URL.createObjectURL(blob), '_blank');
         } catch (e: any) {
             alert(`Error: ${e.message}`);
@@ -362,7 +372,13 @@ export default function FacturasProveedores() {
                                     <input className={inputClass} type="file" accept="application/pdf,image/*"
                                         onChange={e => updateForm('file', e.target.files?.[0] ?? null)} />
                                     {form.fromEmailAttachment && !form.file && (
-                                        <p className="text-xs text-gray mt-1">Este correo trae un adjunto: se guardará automáticamente si no seleccionas otro fichero.</p>
+                                        <p className="text-xs text-gray mt-1">
+                                            Este correo trae un adjunto: se guardará automáticamente si no seleccionas otro fichero.{' '}
+                                            <button type="button" onClick={() => handleViewPendingAttachment(form.emailUid!)}
+                                                className="underline hover:text-gray-dark transition-colors">
+                                                Ver adjunto
+                                            </button>
+                                        </p>
                                     )}
                                     {form.hasExistingFile && !form.file && (
                                         <p className="text-xs text-gray mt-1">Ya hay un fichero adjunto. Selecciona uno nuevo para reemplazarlo.</p>

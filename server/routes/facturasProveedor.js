@@ -92,6 +92,23 @@ router.get('/factura/proveedor/email-pending', async function (req, res) {
     }
 });
 
+router.get('/factura/proveedor/email-pending/:uid/attachment', async function (req, res) {
+    if (!adminGuard(req, res)) return;
+
+    try {
+        const credentials = getImapCredentials();
+        if (!credentials) return res.status(500).json({ error: 'Gmail IMAP no configurado' });
+        const attachment = await downloadSupplierEmailAttachment(credentials.user, credentials.pass, Number(req.params.uid));
+        if (!attachment) return res.sendStatus(404);
+        res.setHeader('Content-Type', attachment.contentType || 'application/octet-stream');
+        res.setHeader('Content-Disposition', `inline; filename="${attachment.filename}"`);
+        res.send(attachment.buffer);
+    } catch (err) {
+        console.error('Error obteniendo adjunto de correo de proveedor:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 router.get('/factura/proveedor/:id/file', async function (req, res) {
     if (!adminGuard(req, res)) return;
 
