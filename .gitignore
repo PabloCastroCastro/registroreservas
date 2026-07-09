@@ -10,6 +10,7 @@
 /infrastructure/bbdd/data_backup
 /infrastructure/check-in/*
 /infrastructure/facturas-proveedor/*
+/infrastructure/facturas-cliente/*
 
 # Logs
 logs
