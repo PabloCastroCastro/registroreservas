@@ -1,6 +1,7 @@
 import express from 'express';
 import { authGuard, adminGuard } from '../middleware/auth.js';
 import { listBasePrices, updateBasePrice, updateSeasonConfig, getPriceForRoomAndDate } from '../rooms/roomPrices.js';
+import { listBookingRoomPrices, updateBookingRoomPrice } from '../rooms/bookingRoomPrices.js';
 
 const router = express.Router();
 
@@ -27,6 +28,17 @@ router.put('/precios-base/season-config', async (req, res) => {
 router.put('/precios-base/:id', async (req, res) => {
     if (!adminGuard(req, res)) return;
     await updateBasePrice(req.params.id, req.body.price, req.body.price_extra_bed);
+    res.sendStatus(200);
+});
+
+router.get('/precios-booking', async (req, res) => {
+    if (!authGuard(req, res)) return;
+    res.json(await listBookingRoomPrices());
+});
+
+router.put('/precios-booking/:id', async (req, res) => {
+    if (!adminGuard(req, res)) return;
+    await updateBookingRoomPrice(req.params.id, req.body.price);
     res.sendStatus(200);
 });
 

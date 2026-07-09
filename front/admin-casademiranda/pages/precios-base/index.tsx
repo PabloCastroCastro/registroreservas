@@ -1,7 +1,7 @@
 import "@/app/globals.css";
 import Navbar from "@/components/navbar/navbar";
 import { useEffect, useState } from "react";
-import type { RoomBasePrice, SeasonConfig } from "@/interfaces/roomPrice";
+import type { RoomBasePrice, SeasonConfig, BookingRoomPrice } from "@/interfaces/roomPrice";
 import * as API from "@/services/roomPrices";
 import { isAdmin } from "@/auth/auth";
 
@@ -16,13 +16,41 @@ export default function PreciosBasePage() {
     const [saved, setSaved] = useState(false);
     const [canEdit] = useState(isAdmin());
 
+    const [bookingPrices, setBookingPrices] = useState<BookingRoomPrice[]>([]);
+    const [bookingEdited, setBookingEdited] = useState<Record<number, string>>({});
+    const [savingBooking, setSavingBooking] = useState(false);
+    const [savedBooking, setSavedBooking] = useState(false);
+
     useEffect(() => { load(); }, []);
 
     async function load() {
         const data = await API.getBasePrices();
         setPrices(data.prices ?? []);
         setSeasonConfig(data.seasonConfig);
+        setBookingPrices(await API.getBookingRoomPrices());
     }
+
+    function getBookingEdited(id: number, original: number) {
+        return bookingEdited[id] ?? String(original);
+    }
+
+    function setBookingEditedField(id: number, value: string) {
+        setBookingEdited(prev => ({ ...prev, [id]: value }));
+    }
+
+    async function handleSaveBooking() {
+        setSavingBooking(true);
+        await Promise.all(
+            Object.entries(bookingEdited).map(([id, price]) => API.updateBookingRoomPrice(parseInt(id), parseFloat(price)))
+        );
+        setBookingEdited({});
+        setSavingBooking(false);
+        setSavedBooking(true);
+        setTimeout(() => setSavedBooking(false), 2500);
+        load();
+    }
+
+    const hasBookingChanges = Object.keys(bookingEdited).length > 0;
 
     function getEdited(id: number, field: 'price' | 'price_extra_bed', original: number) {
         return edited[id]?.[field] ?? String(original);
@@ -200,6 +228,51 @@ export default function PreciosBasePage() {
                             ))}
                         </tbody>
                     </table>
+                </section>
+
+                {/* Precios de referencia en Booking */}
+                <section className="border border-gray-light rounded-lg p-4 mt-5 max-w-2xl">
+                    <div className="flex items-center justify-between mb-1">
+                        <h2 className="text-xs text-gray uppercase tracking-wide font-semibold">Precios de referencia en Booking</h2>
+                        {canEdit && hasBookingChanges && (
+                            <button
+                                onClick={handleSaveBooking}
+                                disabled={savingBooking}
+                                className="rounded-full bg-green bg-opacity-50 px-4 py-1.5 text-xs font-semibold text-gray-dark disabled:opacity-40"
+                            >
+                                {savingBooking ? 'Guardando...' : 'Guardar cambios'}
+                            </button>
+                        )}
+                        {savedBooking && <p className="text-xs text-green font-medium">Guardado</p>}
+                    </div>
+                    <p className="text-xs text-gray mb-3">
+                        Solo informativo: se usa para repartir proporcionalmente el precio total entre habitaciones
+                        al cargar reservas de Booking con varias habitaciones. No afecta a los precios de creación de reservas.
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {ROOMS.map(room => (
+                            <div key={room} className="border border-gray-light rounded-lg p-3">
+                                <p className="text-xs font-semibold text-gray-dark mb-2">{room}</p>
+                                {(['low', 'high'] as const).map(s => {
+                                    const row = bookingPrices.find(p => p.room_name === room && p.season === s);
+                                    if (!row) return null;
+                                    return (
+                                        <div key={row.id} className="flex items-center justify-between mb-1 last:mb-0">
+                                            <span className="text-xs text-gray">{s === 'high' ? 'Alta' : 'Baja'}</span>
+                                            <div className="flex items-center gap-1">
+                                                <input className="border border-gray-light rounded-lg px-2 py-1 text-sm text-gray-dark w-16 text-right focus:outline-none"
+                                                    type="number" min="0" step="0.01"
+                                                    disabled={!canEdit}
+                                                    value={getBookingEdited(row.id, row.price)}
+                                                    onChange={e => setBookingEditedField(row.id, e.target.value)} />
+                                                <span className="text-gray text-xs">€</span>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ))}
+                    </div>
                 </section>
             </div>
         </>
