@@ -1,7 +1,9 @@
 import executeQuery from '../sql/sqlUtils.js';
 
 export async function listSuppliers() {
-    const rows = await executeQuery('SELECT id, name, domain FROM casademiranda.suppliers ORDER BY name');
+    const rows = await executeQuery(
+        'SELECT id, name, domain, subject_keyword AS subjectKeyword FROM casademiranda.suppliers ORDER BY name'
+    );
     return rows ?? [];
 }
 
@@ -12,13 +14,19 @@ export async function findSupplierByDomain(domain, excludeId = null) {
     return rows?.[0] ?? null;
 }
 
-export async function createSupplier(name, domain) {
-    const result = await executeQuery('INSERT INTO casademiranda.suppliers (name, domain) VALUES (?, ?)', [name, domain]);
+export async function createSupplier(name, domain, subjectKeyword) {
+    const result = await executeQuery(
+        'INSERT INTO casademiranda.suppliers (name, domain, subject_keyword) VALUES (?, ?, ?)',
+        [name, domain, subjectKeyword ?? null]
+    );
     return result.insertId;
 }
 
-export async function updateSupplier(id, name, domain) {
-    await executeQuery('UPDATE casademiranda.suppliers SET name = ?, domain = ? WHERE id = ?', [name, domain, id]);
+export async function updateSupplier(id, name, domain, subjectKeyword) {
+    await executeQuery(
+        'UPDATE casademiranda.suppliers SET name = ?, domain = ?, subject_keyword = ? WHERE id = ?',
+        [name, domain, subjectKeyword ?? null, id]
+    );
 }
 
 export async function deleteSupplier(id) {

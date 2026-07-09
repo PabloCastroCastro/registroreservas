@@ -12,9 +12,14 @@ async function getClient(user, password) {
     return client;
 }
 
-function matchSupplier(fromAddress, knownSuppliers) {
+function matchSupplier(fromAddress, subject, knownSuppliers) {
     const address = (fromAddress ?? '').toLowerCase();
-    return knownSuppliers.find(s => address.includes((s.domain ?? '').toLowerCase()));
+    const subjectLower = (subject ?? '').toLowerCase();
+    return knownSuppliers.find(s => {
+        if (!address.includes((s.domain ?? '').toLowerCase())) return false;
+        if (s.subjectKeyword) return subjectLower.includes(s.subjectKeyword.toLowerCase());
+        return true;
+    });
 }
 
 function findAttachmentPart(node) {
@@ -43,11 +48,12 @@ export async function checkPendingSupplierEmails(user, password, knownSuppliers)
         if (uids.length > 0) {
             for await (const msg of client.fetch(uids, { envelope: true, bodyStructure: true }, { uid: true })) {
                 const from = msg.envelope.from?.[0]?.address ?? '';
-                const supplier = matchSupplier(from, knownSuppliers);
+                const subject = msg.envelope.subject ?? '';
+                const supplier = matchSupplier(from, subject, knownSuppliers);
                 if (supplier) {
                     pending.push({
                         uid: msg.uid,
-                        subject: msg.envelope.subject ?? '',
+                        subject,
                         from,
                         date: msg.envelope.date,
                         supplierName: supplier.name,

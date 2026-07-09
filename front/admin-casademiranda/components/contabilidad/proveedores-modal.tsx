@@ -16,12 +16,14 @@ export default function ProveedoresModal({ onClose }: Props) {
 
     const [name, setName] = useState('');
     const [domain, setDomain] = useState('');
+    const [subjectKeyword, setSubjectKeyword] = useState('');
     const [creating, setCreating] = useState(false);
     const [createError, setCreateError] = useState('');
 
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editName, setEditName] = useState('');
     const [editDomain, setEditDomain] = useState('');
+    const [editSubjectKeyword, setEditSubjectKeyword] = useState('');
     const [savingEdit, setSavingEdit] = useState(false);
     const [editError, setEditError] = useState('');
 
@@ -48,9 +50,10 @@ export default function ProveedoresModal({ onClose }: Props) {
         setCreating(true);
         setCreateError('');
         try {
-            await createSupplier(name.trim(), domain.trim());
+            await createSupplier(name.trim(), domain.trim(), subjectKeyword.trim() || null);
             setName('');
             setDomain('');
+            setSubjectKeyword('');
             await load();
         } catch (e: any) {
             setCreateError(e.message);
@@ -63,6 +66,7 @@ export default function ProveedoresModal({ onClose }: Props) {
         setEditingId(s.id);
         setEditName(s.name);
         setEditDomain(s.domain);
+        setEditSubjectKeyword(s.subjectKeyword ?? '');
         setEditError('');
     }
 
@@ -74,7 +78,7 @@ export default function ProveedoresModal({ onClose }: Props) {
         setSavingEdit(true);
         setEditError('');
         try {
-            await updateSupplier(id, editName.trim(), editDomain.trim());
+            await updateSupplier(id, editName.trim(), editDomain.trim(), editSubjectKeyword.trim() || null);
             setEditingId(null);
             await load();
         } catch (e: any) {
@@ -101,7 +105,7 @@ export default function ProveedoresModal({ onClose }: Props) {
                 <p className="text-xs text-gray mb-4">Se usan para detectar automáticamente sus facturas al leer el correo.</p>
 
                 <form onSubmit={handleCreate} noValidate className="mb-4">
-                    <div className="grid grid-cols-3 gap-3 items-end">
+                    <div className="grid grid-cols-4 gap-3 items-end">
                         <div>
                             <label className={labelClass}>Nombre</label>
                             <input className={inputClass} value={name} onChange={e => setName(e.target.value)} />
@@ -110,6 +114,11 @@ export default function ProveedoresModal({ onClose }: Props) {
                             <label className={labelClass}>Dominio email</label>
                             <input className={inputClass} placeholder="proveedor.com" value={domain}
                                 onChange={e => setDomain(e.target.value)} />
+                        </div>
+                        <div>
+                            <label className={labelClass}>Palabra clave asunto</label>
+                            <input className={inputClass} placeholder="factura (opcional)" value={subjectKeyword}
+                                onChange={e => setSubjectKeyword(e.target.value)} />
                         </div>
                         <div>
                             <button type="submit" disabled={creating}
@@ -132,6 +141,7 @@ export default function ProveedoresModal({ onClose }: Props) {
                                 <tr className="border-b border-gray-light">
                                     <th className="text-left py-2 px-3 text-xs text-gray uppercase tracking-wide font-semibold">Nombre</th>
                                     <th className="text-left py-2 px-3 text-xs text-gray uppercase tracking-wide font-semibold">Dominio</th>
+                                    <th className="text-left py-2 px-3 text-xs text-gray uppercase tracking-wide font-semibold">Palabra clave asunto</th>
                                     <th className="py-2 px-3"></th>
                                 </tr>
                             </thead>
@@ -148,6 +158,10 @@ export default function ProveedoresModal({ onClose }: Props) {
                                                     <input className={inputClass} value={editDomain}
                                                         onChange={e => setEditDomain(e.target.value)} />
                                                 </td>
+                                                <td className="py-2 px-3">
+                                                    <input className={inputClass} value={editSubjectKeyword}
+                                                        onChange={e => setEditSubjectKeyword(e.target.value)} />
+                                                </td>
                                                 <td className="py-2 px-3 text-right whitespace-nowrap">
                                                     <button onClick={() => handleSaveEdit(s.id)} disabled={savingEdit}
                                                         className="text-gray hover:text-green transition-colors text-xs font-semibold mr-3 disabled:opacity-40">
@@ -163,6 +177,7 @@ export default function ProveedoresModal({ onClose }: Props) {
                                             <>
                                                 <td className="py-2 px-3 text-gray-dark font-medium">{s.name}</td>
                                                 <td className="py-2 px-3">{s.domain}</td>
+                                                <td className="py-2 px-3 text-gray">{s.subjectKeyword ?? '—'}</td>
                                                 <td className="py-2 px-3 text-right whitespace-nowrap">
                                                     <button onClick={() => startEdit(s)}
                                                         className="text-gray hover:text-gray-dark transition-colors text-xs font-semibold mr-3">
@@ -178,7 +193,7 @@ export default function ProveedoresModal({ onClose }: Props) {
                                     </tr>
                                 ))}
                                 {suppliers.length === 0 && (
-                                    <tr><td colSpan={3} className="py-4 px-3 text-center text-gray text-sm">Sin proveedores registrados</td></tr>
+                                    <tr><td colSpan={4} className="py-4 px-3 text-center text-gray text-sm">Sin proveedores registrados</td></tr>
                                 )}
                             </tbody>
                         </table>

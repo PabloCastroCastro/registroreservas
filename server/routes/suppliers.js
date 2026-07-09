@@ -21,10 +21,11 @@ router.post('/proveedores', async function (req, res) {
     if (!name || !domain) {
         return res.status(400).json({ message: 'name y domain son obligatorios' });
     }
+    const subjectKeyword = (req.body.subjectKeyword ?? '').trim() || null;
     try {
         const existing = await findSupplierByDomain(domain);
         if (existing) return res.status(409).json({ message: 'Ya existe un proveedor con ese dominio' });
-        const id = await createSupplier(name, domain);
+        const id = await createSupplier(name, domain, subjectKeyword);
         res.status(201).json({ id });
     } catch (err) {
         console.error('Error creando proveedor:', err);
@@ -39,10 +40,11 @@ router.put('/proveedores/:id', async function (req, res) {
     if (!name || !domain) {
         return res.status(400).json({ message: 'name y domain son obligatorios' });
     }
+    const subjectKeyword = (req.body.subjectKeyword ?? '').trim() || null;
     try {
         const existing = await findSupplierByDomain(domain, req.params.id);
         if (existing) return res.status(409).json({ message: 'Ya existe un proveedor con ese dominio' });
-        await updateSupplier(req.params.id, name, domain);
+        await updateSupplier(req.params.id, name, domain, subjectKeyword);
         res.sendStatus(204);
     } catch (err) {
         console.error('Error actualizando proveedor:', err);
