@@ -7,11 +7,9 @@ CREATE TABLE casademiranda.booking_room_prices (
 );
 
 INSERT INTO casademiranda.booking_room_prices (room_name, season, price) VALUES
-    ('A Fonte',       'low',  75.00),
-    ('A Fonte',       'high', 90.00),
-    ('O Carpinteiro', 'low',  75.00),
-    ('O Carpinteiro', 'high', 90.00),
-    ('O Cuberto',     'low',  95.00),
-    ('O Cuberto',     'high',105.00),
-    ('O Faiado',      'low',  75.00),
-    ('O Faiado',      'high', 90.00);
+    ('A Fonte',       'low',  80.00),
+    ('A Fonte',       'high', 95.00),
+    ('O Carpinteiro', 'low',  80.00),
+    ('O Carpinteiro', 'high', 95.00),
+    ('O Cuberto',     'low',  100.00),
+    ('O Cuberto',     'high',110.00);
