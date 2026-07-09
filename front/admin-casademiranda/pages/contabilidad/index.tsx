@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { Tabs } from 'flowbite-react';
 import Navbar from '@/components/navbar/navbar';
+import FacturasProveedores from '@/components/contabilidad/facturas-proveedores';
 import { isAdmin } from '@/auth/auth';
 
 export default function Contabilidad() {
@@ -27,7 +28,7 @@ export default function Contabilidad() {
                         <p className="text-sm text-gray">Próximamente</p>
                     </Tabs.Item>
                     <Tabs.Item title="Facturas proveedores">
-                        <p className="text-sm text-gray">Próximamente</p>
+                        <FacturasProveedores />
                     </Tabs.Item>
                     <Tabs.Item title="Informe / Gestoría">
                         <p className="text-sm text-gray">Próximamente</p>
