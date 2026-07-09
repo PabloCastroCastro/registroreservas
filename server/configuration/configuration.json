@@ -4,6 +4,5 @@
     "sql.user": "root",
     "sql.server": "db",
     "sql.port": 3306,
-    "sql.database": "casademiranda",
-    "suppliers.known": []
+    "sql.database": "casademiranda"
 }

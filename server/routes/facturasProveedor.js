@@ -17,6 +17,7 @@ import {
     markSupplierEmailRead,
     downloadSupplierEmailAttachment,
 } from '../mail/checkSupplierMails.js';
+import { listSuppliers } from '../suppliers/suppliers.js';
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -77,7 +78,7 @@ router.get('/factura/proveedor/email-pending', async function (req, res) {
     try {
         const credentials = getImapCredentials();
         if (!credentials) return res.status(500).json({ error: 'Gmail IMAP no configurado' });
-        const knownSuppliers = readProperty('suppliers.known') || [];
+        const knownSuppliers = await listSuppliers();
         const pending = await checkPendingSupplierEmails(credentials.user, credentials.pass, knownSuppliers);
         res.json(pending);
     } catch (err) {

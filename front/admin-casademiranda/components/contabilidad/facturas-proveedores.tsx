@@ -8,6 +8,7 @@ import {
     viewSupplierInvoiceFile,
 } from '@/services/supplierInvoices';
 import type { SupplierInvoice, PendingSupplierEmail } from '@/interfaces/supplierInvoice';
+import ProveedoresModal from '@/components/contabilidad/proveedores-modal';
 
 const inputClass = "mt-1 w-full border border-gray-light rounded-lg px-3 py-2 text-gray-dark text-sm focus:outline-none focus:border-gray";
 const labelClass = "text-xs text-gray uppercase tracking-wide block";
@@ -56,6 +57,7 @@ export default function FacturasProveedores() {
 
     const [checkingMail, setCheckingMail] = useState(false);
     const [mailQueue, setMailQueue] = useState<PendingSupplierEmail[]>([]);
+    const [showSuppliers, setShowSuppliers] = useState(false);
 
     useEffect(() => { load(); }, [year, quarter]);
 
@@ -230,6 +232,10 @@ export default function FacturasProveedores() {
                     </div>
                 </div>
                 <div className="flex gap-3">
+                    <button onClick={() => setShowSuppliers(true)}
+                        className="rounded-full border border-gray-light px-4 py-2 text-sm font-semibold text-gray-dark hover:border-gray transition-colors">
+                        Proveedores
+                    </button>
                     <button onClick={handleCheckMail} disabled={checkingMail}
                         className="rounded-full border border-gray-light px-4 py-2 text-sm font-semibold text-gray-dark hover:border-gray transition-colors disabled:opacity-40">
                         {checkingMail ? 'Comprobando...' : 'Leer correo'}
@@ -385,6 +391,8 @@ export default function FacturasProveedores() {
                     </div>
                 </div>
             )}
+
+            {showSuppliers && <ProveedoresModal onClose={() => setShowSuppliers(false)} />}
         </div>
     );
 }
