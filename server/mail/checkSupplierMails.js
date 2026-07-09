@@ -66,13 +66,18 @@ export async function checkPendingSupplierEmails(user, password, knownSuppliers,
                 const subject = msg.envelope.subject ?? '';
                 const supplier = matchSupplier(from, subject, knownSuppliers);
                 if (supplier) {
+                    const attachment = findAttachmentPart(msg.bodyStructure);
+                    if (!attachment) {
+                        console.log(`[checkSupplierMails] sin adjunto detectado, uid=${msg.uid}, asunto="${subject}"`);
+                        console.log(JSON.stringify(msg.bodyStructure, null, 2));
+                    }
                     pending.push({
                         uid: msg.uid,
                         subject,
                         from,
                         date: msg.envelope.date,
                         supplierName: supplier.name,
-                        hasAttachment: !!findAttachmentPart(msg.bodyStructure),
+                        hasAttachment: !!attachment,
                     });
                 }
             }
