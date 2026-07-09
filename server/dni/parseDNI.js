@@ -40,13 +40,6 @@ function correctDateWithCheckDigit(dateStr, checkDigitChar) {
     return null;
 }
 
-function textDateToISO(text) {
-    const match = text.match(/(\d{1,2})[\s./\-](\d{1,2})[\s./\-](\d{4})/);
-    if (!match) return null;
-    const [, dd, mm, yyyy] = match;
-    return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
-}
-
 async function runOCR(imagePath, { whitelist = null, lang = 'spa' } = {}) {
     const args = [imagePath, 'stdout', '-l', lang, '--oem', '1', '--psm', '6'];
     if (whitelist) args.push('-c', `tessedit_char_whitelist=${whitelist}`);
@@ -261,35 +254,3 @@ function extractDomicilio(text) {
     return {};
 }
 
-export async function parseExpeditionDate(inputBuffer) {
-    const tmpFront    = path.join(os.tmpdir(), `dni_front_${Date.now()}.png`);
-    const tmpFront180 = path.join(os.tmpdir(), `dni_front180_${Date.now()}.png`);
-
-    try {
-        for (const [rotate180, tmpPath] of [[false, tmpFront], [true, tmpFront180]]) {
-            let pipeline = sharp(inputBuffer)
-                .rotate()
-                .greyscale().normalize().sharpen()
-                .resize({ width: 1800, withoutEnlargement: false });
-            if (rotate180) pipeline = pipeline.rotate(180);
-            await pipeline.png().toFile(tmpPath);
-
-            const text = await runOCR(tmpPath, { lang: 'spa' });
-            console.log(`[parseDNI front${rotate180 ? ' 180°' : ''}] OCR output:`, JSON.stringify(text));
-
-            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-            for (let i = 0; i < lines.length - 1; i++) {
-                if (/EMISI/i.test(lines[i])) {
-                    const date = textDateToISO(lines[i + 1]);
-                    console.log(`[parseDNI front${rotate180 ? ' 180°' : ''}] Expedición encontrada:`, lines[i + 1], '→', date);
-                    if (date) return date;
-                }
-            }
-        }
-
-        console.log('[parseDNI front] No se encontró fecha de expedición');
-        return null;
-    } finally {
-        [tmpFront, tmpFront180].forEach(f => { try { fs.unlinkSync(f); } catch {} });
-    }
-}
