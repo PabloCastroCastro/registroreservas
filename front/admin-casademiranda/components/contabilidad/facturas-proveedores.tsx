@@ -5,6 +5,7 @@ import {
     updateSupplierInvoice,
     deleteSupplierInvoice,
     getPendingSupplierEmails,
+    viewSupplierInvoiceFile,
 } from '@/services/supplierInvoices';
 import type { SupplierInvoice, PendingSupplierEmail } from '@/interfaces/supplierInvoice';
 
@@ -31,11 +32,15 @@ interface FormState {
     reference: string;
     notes: string;
     emailUid: number | null;
+    file: File | null;
+    hasExistingFile: boolean;
+    fromEmailAttachment: boolean;
 }
 
 const emptyForm: FormState = {
     id: null, invoiceNumber: '', nif: '', date: '', supplierName: '',
     baseAmount: '', vatPercent: '21', totalAmount: '', reference: '', notes: '', emailUid: null,
+    file: null, hasExistingFile: false, fromEmailAttachment: false,
 };
 
 export default function FacturasProveedores() {
@@ -85,6 +90,9 @@ export default function FacturasProveedores() {
             reference: inv.reference ?? '',
             notes: inv.notes ?? '',
             emailUid: null,
+            file: null,
+            hasExistingFile: !!inv.filePath,
+            fromEmailAttachment: false,
         });
     }
 
@@ -96,6 +104,7 @@ export default function FacturasProveedores() {
             supplierName: email.supplierName,
             reference: email.subject,
             emailUid: email.uid,
+            fromEmailAttachment: email.hasAttachment,
         });
     }
 
@@ -138,6 +147,7 @@ export default function FacturasProveedores() {
                 reference: form.reference || null,
                 notes: form.notes || null,
                 ...(form.emailUid ? { emailUid: form.emailUid } : {}),
+                ...(form.file ? { file: form.file } : {}),
             };
             if (form.id) {
                 await updateSupplierInvoice(form.id, payload);
@@ -156,6 +166,15 @@ export default function FacturasProveedores() {
             setFormError(e.message);
         } finally {
             setSaving(false);
+        }
+    }
+
+    async function handleViewFile(id: number) {
+        try {
+            const blob = await viewSupplierInvoiceFile(id);
+            window.open(URL.createObjectURL(blob), '_blank');
+        } catch (e: any) {
+            alert(`Error: ${e.message}`);
         }
     }
 
@@ -250,6 +269,12 @@ export default function FacturasProveedores() {
                                     <td className="py-2 px-3 text-right">{inv.vatRate != null ? (inv.vatRate * 100).toFixed(0) + '%' : '—'}</td>
                                     <td className="py-2 px-3 text-right">{inv.totalAmount.toFixed(2)} €</td>
                                     <td className="py-2 px-3 text-right whitespace-nowrap">
+                                        {inv.filePath && (
+                                            <button onClick={() => handleViewFile(inv.id)}
+                                                className="text-gray hover:text-gray-dark transition-colors text-xs font-semibold mr-3">
+                                                Ver factura
+                                            </button>
+                                        )}
                                         <button onClick={() => openEdit(inv)}
                                             className="text-gray hover:text-gray-dark transition-colors text-xs font-semibold mr-3">
                                             Editar
@@ -332,6 +357,17 @@ export default function FacturasProveedores() {
                                     <label className={labelClass}>Notas</label>
                                     <textarea className={inputClass} rows={2} value={form.notes}
                                         onChange={e => updateForm('notes', e.target.value)} />
+                                </div>
+                                <div className="col-span-2">
+                                    <label className={labelClass}>Factura adjunta (PDF o imagen)</label>
+                                    <input className={inputClass} type="file" accept="application/pdf,image/*"
+                                        onChange={e => updateForm('file', e.target.files?.[0] ?? null)} />
+                                    {form.fromEmailAttachment && !form.file && (
+                                        <p className="text-xs text-gray mt-1">Este correo trae un adjunto: se guardará automáticamente si no seleccionas otro fichero.</p>
+                                    )}
+                                    {form.hasExistingFile && !form.file && (
+                                        <p className="text-xs text-gray mt-1">Ya hay un fichero adjunto. Selecciona uno nuevo para reemplazarlo.</p>
+                                    )}
                                 </div>
                             </div>
                             {formError && <p className="text-xs text-orange mb-3">{formError}</p>}

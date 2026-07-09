@@ -14,13 +14,28 @@ export async function listSupplierInvoices(year, quarter) {
     const rows = await executeQuery(
         `SELECT id, invoice_number AS invoiceNumber, nif, date, supplier_name AS supplierName,
                 base_amount AS baseAmount, vat_rate AS vatRate, vat_amount AS vatAmount,
-                total_amount AS totalAmount, reference, notes
+                total_amount AS totalAmount, reference, notes, file_path AS filePath
          FROM casademiranda.supplier_invoices
          WHERE date BETWEEN ? AND ?
          ORDER BY date, id`,
         [startDate, endDate]
     );
     return rows ?? [];
+}
+
+export async function getSupplierInvoiceFilePath(id) {
+    const rows = await executeQuery(
+        'SELECT file_path AS filePath FROM casademiranda.supplier_invoices WHERE id = ?',
+        [id]
+    );
+    return rows?.[0]?.filePath ?? null;
+}
+
+export async function setSupplierInvoiceFilePath(id, filePath) {
+    await executeQuery(
+        'UPDATE casademiranda.supplier_invoices SET file_path = ? WHERE id = ?',
+        [filePath, id]
+    );
 }
 
 export async function createSupplierInvoice(data) {

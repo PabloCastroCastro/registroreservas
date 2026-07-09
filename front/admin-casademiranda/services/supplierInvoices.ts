@@ -13,12 +13,24 @@ export async function listSupplierInvoices(year: number, quarter: number): Promi
     return res.json();
 }
 
+function toFormData(data: SupplierInvoiceInput): FormData {
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+        if (key === 'file') {
+            if (value) formData.append('file', value as File);
+        } else if (value !== null && value !== undefined) {
+            formData.append(key, String(value));
+        }
+    });
+    return formData;
+}
+
 export async function createSupplierInvoice(data: SupplierInvoiceInput): Promise<void> {
     const token = getToken();
     const res = await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify(data)
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: toFormData(data)
     });
     if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -30,8 +42,8 @@ export async function updateSupplierInvoice(id: number, data: SupplierInvoiceInp
     const token = getToken();
     const res = await fetch(`${API_URL}/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify(data)
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: toFormData(data)
     });
     if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -46,6 +58,15 @@ export async function deleteSupplierInvoice(id: number): Promise<void> {
         headers: { 'Authorization': `Bearer ${token}` }
     });
     if (!res.ok) throw new Error(`Error HTTP ${res.status}`);
+}
+
+export async function viewSupplierInvoiceFile(id: number): Promise<Blob> {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/${id}/file`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error(`Error HTTP ${res.status}`);
+    return res.blob();
 }
 
 export async function getPendingSupplierEmails(): Promise<PendingSupplierEmail[]> {
