@@ -8,7 +8,7 @@ const save = async (booking_id, customer) => {
     let idCustomer = 0;
     if (customers.length == 0) {
         const customerInserted = await executeQuery('INSERT INTO casademiranda.customers (name, surname, surname2, identifier, email, nacionality, document_type, support_document, expedition_date, gender, relationship, birthdate, phone, other_phone, made_booking) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0);',
-            [customer.nombre, customer.apellido1, customer.apellido2 ?? null, customer.numero_documento, customer.correo, customer.nacionalidad, customer.tipo_documento, customer.soporte_documento, customer.fecha_expedicion.split("T")[0], customer.genero, customer.parentesco, customer.fecha_nacimiento.split("T")[0], customer.telefono, customer.otro_telefono]);
+            [customer.nombre, customer.apellido1, customer.apellido2 ?? null, customer.numero_documento, customer.correo, customer.nacionalidad, customer.tipo_documento, customer.soporte_documento, customer.fecha_expedicion ? customer.fecha_expedicion.split("T")[0] : null, customer.genero, customer.parentesco, customer.fecha_nacimiento.split("T")[0], customer.telefono, customer.otro_telefono]);
         idCustomer = customerInserted.insertId;
     } else if (customers.length > 1) {
         throw new Error('Only one customer for identifier');
@@ -36,7 +36,7 @@ const update = async (booking_id, customer) => {
     let customerUpdate;
     if (customers.length === 1 && idBooking.length === 1 && customers[0].customer_id === idBooking[0].customer_id) {
         customerUpdate = await executeQuery('UPDATE casademiranda.customers SET name = ?, surname = ?, surname2 = ?, identifier = ?, email = ?, nacionality = ?, document_type = ?, support_document = ?, expedition_date = ?, gender = ?, relationship = ?, birthdate = ?, phone = ?, other_phone = ? WHERE customer_id = ?;',
-            [customer.nombre, customer.apellido1, customer.apellido2 ?? null, customer.numero_documento, customer.correo, customer.nacionalidad, customer.tipo_documento, customer.soporte_documento, customer.fecha_expedicion.split("T")[0], customer.genero, customer.parentesco, customer.fecha_nacimiento.split("T")[0], customer.telefono, customer.otro_telefono, customer.cliente_id]);
+            [customer.nombre, customer.apellido1, customer.apellido2 ?? null, customer.numero_documento, customer.correo, customer.nacionalidad, customer.tipo_documento, customer.soporte_documento, customer.fecha_expedicion ? customer.fecha_expedicion.split("T")[0] : null, customer.genero, customer.parentesco, customer.fecha_nacimiento.split("T")[0], customer.telefono, customer.otro_telefono, customer.cliente_id]);
     
         const idAddress = await executeQuery('SELECT address_id, customer_id FROM casademiranda.customer_address WHERE customer_id=?', [customer.cliente_id]);
         if(customers.length === 1 && idAddress.length === 1 && customers[0].customer_id === idAddress[0].customer_id){

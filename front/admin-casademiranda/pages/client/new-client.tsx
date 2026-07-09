@@ -11,6 +11,7 @@ import { useRouter } from 'next/router';
 import { findMunicipioByName } from '@/utils/municipioSearch';
 import { MunicipioSelector } from '@/components/clients/MunicipioSelector';
 import { PostalCodeSelector } from '@/components/clients/PostalCodeSelector';
+import { PaisSelector } from '@/components/clients/PaisSelector';
 
 type Country = {
     pais: string;
@@ -58,7 +59,6 @@ export default function NewClient() {
     const [scanning, setScanning] = useState(false);
     const [scanError, setScanError] = useState('');
     const [backFile, setBackFile] = useState<File | null>(null);
-    const [frontFile, setFrontFile] = useState<File | null>(null);
 
     const validData = (client: Client) => {
         return true;
@@ -69,7 +69,7 @@ export default function NewClient() {
         setScanning(true);
         setScanError('');
         try {
-            const result = await parseDNI(backFile, frontFile ?? undefined);
+            const result = await parseDNI(backFile);
             setName(result.nombre);
             setFistSurname(result.apellido1);
             setSecondSurname(result.apellido2);
@@ -79,7 +79,6 @@ export default function NewClient() {
             setGender(result.sex);
             setNacionality(result.nationality);
             if (result.birthDate) setBirthdate(result.birthDate);
-            if (result.expeditionDate) setExpeditionDate(result.expeditionDate);
             if (result.domicilio) setLine(result.domicilio);
             if (result.municipio) {
                 const match = findMunicipioByName(result.municipio, municipios);
@@ -91,7 +90,6 @@ export default function NewClient() {
             if (isPhotoError) {
                 setScanError('No se pudo leer el DNI. Comprueba que la foto sea nítida, el DNI ocupe casi toda la imagen y las 3 líneas de código del fondo sean visibles. Selecciona una nueva foto e inténtalo de nuevo.');
                 setBackFile(null);
-                setFrontFile(null);
             } else {
                 setScanError(err.message);
             }
@@ -210,12 +208,6 @@ export default function NewClient() {
                                 <input type="file" accept="image/*" capture="environment" className="hidden"
                                     onChange={e => { setBackFile(e.target.files?.[0] ?? null); e.target.value = ''; }} />
                             </label>
-                            <label className="flex-1 flex items-center gap-2 cursor-pointer rounded-lg px-3 py-2 text-sm text-gray-dark border border-gray-light hover:border-gray transition-colors">
-                                <span className="text-xs text-gray whitespace-nowrap">Cara delantera</span>
-                                <span className="text-xs font-medium truncate">{frontFile ? frontFile.name : 'Opcional'}</span>
-                                <input type="file" accept="image/*" capture="environment" className="hidden"
-                                    onChange={e => { setFrontFile(e.target.files?.[0] ?? null); e.target.value = ''; }} />
-                            </label>
                         </div>
                         <div className="flex items-center gap-3">
                             <button type="button" onClick={handleScanDNI} disabled={!backFile || scanning}
@@ -238,17 +230,11 @@ export default function NewClient() {
                         </div>
                         <div className="grid grid-cols-1">
                             <label className='rounded-full text-gray-dark text-opacity-75' id="nacionality">Nacionalidad:</label>
-                            <select
-                                className="rounded-full"
-                                id="selector-nacionality"
-                                value={nacionality || ''}
-                                onChange={(e) => setNacionality(e.target.value)}
-                            >
-                                <option value="">-- Elige un país --</option>
-                                {paises.map(p => (
-                                    <option key={p.codigo} value={p.codigo}>{p.pais}</option>
-                                ))}
-                            </select>
+                            <PaisSelector
+                                paises={paises}
+                                value={nacionality}
+                                onChange={setNacionality}
+                            />
                         </div>
 
                         <div className="grid grid-cols-1">
@@ -274,7 +260,7 @@ export default function NewClient() {
 
                         <div className="grid grid-cols-1">
                             <label className='text-gray-dark text-opacity-75' id="expeditionDate">Fecha de expedición:</label>
-                            <input type="date" className='rounded-full' id="expeditionDate" name="expeditionDate" value={expeditionDate} onChange={(e) => setExpeditionDate(e.target.value)} required />
+                            <input type="date" className='rounded-full' id="expeditionDate" name="expeditionDate" value={expeditionDate} onChange={(e) => setExpeditionDate(e.target.value)} />
                         </div>
 
                         <div className="grid grid-cols-1">
@@ -377,17 +363,11 @@ export default function NewClient() {
 
                         <div className="grid grid-cols-1">
                             <label className='rounded-full text-gray-dark text-opacity-75' id="country">Pais:</label>
-                            <select
-                                className="rounded-full"
-                                id="selector-country"
-                                value={country || ''}
-                                onChange={(e) => setCountry(e.target.value)}
-                            >
-                                <option value="">-- Elige un país --</option>
-                                {paises.map(p => (
-                                    <option key={p.codigo} value={p.codigo}>{p.pais}</option>
-                                ))}
-                            </select>
+                            <PaisSelector
+                                paises={paises}
+                                value={country}
+                                onChange={setCountry}
+                            />
                         </div>
                         {country === "ESP" ? (
                             <div className="grid grid-cols-1">

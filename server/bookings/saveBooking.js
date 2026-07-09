@@ -52,4 +52,19 @@ const saveRoom = async (rooms, idBooking) => {
     }
 }
 
+export const updateBookingRooms = async (bookingId, rooms) => {
+    const existingRooms = await executeQuery(
+        'SELECT booking_room_id FROM casademiranda.booking_room WHERE booking_id = ?',
+        [bookingId]
+    );
+    for (const room of existingRooms) {
+        await executeQuery(
+            'DELETE FROM casademiranda.booking_room_extra_bed WHERE booking_room_id = ?',
+            [room.booking_room_id]
+        );
+    }
+    await executeQuery('DELETE FROM casademiranda.booking_room WHERE booking_id = ?', [bookingId]);
+    await saveRoom(rooms, bookingId);
+};
+
 export default save;

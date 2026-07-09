@@ -11,6 +11,7 @@ type ImportResult = {
     message: string;
     reservasCreadas: number;
     reservasOmitidas: number;
+    reservasActualizadas: number;
     errores: { referencia: string; error: string }[];
 };
 
@@ -157,14 +158,18 @@ export default function LoadBooking() {
                 {result && (
                     <section className="mt-4 border border-gray-light rounded-lg p-4 max-w-xl">
                         <h2 className="text-xs text-gray uppercase tracking-wide font-semibold mb-3">Resultado</h2>
-                        <div className="grid grid-cols-2 gap-3 mb-3">
+                        <div className="grid grid-cols-3 gap-3 mb-3">
                             <div className="border border-gray-light rounded-lg p-3 text-center">
                                 <p className="text-2xl font-semibold text-green">{result.reservasCreadas}</p>
                                 <p className="text-xs text-gray mt-1">Reservas importadas</p>
                             </div>
                             <div className="border border-gray-light rounded-lg p-3 text-center">
+                                <p className="text-2xl font-semibold text-orange">{result.reservasActualizadas}</p>
+                                <p className="text-xs text-gray mt-1">Actualizadas</p>
+                            </div>
+                            <div className="border border-gray-light rounded-lg p-3 text-center">
                                 <p className="text-2xl font-semibold text-gray">{result.reservasOmitidas}</p>
-                                <p className="text-xs text-gray mt-1">Ya existían (omitidas)</p>
+                                <p className="text-xs text-gray mt-1">Sin cambios (omitidas)</p>
                             </div>
                         </div>
                         {result.errores.length > 0 && (

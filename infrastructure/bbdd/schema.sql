@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS `casademiranda`.`address` (
   `country` VARCHAR(40) NULL DEFAULT NULL,
   `province` VARCHAR(40) NULL DEFAULT NULL,
   `location` VARCHAR(40) NULL DEFAULT NULL,
-  `postalCode` INT NOT NULL,
+  `postalCode` INT NULL DEFAULT NULL,
   PRIMARY KEY (`address_id`),
   INDEX `fk_address_idx` (`address_id` ASC))
   DEFAULT CHARACTER SET = utf8
