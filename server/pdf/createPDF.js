@@ -189,6 +189,7 @@ function buildPDF(reserva, cliente) {
 
 export async function generarFactura(reserva, cliente) {
     const buffer = await buildPDF(reserva, cliente);
+    fs.mkdirSync('./facturas-cliente', { recursive: true });
     fs.writeFileSync('./facturas-cliente/' + reserva.numeroFactura + '.pdf', buffer);
 }
 
