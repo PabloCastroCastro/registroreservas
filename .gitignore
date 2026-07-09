@@ -9,6 +9,7 @@
 /infrastructure/bbdd/data
 /infrastructure/bbdd/data_backup
 /infrastructure/check-in/*
+/infrastructure/facturas-proveedor/*
 
 # Logs
 logs
