@@ -22,17 +22,27 @@ function matchSupplier(fromAddress, subject, knownSuppliers) {
     });
 }
 
+const DOC_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png', 'webp'];
+
 function findAttachmentPart(node) {
     if (!node) return null;
+
+    if ((node.type ?? '').toLowerCase() === 'multipart') {
+        for (const child of node.childNodes ?? []) {
+            const found = findAttachmentPart(child);
+            if (found) return found;
+        }
+        return null;
+    }
+
     const type = `${node.type}/${node.subtype}`.toLowerCase();
     const filename = node.dispositionParameters?.filename ?? node.parameters?.name;
-    const isDoc = type === 'application/pdf' || type.startsWith('image/');
-    if (isDoc && (node.disposition?.toLowerCase() === 'attachment' || filename) && !node.childNodes) {
-        return { part: node.part, filename: filename ?? `factura.${type.split('/')[1]}`, contentType: type };
-    }
-    for (const child of node.childNodes ?? []) {
-        const found = findAttachmentPart(child);
-        if (found) return found;
+    const extension = filename?.split('.').pop()?.toLowerCase();
+    const isAttachment = node.disposition?.toLowerCase() === 'attachment' || !!filename;
+    const isDoc = type === 'application/pdf' || type.startsWith('image/') || DOC_EXTENSIONS.includes(extension ?? '');
+
+    if (isAttachment && isDoc) {
+        return { part: node.part, filename: filename ?? `factura.${type.split('/')[1] ?? 'pdf'}`, contentType: type };
     }
     return null;
 }

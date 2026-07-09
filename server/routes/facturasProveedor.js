@@ -61,9 +61,12 @@ function parseInvoiceBody(body) {
     };
 }
 
-function saveInvoiceFile(id, buffer, contentType) {
+function saveInvoiceFile(id, buffer, contentType, originalFilename) {
     fs.mkdirSync(FILES_DIR, { recursive: true });
-    const extension = EXTENSION_BY_CONTENT_TYPE[(contentType ?? '').toLowerCase()] ?? 'pdf';
+    const nameExtension = originalFilename?.split('.').pop()?.toLowerCase();
+    const extension = CONTENT_TYPE_BY_EXTENSION[nameExtension]
+        ? nameExtension
+        : (EXTENSION_BY_CONTENT_TYPE[(contentType ?? '').toLowerCase()] ?? 'pdf');
     const filename = `${id}.${extension}`;
     fs.writeFileSync(path.join(FILES_DIR, filename), buffer);
     return filename;
@@ -129,7 +132,7 @@ router.post('/factura/proveedor', upload.single('file'), async function (req, re
     try {
         const id = await createSupplierInvoice(invoice);
 
-        let attachment = req.file ? { buffer: req.file.buffer, contentType: req.file.mimetype } : null;
+        let attachment = req.file ? { buffer: req.file.buffer, contentType: req.file.mimetype, filename: req.file.originalname } : null;
         const credentials = getImapCredentials();
         if (!attachment && invoice.emailUid && credentials) {
             try {
@@ -139,7 +142,7 @@ router.post('/factura/proveedor', upload.single('file'), async function (req, re
             }
         }
         if (attachment) {
-            const filePath = saveInvoiceFile(id, attachment.buffer, attachment.contentType);
+            const filePath = saveInvoiceFile(id, attachment.buffer, attachment.contentType, attachment.filename);
             await setSupplierInvoiceFilePath(id, filePath);
         }
 
@@ -170,7 +173,7 @@ router.put('/factura/proveedor/:id', upload.single('file'), async function (req,
         if (req.file) {
             const previousFilePath = await getSupplierInvoiceFilePath(req.params.id);
             if (previousFilePath) removeInvoiceFile(previousFilePath);
-            const filePath = saveInvoiceFile(req.params.id, req.file.buffer, req.file.mimetype);
+            const filePath = saveInvoiceFile(req.params.id, req.file.buffer, req.file.mimetype, req.file.originalname);
             await setSupplierInvoiceFilePath(req.params.id, filePath);
         }
 

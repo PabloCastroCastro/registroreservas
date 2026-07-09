@@ -56,7 +56,7 @@ export default function FacturasProveedores() {
     const [formError, setFormError] = useState('');
 
     const [checkingMail, setCheckingMail] = useState(false);
-    const [mailQueue, setMailQueue] = useState<PendingSupplierEmail[]>([]);
+    const [pendingEmails, setPendingEmails] = useState<PendingSupplierEmail[] | null>(null);
     const [showSuppliers, setShowSuppliers] = useState(false);
 
     useEffect(() => { load(); }, [year, quarter]);
@@ -98,7 +98,8 @@ export default function FacturasProveedores() {
         });
     }
 
-    function openFromEmail(email: PendingSupplierEmail) {
+    function handleSelectEmail(email: PendingSupplierEmail) {
+        setPendingEmails(null);
         setFormError('');
         setForm({
             ...emptyForm,
@@ -158,12 +159,6 @@ export default function FacturasProveedores() {
             }
             setForm(null);
             await load();
-
-            if (mailQueue.length > 0) {
-                const [next, ...rest] = mailQueue;
-                setMailQueue(rest);
-                openFromEmail(next);
-            }
         } catch (e: any) {
             setFormError(e.message);
         } finally {
@@ -198,9 +193,7 @@ export default function FacturasProveedores() {
                 alert('No hay correos de proveedores conocidos pendientes de leer.');
                 return;
             }
-            const [first, ...rest] = pending;
-            setMailQueue(rest);
-            openFromEmail(first);
+            setPendingEmails(pending);
         } catch (e: any) {
             alert(`Error: ${e.message}`);
         } finally {
@@ -378,7 +371,7 @@ export default function FacturasProveedores() {
                             </div>
                             {formError && <p className="text-xs text-orange mb-3">{formError}</p>}
                             <div className="flex justify-end gap-3">
-                                <button type="button" onClick={() => { setForm(null); setMailQueue([]); }}
+                                <button type="button" onClick={() => setForm(null)}
                                     className="px-4 py-2 text-sm text-gray hover:text-gray-dark border border-gray-light rounded-full transition-colors">
                                     Cancelar
                                 </button>
@@ -388,6 +381,49 @@ export default function FacturasProveedores() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {pendingEmails && (
+                <div className="fixed inset-0 bg-gray-dark bg-opacity-40 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-2xl mx-4">
+                        <h3 className="text-sm font-semibold text-gray-dark mb-4">Correos de proveedores pendientes</h3>
+                        <div className="max-h-96 overflow-y-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b border-gray-light">
+                                        <th className="text-left py-2 px-3 text-xs text-gray uppercase tracking-wide font-semibold">Proveedor</th>
+                                        <th className="text-left py-2 px-3 text-xs text-gray uppercase tracking-wide font-semibold">Asunto</th>
+                                        <th className="text-left py-2 px-3 text-xs text-gray uppercase tracking-wide font-semibold">Fecha</th>
+                                        <th className="text-left py-2 px-3 text-xs text-gray uppercase tracking-wide font-semibold">Adjunto</th>
+                                        <th className="py-2 px-3"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {pendingEmails.map(email => (
+                                        <tr key={email.uid} className="border-b border-gray-light last:border-0">
+                                            <td className="py-2 px-3 text-gray-dark font-medium">{email.supplierName}</td>
+                                            <td className="py-2 px-3">{email.subject}</td>
+                                            <td className="py-2 px-3">{new Date(email.date).toLocaleDateString('es-ES')}</td>
+                                            <td className="py-2 px-3">{email.hasAttachment ? 'Sí' : 'No'}</td>
+                                            <td className="py-2 px-3 text-right whitespace-nowrap">
+                                                <button onClick={() => handleSelectEmail(email)}
+                                                    className="text-gray hover:text-green transition-colors text-xs font-semibold">
+                                                    Registrar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="flex justify-end mt-4">
+                            <button onClick={() => setPendingEmails(null)}
+                                className="px-4 py-2 text-sm text-gray hover:text-gray-dark border border-gray-light rounded-full transition-colors">
+                                Cerrar
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
