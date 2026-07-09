@@ -20,7 +20,14 @@ export async function listSupplierInvoices(year, quarter) {
          ORDER BY date, id`,
         [startDate, endDate]
     );
-    return rows ?? [];
+    // mysql2 devuelve las columnas DECIMAL como string; el frontend necesita numeros (toFixed, sumas).
+    return (rows ?? []).map(row => ({
+        ...row,
+        baseAmount: row.baseAmount != null ? Number(row.baseAmount) : null,
+        vatRate: row.vatRate != null ? Number(row.vatRate) : null,
+        vatAmount: row.vatAmount != null ? Number(row.vatAmount) : null,
+        totalAmount: Number(row.totalAmount),
+    }));
 }
 
 export async function getSupplierInvoiceFilePath(id) {
