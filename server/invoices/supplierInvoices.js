@@ -38,15 +38,22 @@ export async function setSupplierInvoiceFilePath(id, filePath) {
     );
 }
 
+export async function listRegisteredEmailUids() {
+    const rows = await executeQuery(
+        'SELECT email_uid FROM casademiranda.supplier_invoices WHERE email_uid IS NOT NULL'
+    );
+    return (rows ?? []).map(r => r.email_uid);
+}
+
 export async function createSupplierInvoice(data) {
-    const { invoiceNumber, nif, date, supplierName, baseAmount, vatRate, vatAmount, totalAmount, reference, notes } = data;
+    const { invoiceNumber, nif, date, supplierName, baseAmount, vatRate, vatAmount, totalAmount, reference, notes, emailUid } = data;
     const result = await executeQuery(
         `INSERT INTO casademiranda.supplier_invoices
-            (invoice_number, nif, date, supplier_name, base_amount, vat_rate, vat_amount, total_amount, reference, notes)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            (invoice_number, nif, date, supplier_name, base_amount, vat_rate, vat_amount, total_amount, reference, notes, email_uid)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [invoiceNumber ?? null, nif ?? null, date, supplierName,
          baseAmount ?? null, vatRate ?? null, vatAmount ?? null, totalAmount,
-         reference ?? null, notes ?? null]
+         reference ?? null, notes ?? null, emailUid ?? null]
     );
     return result.insertId;
 }

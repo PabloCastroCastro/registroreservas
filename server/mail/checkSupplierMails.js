@@ -37,16 +37,21 @@ function findAttachmentPart(node) {
     return null;
 }
 
-export async function checkPendingSupplierEmails(user, password, knownSuppliers) {
+const SEARCH_WINDOW_DAYS = 90;
+
+export async function checkPendingSupplierEmails(user, password, knownSuppliers, excludeUids = []) {
     if (!knownSuppliers || knownSuppliers.length === 0) return [];
 
+    const excluded = new Set(excludeUids);
     const client = await getClient(user, password);
     const lock = await client.getMailboxLock('INBOX');
     try {
-        const uids = await client.search({ seen: false }, { uid: true });
+        const since = new Date(Date.now() - SEARCH_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+        const uids = await client.search({ since }, { uid: true });
         const pending = [];
         if (uids.length > 0) {
             for await (const msg of client.fetch(uids, { envelope: true, bodyStructure: true }, { uid: true })) {
+                if (excluded.has(msg.uid)) continue;
                 const from = msg.envelope.from?.[0]?.address ?? '';
                 const subject = msg.envelope.subject ?? '';
                 const supplier = matchSupplier(from, subject, knownSuppliers);

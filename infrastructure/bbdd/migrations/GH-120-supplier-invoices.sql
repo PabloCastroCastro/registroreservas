@@ -13,3 +13,6 @@ CREATE TABLE casademiranda.supplier_invoices (
   file_path     VARCHAR(255),
   created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE casademiranda.supplier_invoices
+  ADD COLUMN email_uid INT NULL;

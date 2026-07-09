@@ -11,6 +11,7 @@ import {
     deleteSupplierInvoice,
     getSupplierInvoiceFilePath,
     setSupplierInvoiceFilePath,
+    listRegisteredEmailUids,
 } from '../invoices/supplierInvoices.js';
 import {
     checkPendingSupplierEmails,
@@ -79,7 +80,8 @@ router.get('/factura/proveedor/email-pending', async function (req, res) {
         const credentials = getImapCredentials();
         if (!credentials) return res.status(500).json({ error: 'Gmail IMAP no configurado' });
         const knownSuppliers = await listSuppliers();
-        const pending = await checkPendingSupplierEmails(credentials.user, credentials.pass, knownSuppliers);
+        const excludeUids = await listRegisteredEmailUids();
+        const pending = await checkPendingSupplierEmails(credentials.user, credentials.pass, knownSuppliers, excludeUids);
         res.json(pending);
     } catch (err) {
         console.error('Error leyendo correo de proveedores:', err);
