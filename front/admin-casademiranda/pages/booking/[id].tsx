@@ -106,6 +106,7 @@ export default function BookingPage() {
     const [billConcepto, setBillConcepto] = useState('');
     const [billExtras, setBillExtras] = useState<BillExtra[]>([]);
     const [billEmail, setBillEmail] = useState('');
+    const [billEnviarACliente, setBillEnviarACliente] = useState(false);
     const [billNombreEmpresa, setBillNombreEmpresa] = useState('');
     const [billCodigoPostalCiudad, setBillCodigoPostalCiudad] = useState('');
     const [billPais, setBillPais] = useState('España');
@@ -157,6 +158,7 @@ export default function BookingPage() {
         const totalCenas = cenas.reduce((sum, c) => sum + Number(c.price) * c.quantity, 0);
         setBillExtras(totalCenas > 0 ? [{ descripcion: 'Cenas', precio: Math.round(totalCenas * 100) / 100 }] : []);
         setBillEmail(clients?.[0]?.email ?? '');
+        setBillEnviarACliente(false);
         setBillNombreEmpresa('');
         setBillCodigoPostalCiudad('');
         setBillPais('España');
@@ -185,6 +187,7 @@ export default function BookingPage() {
             apellidos: billSurname,
             dni: billDni,
             email: billEmail,
+            enviarACliente: billEnviarACliente,
             nombreEmpresa: billTipo === 'empresa' ? billNombreEmpresa || undefined : undefined,
             codigoPostalCiudad: billTipo === 'empresa' ? billCodigoPostalCiudad || undefined : undefined,
             pais: billTipo === 'empresa' ? billPais || undefined : undefined,
@@ -625,7 +628,19 @@ export default function BookingPage() {
                                         <div className="sm:col-span-2">
                                             <label className={labelClass}>Email destinatario</label>
                                             <input className={inputClass} type="email" value={billEmail} onChange={e => setBillEmail(e.target.value)} placeholder="email@ejemplo.com" />
-                                            <p className="text-xs text-gray mt-1">casademirandaezaro@gmail.com recibirá siempre una copia (CC)</p>
+                                            <label className="flex items-center gap-2 mt-2 text-xs text-gray-dark">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={billEnviarACliente}
+                                                    onChange={e => setBillEnviarACliente(e.target.checked)}
+                                                />
+                                                Enviar también al cliente
+                                            </label>
+                                            <p className="text-xs text-gray mt-1">
+                                                {billEnviarACliente
+                                                    ? 'Se enviará al cliente con copia (CC) a casademirandaezaro@gmail.com'
+                                                    : 'Se enviará solo a casademirandaezaro@gmail.com'}
+                                            </p>
                                         </div>
                                         <div className="sm:col-span-2">
                                             <label className={labelClass}>Concepto (opcional)</label>

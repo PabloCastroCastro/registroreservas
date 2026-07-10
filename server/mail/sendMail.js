@@ -2,7 +2,9 @@ import nodemailer from 'nodemailer';
 import readProperty from '../configuration/readConfiguration.js';
 
 
-const sendMail = (idBooking, name, surname, email) => {
+const CASA_MIRANDA_EMAIL = "casademirandaezaro@gmail.com";
+
+const sendMail = (idBooking, name, surname, email, enviarACliente = false) => {
     console.log("Send mail for booking: ", idBooking);
 
     const pass = readProperty("mail.facturacion.password");
@@ -22,10 +24,13 @@ const sendMail = (idBooking, name, surname, email) => {
         }
     });
 
+    const mailOptions = enviarACliente
+        ? { to: email, cc: CASA_MIRANDA_EMAIL }
+        : { to: CASA_MIRANDA_EMAIL };
+
     transporter.sendMail({
         from: '"Facturacion Casa de Miranda" <facturacion@casademiranda.com>',
-        to: email,
-        cc: "casademirandaezaro@gmail.com",
+        ...mailOptions,
         subject: "Factura " + idBooking,
         html: bodyHtml,
         attachments: [
