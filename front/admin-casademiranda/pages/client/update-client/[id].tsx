@@ -221,10 +221,6 @@ export default function UpdateClient() {
                                 <input className='rounded-full' type="text" id="supportDocument" name="supportDocument" value={client.support_document} onChange={(e) => setClient({ ...client, support_document: e.target.value })} />
                             </div>
                             <div className="grid grid-cols-1">
-                                <label className='text-gray-dark text-opacity-75' id="expeditionDate">Fecha de expedición:</label>
-                                <input className='rounded-full' type="date" id="expeditionDate" name="expeditionDate" value={client.expedition_date ? new Date(client.expedition_date).toISOString().split('T')[0] : ""} onChange={(e) => setClient({ ...client, expedition_date: new Date(e.target.value) })} />
-                            </div>
-                            <div className="grid grid-cols-1">
                                 <label className='text-gray-dark text-opacity-75' id="nombre">Nombre:</label>
                                 <input className='rounded-full' type="text" id="nombre" name="nombre" value={client.name} onChange={(e) => setClient({ ...client, name: e.target.value })} required />
                             </div>

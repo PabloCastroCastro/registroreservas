@@ -5,7 +5,7 @@ export type Client = {
     document_type: string
     document_number: string
     support_document: string
-    expedition_date: Date
+    expedition_date?: Date
     name: string
     firstSurname: string
     secondSurname: string
