@@ -12,6 +12,7 @@ export type Bill = {
   apellidos: string
   dni: string
   email: string
+  enviarACliente?: boolean
   // empresa only
   nombreEmpresa?: string
   codigoPostalCiudad?: string
