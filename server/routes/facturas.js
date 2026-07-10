@@ -61,7 +61,7 @@ router.post('/factura', async function (req, res) {
 
     const { reserva, cliente } = parseBillBody(req.body);
     await generarFactura(reserva, cliente);
-    sendMail(reserva.numeroFactura, cliente.nombre, cliente.apellidos, cliente.email);
+    sendMail(reserva.numeroFactura, cliente.nombre, cliente.apellidos, cliente.email, req.body.enviarACliente === true);
     res.send('Datos recibidos correctamente.');
 });
 

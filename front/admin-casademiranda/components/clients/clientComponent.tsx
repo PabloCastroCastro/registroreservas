@@ -73,7 +73,6 @@ export default function ClientComponent({ client }: ClientProps) {
                 <Field label="Tipo documento" value={client.document_type} />
                 <Field label="Número documento" value={client.document_number} />
                 <Field label="Soporte documento" value={client.support_document} />
-                <DateComponent label="Fecha expedición" date={client.expedition_date} />
             </div>
 
             {/* Contacto */}

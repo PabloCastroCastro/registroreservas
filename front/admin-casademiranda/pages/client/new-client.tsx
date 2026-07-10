@@ -31,7 +31,6 @@ export default function NewClient() {
     const [nacionality, setNacionality] = useState("");
     const [documentType, setDocumentType] = useState("");
     const [documentNumber, setDocumentNumber] = useState("");
-    const [expeditionDate, setExpeditionDate] = useState("");
     const [name, setName] = useState("");
     const [firstSurname, setFistSurname] = useState("");
     const [secondSurname, setSecondSurname] = useState("");
@@ -125,7 +124,6 @@ export default function NewClient() {
             document_type: documentType,
             document_number: documentNumber,
             support_document: supportDocument,
-            expedition_date: new Date(expeditionDate),
             name: name,
             firstSurname: firstSurname,
             secondSurname: secondSurname,
@@ -256,11 +254,6 @@ export default function NewClient() {
                         <div className="grid grid-cols-1">
                             <label className='text-gray-dark text-opacity-75' id="supportDocument">Soporte documento:</label>
                             <input type="text" className='rounded-full' id="supportDocument" name="supportDocument" value={supportDocument} onChange={(e) => setSupportDocument(e.target.value)} />
-                        </div>
-
-                        <div className="grid grid-cols-1">
-                            <label className='text-gray-dark text-opacity-75' id="expeditionDate">Fecha de expedición:</label>
-                            <input type="date" className='rounded-full' id="expeditionDate" name="expeditionDate" value={expeditionDate} onChange={(e) => setExpeditionDate(e.target.value)} />
                         </div>
 
                         <div className="grid grid-cols-1">
