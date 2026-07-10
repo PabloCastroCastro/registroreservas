@@ -150,7 +150,7 @@ export default function BookingPage() {
         if (!booking) return;
         setBillTipo('personal');
         setBillName(booking.name);
-        setBillSurname(booking.surname);
+        setBillSurname([booking.surname, booking.surname2].filter(Boolean).join(' '));
         setBillDni(booking.identifier);
         setBillAddress('');
         setBillConcepto('');

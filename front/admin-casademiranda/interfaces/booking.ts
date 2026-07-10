@@ -5,6 +5,7 @@ export type Booking = {
     confirmation_number: string
     name: string
     surname: string
+    surname2: string | null
     identifier: string
     check_in: Date
     check_out: Date
