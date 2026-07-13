@@ -4,6 +4,7 @@
 /infrastructure/launch-docker.exe
 /server/node_modules
 /server/configuration/password.json
+/server/configuration/password.json.bak
 /server/password.txt
 /server/confmail.PNG
 /infrastructure/bbdd/data
