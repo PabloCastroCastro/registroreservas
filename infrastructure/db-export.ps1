@@ -8,8 +8,10 @@ if (-not $CONTAINER) {
     exit 1
 }
 
+$MYSQL_ROOT_PASSWORD = if ($env:MYSQL_ROOT_PASSWORD) { $env:MYSQL_ROOT_PASSWORD } else { "password" }
+
 Write-Host "Exportando base de datos desde $CONTAINER..."
-docker exec $CONTAINER mysqldump -u root -ppassword casademiranda | Out-File -FilePath "./bbdd/casademiranda-dump.sql" -Encoding utf8
+docker exec $CONTAINER mysqldump -u root -p"$MYSQL_ROOT_PASSWORD" casademiranda | Out-File -FilePath "./bbdd/casademiranda-dump.sql" -Encoding utf8
 
 Write-Host "Exportacion completada: bbdd/casademiranda-dump.sql"
 Write-Host ""
