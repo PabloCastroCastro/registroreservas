@@ -12,10 +12,12 @@ services:
       - node-network
   
   backend:
-    build: 
+    build:
       context: ../server
-    networks: 
+    networks:
       - node-network
+    environment:
+      - CONFIG_MASTER_KEY=${CONFIG_MASTER_KEY}
     volumes:
       - /project/node_modules
       - ./certs:/infrastructure/certs
