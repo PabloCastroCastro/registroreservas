@@ -18,5 +18,5 @@ if [ -z "$CONTAINER" ]; then
 fi
 
 echo "Importando $DUMP_FILE en $CONTAINER..."
-docker exec -i "$CONTAINER" mysql -u root -ppassword casademiranda < "$DUMP_FILE"
+docker exec -i "$CONTAINER" mysql -u root -p"${MYSQL_ROOT_PASSWORD:-password}" casademiranda < "$DUMP_FILE"
 echo "Importacion completada."
