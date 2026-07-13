@@ -188,3 +188,55 @@ git pull
 cd infrastructure
 sudo systemctl restart registroreservas
 ```
+
+---
+
+## Rotar la contraseña de la base de datos
+
+Cambiar `MYSQL_ROOT_PASSWORD` en `compose.yaml`/`.env` **no rota la contraseña real** de un MySQL que ya tiene datos: esa variable solo la usa la imagen oficial de MySQL para fijarla la primera vez que se inicializa el volumen (`bbdd/data`). En un despliegue ya en marcha hay que rotarla a mano contra el MySQL en vivo:
+
+```bash
+cd ~/registroreservas/infrastructure
+
+# 1. Backup antes de tocar nada
+docker compose exec db sh -c 'mysqldump -u root -p"$MYSQL_ROOT_PASSWORD" casademiranda' > "bbdd/casademiranda-backup-$(date +%Y%m%d-%H%M).sql"
+
+# 2. Generar contraseña nueva y rotarla en el MySQL en vivo
+NEW_PASS=$(openssl rand -hex 24)
+docker compose exec db mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e \
+  "ALTER USER 'root'@'%' IDENTIFIED BY '${NEW_PASS}'; ALTER USER 'root'@'localhost' IDENTIFIED BY '${NEW_PASS}'; FLUSH PRIVILEGES;"
+
+# Verificar que la nueva contraseña funciona antes de seguir
+docker compose exec db mysql -u root -p"${NEW_PASS}" -e "SELECT 1;"
+
+# 3. Guardar la nueva contraseña en .env
+echo "MYSQL_ROOT_PASSWORD=${NEW_PASS}" >> .env
+
+# 4. Actualizar sql.password en password.json (en claro) y volver a cifrarlo
+docker compose run --rm \
+  -v "$(pwd)/../server/configuration:/server/configuration" \
+  -e NEW_PASS="${NEW_PASS}" \
+  backend node -e "
+    const fs = require('fs');
+    const p = './configuration/password.json';
+    const cfg = JSON.parse(fs.readFileSync(p, 'utf8'));
+    cfg['sql.password'] = process.env.NEW_PASS;
+    fs.writeFileSync(p, JSON.stringify(cfg, null, 4) + '\n');
+  "
+docker compose run --rm \
+  -v "$(pwd)/../server/configuration:/server/configuration" \
+  backend node configuration/encryptSecrets.js
+
+# 5. Reiniciar el backend con la contraseña nueva
+docker compose up -d --build backend
+rm -f ../server/configuration/password.json.bak
+```
+
+> `password.json` guarda sus valores sensibles cifrados con AES-256-GCM (clave maestra `CONFIG_MASTER_KEY` en `.env`, ver `server/configuration/secretsCrypto.js`). El paso 4 actualiza `sql.password` en claro y lo vuelve a cifrar con `encryptSecrets.js`.
+
+Verificar que el backend arrancó bien antes de dar la rotación por terminada:
+
+```bash
+docker compose logs --tail=30 backend
+curl -s http://localhost:3003/reserva -o /dev/null -w "%{http_code}\n"
+```
