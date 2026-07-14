@@ -1,6 +1,30 @@
 import ExcelJS from 'exceljs';
 import { getClienteDetalle, getProveedorDetalle } from '../invoices/informeGestoria.js';
 
+const CURRENCY_FORMAT = '#,##0.00" €"';
+const GRAY_FILL = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE5E8E8' } };
+
+function addSectionTitle(sheet, title, columnCount) {
+    const row = sheet.addRow([title]);
+    sheet.mergeCells(row.number, 1, row.number, columnCount);
+    row.font = { bold: true, size: 12 };
+}
+
+function addHeaderRow(sheet, headers) {
+    const row = sheet.addRow(headers);
+    row.font = { bold: true };
+    row.eachCell(cell => { cell.border = { bottom: { style: 'thin' } }; });
+    return row;
+}
+
+function addDataRows(sheet, items, buildValues, currencyColumns) {
+    items.forEach((item, i) => {
+        const row = sheet.addRow(buildValues(item));
+        if (i % 2 === 0) row.eachCell({ includeEmpty: true }, cell => { cell.fill = GRAY_FILL; });
+        currencyColumns.forEach(col => { row.getCell(col).numFmt = CURRENCY_FORMAT; });
+    });
+}
+
 export async function generateInformeExcel(year, quarter) {
     const [clientes, proveedores] = await Promise.all([
         getClienteDetalle(year, quarter),
@@ -8,44 +32,49 @@ export async function generateInformeExcel(year, quarter) {
     ]);
 
     const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('InformeGestoria');
 
-    const clientesSheet = workbook.addWorksheet('Clientes');
-    clientesSheet.columns = [
-        { header: 'Identificador reserva', key: 'confirmationNumber', width: 18 },
-        { header: 'Fecha checkout', key: 'checkOut', width: 14 },
-        { header: 'Número noches', key: 'nights', width: 14 },
-        { header: 'Precio habitación', key: 'roomPrice', width: 16 },
-        { header: 'Supletorias', key: 'extraBedCount', width: 12 },
-        { header: 'Precio Supletoria', key: 'extraBedPrice', width: 16 },
-        { header: 'Total', key: 'total', width: 12 },
-        { header: 'Observaciones', key: 'observaciones', width: 24 },
+    const COLUMN_COUNT = 8;
+    sheet.columns = [
+        { width: 18 }, { width: 14 }, { width: 14 }, { width: 16 },
+        { width: 12 }, { width: 16 }, { width: 12 }, { width: 24 },
     ];
-    clientes.forEach(c => clientesSheet.addRow({
-        confirmationNumber: c.confirmationNumber,
-        checkOut: new Date(c.checkOut).toLocaleDateString('es-ES'),
-        nights: c.nights,
-        roomPrice: c.roomPrice,
-        extraBedCount: c.extraBedCount ?? '',
-        extraBedPrice: c.extraBedPrice ?? '',
-        total: c.total,
-        observaciones: '',
-    }));
 
-    const proveedoresSheet = workbook.addWorksheet('Proveedores');
-    proveedoresSheet.columns = [
-        { header: 'Número factura', key: 'invoiceNumber', width: 18 },
-        { header: 'Fecha', key: 'date', width: 14 },
-        { header: 'Importe total', key: 'totalAmount', width: 14 },
-        { header: 'Beneficiario', key: 'supplierName', width: 30 },
-        { header: 'Observaciones', key: 'notes', width: 24 },
-    ];
-    proveedores.forEach(p => proveedoresSheet.addRow({
-        invoiceNumber: p.invoiceNumber ?? '',
-        date: new Date(p.date).toLocaleDateString('es-ES'),
-        totalAmount: p.totalAmount,
-        supplierName: p.supplierName,
-        notes: p.notes ?? '',
-    }));
+    addSectionTitle(sheet, 'Clientes', COLUMN_COUNT);
+    addHeaderRow(sheet, [
+        'Identificador reserva', 'Fecha checkout', 'Número noches', 'Precio habitación',
+        'Supletorias', 'Precio Supletoria', 'Total', 'Observaciones',
+    ]);
+    addDataRows(sheet, clientes, c => [
+        c.confirmationNumber,
+        new Date(c.checkOut).toLocaleDateString('es-ES'),
+        c.nights,
+        c.roomPrice,
+        c.extraBedCount ?? '',
+        c.extraBedPrice ?? '',
+        c.total,
+        '',
+    ], [4, 6, 7]);
+
+    sheet.addRow([]);
+
+    addSectionTitle(sheet, 'Proveedores', COLUMN_COUNT);
+    addHeaderRow(sheet, ['Número factura', 'Fecha', 'Importe total', 'Beneficiario', 'Observaciones']);
+    addDataRows(sheet, proveedores, p => [
+        p.invoiceNumber ?? '',
+        new Date(p.date).toLocaleDateString('es-ES'),
+        p.totalAmount,
+        p.supplierName,
+        p.notes ?? '',
+    ], [3]);
+
+    sheet.pageSetup = {
+        orientation: 'landscape',
+        fitToPage: true,
+        fitToWidth: 1,
+        fitToHeight: 1,
+        margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 },
+    };
 
     return workbook.xlsx.writeBuffer();
 }
