@@ -15,6 +15,7 @@ import usuariosRoutes from './routes/usuarios.js';
 import bookingSyncRoutes from './routes/bookingSync.js';
 import uploadBookingRoutes from './routes/uploadBooking.js';
 import dniRoutes from './routes/dni.js';
+import bankMovementsRoutes from './routes/bankMovements.js';
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use('/', usuariosRoutes);
 app.use('/', bookingSyncRoutes);
 app.use('/', uploadBookingRoutes);
 app.use('/', dniRoutes);
+app.use('/', bankMovementsRoutes);
 
 app.listen(3003, function () {
     console.log('Servidor escuchando en el puerto 3003.');

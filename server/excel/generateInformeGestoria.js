@@ -1,5 +1,5 @@
 import ExcelJS from 'exceljs';
-import { getClienteDetalle, getProveedorDetalle } from '../invoices/informeGestoria.js';
+import { getClienteDetalle, getProveedorDetalle, getBankMovementDetalle } from '../invoices/informeGestoria.js';
 
 const CURRENCY_FORMAT = '#,##0.00" €"';
 const GRAY_FILL = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE5E8E8' } };
@@ -32,10 +32,13 @@ function addDataRows(sheet, items, buildValues, currencyColumns) {
 }
 
 export async function generateInformeExcel(year, quarter) {
-    const [clientes, proveedores] = await Promise.all([
+    const [clientes, proveedores, movimientos] = await Promise.all([
         getClienteDetalle(year, quarter),
         getProveedorDetalle(year, quarter),
+        getBankMovementDetalle(year, quarter),
     ]);
+    const gastosBanco = movimientos.filter(m => m.type === 'gasto');
+    const ingresosBanco = movimientos.filter(m => m.type === 'ingreso');
 
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('InformeGestoria');
@@ -72,6 +75,28 @@ export async function generateInformeExcel(year, quarter) {
         p.totalAmount,
         p.supplierName,
         p.notes ?? '',
+    ], [3]);
+
+    sheet.addRow([]);
+
+    addSectionTitle(sheet, 'Gastos banco', COLUMN_COUNT);
+    addHeaderRow(sheet, ['Fecha', 'Razón', 'Importe', 'Comentarios']);
+    addDataRows(sheet, gastosBanco, m => [
+        new Date(m.date).toLocaleDateString('es-ES'),
+        m.description,
+        m.amount,
+        m.notes ?? '',
+    ], [3]);
+
+    sheet.addRow([]);
+
+    addSectionTitle(sheet, 'Ingresos banco', COLUMN_COUNT);
+    addHeaderRow(sheet, ['Fecha', 'Razón', 'Importe', 'Comentarios']);
+    addDataRows(sheet, ingresosBanco, m => [
+        new Date(m.date).toLocaleDateString('es-ES'),
+        m.description,
+        m.amount,
+        m.notes ?? '',
     ], [3]);
 
     sheet.pageSetup = {

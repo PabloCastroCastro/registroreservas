@@ -1,6 +1,7 @@
 import executeQuery from '../sql/sqlUtils.js';
 import { getConfirmationNumbersForQuarter } from './listInvoices.js';
 import { listSupplierInvoices } from './supplierInvoices.js';
+import { listBankMovements } from '../bankMovements/bankMovements.js';
 
 export async function getClienteDetalle(year, quarter) {
     const confirmationNumbers = getConfirmationNumbersForQuarter(year, quarter);
@@ -49,18 +50,28 @@ export async function getProveedorDetalle(year, quarter) {
     }));
 }
 
+export async function getBankMovementDetalle(year, quarter) {
+    return listBankMovements(year, quarter);
+}
+
 export async function getInformeResumen(year, quarter) {
-    const [clientes, proveedores] = await Promise.all([
+    const [clientes, proveedores, movimientos] = await Promise.all([
         getClienteDetalle(year, quarter),
         getProveedorDetalle(year, quarter),
+        getBankMovementDetalle(year, quarter),
     ]);
-    const ingresos = clientes.reduce((sum, c) => sum + c.total, 0);
-    const gastos = proveedores.reduce((sum, p) => sum + p.totalAmount, 0);
+    const ingresosFacturas = clientes.reduce((sum, c) => sum + c.total, 0);
+    const gastosFacturas = proveedores.reduce((sum, p) => sum + p.totalAmount, 0);
+    const ingresosBanco = movimientos.filter(m => m.type === 'ingreso').reduce((sum, m) => sum + m.amount, 0);
+    const gastosBanco = movimientos.filter(m => m.type === 'gasto').reduce((sum, m) => sum + m.amount, 0);
     return {
-        ingresos,
-        gastos,
-        resultado: ingresos - gastos,
+        ingresosFacturas,
+        gastosFacturas,
+        ingresosBanco,
+        gastosBanco,
+        resultado: ingresosFacturas + ingresosBanco - gastosFacturas - gastosBanco,
         clientes,
         proveedores,
+        movimientos,
     };
 }

@@ -6,6 +6,7 @@ import Navbar from '@/components/navbar/navbar';
 import FacturasEmitidas from '@/components/contabilidad/facturas-emitidas';
 import FacturasProveedores from '@/components/contabilidad/facturas-proveedores';
 import InformeGestoriaTab from '@/components/contabilidad/informe-gestoria';
+import MovimientosBanco from '@/components/contabilidad/movimientos-banco';
 import { isAdmin } from '@/auth/auth';
 
 export default function Contabilidad() {
@@ -34,6 +35,9 @@ export default function Contabilidad() {
                     </Tabs.Item>
                     <Tabs.Item title="Informe / Gestoría">
                         <InformeGestoriaTab />
+                    </Tabs.Item>
+                    <Tabs.Item title="Movimientos banco">
+                        <MovimientosBanco />
                     </Tabs.Item>
                 </Tabs.Group>
             </div>
