@@ -5,6 +5,7 @@ import { Tabs } from 'flowbite-react';
 import Navbar from '@/components/navbar/navbar';
 import FacturasEmitidas from '@/components/contabilidad/facturas-emitidas';
 import FacturasProveedores from '@/components/contabilidad/facturas-proveedores';
+import InformeGestoriaTab from '@/components/contabilidad/informe-gestoria';
 import { isAdmin } from '@/auth/auth';
 
 export default function Contabilidad() {
@@ -32,7 +33,7 @@ export default function Contabilidad() {
                         <FacturasProveedores />
                     </Tabs.Item>
                     <Tabs.Item title="Informe / Gestoría">
-                        <p className="text-sm text-gray">Próximamente</p>
+                        <InformeGestoriaTab />
                     </Tabs.Item>
                 </Tabs.Group>
             </div>

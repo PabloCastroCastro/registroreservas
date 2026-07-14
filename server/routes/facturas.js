@@ -4,6 +4,8 @@ import { authGuard, adminGuard } from '../middleware/auth.js';
 import { generarFactura, previewFactura } from '../pdf/createPDF.js';
 import sendMail from '../mail/sendMail.js';
 import listInvoices from '../invoices/listInvoices.js';
+import { getInformeResumen } from '../invoices/informeGestoria.js';
+import { generateInformeExcel } from '../excel/generateInformeGestoria.js';
 import executeQuery from '../sql/sqlUtils.js';
 
 const router = express.Router();
@@ -79,6 +81,34 @@ router.get('/factura/list', async function (req, res) {
         res.json(invoices);
     } catch (err) {
         console.error('Error listando facturas:', err);
+        res.sendStatus(500);
+    }
+});
+
+router.get('/factura/informe', async function (req, res) {
+    if (!adminGuard(req, res)) return;
+
+    try {
+        const { year, quarter } = req.query;
+        const informe = await getInformeResumen(year, quarter);
+        res.json(informe);
+    } catch (err) {
+        console.error('Error generando informe de gestoría:', err);
+        res.sendStatus(500);
+    }
+});
+
+router.get('/factura/informe/excel', async function (req, res) {
+    if (!adminGuard(req, res)) return;
+
+    try {
+        const { year, quarter } = req.query;
+        const buffer = await generateInformeExcel(year, quarter);
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="InformeGestoria_${year}T${quarter}.xlsx"`);
+        res.send(buffer);
+    } catch (err) {
+        console.error('Error generando Excel de informe de gestoría:', err);
         res.sendStatus(500);
     }
 });
