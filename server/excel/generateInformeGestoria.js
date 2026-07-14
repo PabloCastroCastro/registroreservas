@@ -3,6 +3,8 @@ import { getClienteDetalle, getProveedorDetalle } from '../invoices/informeGesto
 
 const CURRENCY_FORMAT = '#,##0.00" €"';
 const GRAY_FILL = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE5E8E8' } };
+const THIN_LINE = { style: 'thin', color: { argb: 'FFB0B0B0' } };
+const CELL_BORDER = { top: THIN_LINE, left: THIN_LINE, bottom: THIN_LINE, right: THIN_LINE };
 
 function addSectionTitle(sheet, title, columnCount) {
     const row = sheet.addRow([title]);
@@ -13,14 +15,18 @@ function addSectionTitle(sheet, title, columnCount) {
 function addHeaderRow(sheet, headers) {
     const row = sheet.addRow(headers);
     row.font = { bold: true };
-    row.eachCell(cell => { cell.border = { bottom: { style: 'thin' } }; });
+    row.eachCell(cell => { cell.border = CELL_BORDER; });
     return row;
 }
 
 function addDataRows(sheet, items, buildValues, currencyColumns) {
     items.forEach((item, i) => {
         const row = sheet.addRow(buildValues(item));
-        if (i % 2 === 0) row.eachCell({ includeEmpty: true }, cell => { cell.fill = GRAY_FILL; });
+        const isGray = i % 2 === 0;
+        row.eachCell({ includeEmpty: true }, cell => {
+            if (isGray) cell.fill = GRAY_FILL;
+            cell.border = CELL_BORDER;
+        });
         currencyColumns.forEach(col => { row.getCell(col).numFmt = CURRENCY_FORMAT; });
     });
 }
