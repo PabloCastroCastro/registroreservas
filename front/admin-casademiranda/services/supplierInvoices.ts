@@ -1,4 +1,4 @@
-import type { SupplierInvoice, SupplierInvoiceInput, PendingSupplierEmail } from '../interfaces/supplierInvoice';
+import type { SupplierInvoice, SupplierInvoiceInput, PendingSupplierEmail, ExtractedInvoiceData } from '../interfaces/supplierInvoice';
 import { getToken } from '../auth/auth';
 import { API_HOST } from './config';
 
@@ -18,6 +18,8 @@ function toFormData(data: SupplierInvoiceInput): FormData {
     Object.entries(data).forEach(([key, value]) => {
         if (key === 'file') {
             if (value) formData.append('file', value as File);
+        } else if (key === 'vatLines') {
+            formData.append('vatLines', JSON.stringify(value ?? []));
         } else if (value !== null && value !== undefined) {
             formData.append(key, String(value));
         }
@@ -76,6 +78,18 @@ export async function viewPendingEmailAttachment(uid: number): Promise<Blob> {
     });
     if (!res.ok) throw new Error(`Error HTTP ${res.status}`);
     return res.blob();
+}
+
+export async function extractPendingEmailInvoiceData(uid: number, supplierId: number): Promise<ExtractedInvoiceData> {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/email-pending/${uid}/extract?supplierId=${supplierId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? `Error HTTP ${res.status}`);
+    }
+    return res.json();
 }
 
 export async function getPendingSupplierEmails(): Promise<PendingSupplierEmail[]> {

@@ -18,7 +18,8 @@ import {
     markSupplierEmailRead,
     downloadSupplierEmailAttachment,
 } from '../mail/checkSupplierMails.js';
-import { listSuppliers } from '../suppliers/suppliers.js';
+import { listSuppliers, getSupplierById } from '../suppliers/suppliers.js';
+import { extractSupplierInvoiceFields } from '../invoices/extractSupplierInvoiceData.js';
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -44,6 +45,20 @@ function getImapCredentials() {
     return (user && pass) ? { user, pass } : null;
 }
 
+function parseVatLines(raw) {
+    if (!raw) return [];
+    let parsed;
+    try {
+        parsed = JSON.parse(raw);
+    } catch {
+        return [];
+    }
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+        .map(l => ({ baseAmount: Number(l.baseAmount), vatRate: Number(l.vatRate) }))
+        .filter(l => Number.isFinite(l.baseAmount) && Number.isFinite(l.vatRate));
+}
+
 function parseInvoiceBody(body) {
     const num = v => (v === undefined || v === null || v === '') ? null : Number(v);
     return {
@@ -51,9 +66,7 @@ function parseInvoiceBody(body) {
         nif: body.nif || null,
         date: body.date,
         supplierName: body.supplierName,
-        baseAmount: num(body.baseAmount),
-        vatRate: num(body.vatRate),
-        vatAmount: num(body.vatAmount),
+        vatLines: parseVatLines(body.vatLines),
         totalAmount: num(body.totalAmount),
         reference: body.reference || null,
         notes: body.notes || null,
@@ -109,6 +122,29 @@ router.get('/factura/proveedor/email-pending/:uid/attachment', async function (r
     }
 });
 
+router.get('/factura/proveedor/email-pending/:uid/extract', async function (req, res) {
+    if (!adminGuard(req, res)) return;
+
+    const supplierId = Number(req.query.supplierId);
+    if (!supplierId) return res.status(400).json({ error: 'supplierId es obligatorio' });
+
+    try {
+        const credentials = getImapCredentials();
+        if (!credentials) return res.status(500).json({ error: 'Gmail IMAP no configurado' });
+        const supplier = await getSupplierById(supplierId);
+        if (!supplier) return res.sendStatus(404);
+
+        const attachment = await downloadSupplierEmailAttachment(credentials.user, credentials.pass, Number(req.params.uid));
+        if (!attachment) return res.sendStatus(404);
+
+        const fields = await extractSupplierInvoiceFields(attachment.buffer, attachment.contentType, attachment.filename, supplier);
+        res.json(fields);
+    } catch (err) {
+        console.error('Error extrayendo datos de factura de proveedor:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 router.get('/factura/proveedor/:id/file', async function (req, res) {
     if (!adminGuard(req, res)) return;
 
@@ -146,8 +182,9 @@ router.post('/factura/proveedor', upload.single('file'), async function (req, re
         return res.status(400).json({ message: 'date, supplierName y totalAmount son obligatorios' });
     }
 
+    let id = null;
     try {
-        const id = await createSupplierInvoice(invoice);
+        id = await createSupplierInvoice(invoice);
 
         let attachment = req.file ? { buffer: req.file.buffer, contentType: req.file.mimetype, filename: req.file.originalname } : null;
         const credentials = getImapCredentials();
@@ -172,6 +209,15 @@ router.post('/factura/proveedor', upload.single('file'), async function (req, re
         res.status(201).json({ id });
     } catch (err) {
         console.error('Error creando factura de proveedor:', err);
+        if (id) {
+            try {
+                const filePath = await getSupplierInvoiceFilePath(id);
+                if (filePath) removeInvoiceFile(filePath);
+                await deleteSupplierInvoice(id);
+            } catch (cleanupErr) {
+                console.error('Error revirtiendo factura de proveedor tras fallo:', cleanupErr);
+            }
+        }
         res.status(500).json({ error: err.message });
     }
 });

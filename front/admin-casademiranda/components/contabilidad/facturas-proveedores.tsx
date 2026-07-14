@@ -7,8 +7,9 @@ import {
     getPendingSupplierEmails,
     viewSupplierInvoiceFile,
     viewPendingEmailAttachment,
+    extractPendingEmailInvoiceData,
 } from '@/services/supplierInvoices';
-import type { SupplierInvoice, PendingSupplierEmail } from '@/interfaces/supplierInvoice';
+import type { SupplierInvoice, PendingSupplierEmail, VatLine } from '@/interfaces/supplierInvoice';
 import ProveedoresModal from '@/components/contabilidad/proveedores-modal';
 
 const inputClass = "mt-1 w-full border border-gray-light rounded-lg px-3 py-2 text-gray-dark text-sm focus:outline-none focus:border-gray";
@@ -22,14 +23,18 @@ function currentQuarter() {
     return Math.ceil((new Date().getMonth() + 1) / 3);
 }
 
+interface VatLineForm {
+    baseAmount: string;
+    vatPercent: string;
+}
+
 interface FormState {
     id: number | null;
     invoiceNumber: string;
     nif: string;
     date: string;
     supplierName: string;
-    baseAmount: string;
-    vatPercent: string;
+    vatLines: VatLineForm[];
     totalAmount: string;
     reference: string;
     notes: string;
@@ -41,9 +46,19 @@ interface FormState {
 
 const emptyForm: FormState = {
     id: null, invoiceNumber: '', nif: '', date: '', supplierName: '',
-    baseAmount: '', vatPercent: '21', totalAmount: '', reference: '', notes: '', emailUid: null,
+    vatLines: [], totalAmount: '', reference: '', notes: '', emailUid: null,
     file: null, hasExistingFile: false, fromEmailAttachment: false,
 };
+
+function computeTotalFromLines(vatLines: VatLineForm[]): string {
+    const sum = vatLines.reduce((acc, l) => {
+        const base = parseFloat(l.baseAmount);
+        const vat = parseFloat(l.vatPercent);
+        if (isNaN(base) || isNaN(vat)) return acc;
+        return acc + base + (base * vat / 100);
+    }, 0);
+    return sum > 0 ? sum.toFixed(2) : '';
+}
 
 export default function FacturasProveedores() {
     const [year, setYear] = useState(currentYear);
@@ -59,6 +74,7 @@ export default function FacturasProveedores() {
     const [checkingMail, setCheckingMail] = useState(false);
     const [pendingEmails, setPendingEmails] = useState<PendingSupplierEmail[] | null>(null);
     const [showSuppliers, setShowSuppliers] = useState(false);
+    const [extractingData, setExtractingData] = useState(false);
 
     useEffect(() => { load(); }, [year, quarter]);
 
@@ -87,8 +103,7 @@ export default function FacturasProveedores() {
             nif: inv.nif ?? '',
             date: inv.date.slice(0, 10),
             supplierName: inv.supplierName,
-            baseAmount: inv.baseAmount != null ? String(inv.baseAmount) : '',
-            vatPercent: inv.vatRate != null ? String(inv.vatRate * 100) : '',
+            vatLines: inv.vatLines.map(l => ({ baseAmount: String(l.baseAmount), vatPercent: String(l.vatRate * 100) })),
             totalAmount: String(inv.totalAmount),
             reference: inv.reference ?? '',
             notes: inv.notes ?? '',
@@ -99,7 +114,7 @@ export default function FacturasProveedores() {
         });
     }
 
-    function handleSelectEmail(email: PendingSupplierEmail) {
+    async function handleSelectEmail(email: PendingSupplierEmail) {
         setPendingEmails(null);
         setFormError('');
         setForm({
@@ -110,20 +125,50 @@ export default function FacturasProveedores() {
             emailUid: email.uid,
             fromEmailAttachment: email.hasAttachment,
         });
+
+        if (!email.hasAttachment) return;
+        setExtractingData(true);
+        try {
+            const extracted = await extractPendingEmailInvoiceData(email.uid, email.supplierId);
+            setForm(prev => {
+                if (!prev) return prev;
+                const next = { ...prev };
+                if (extracted.invoiceNumber) next.invoiceNumber = extracted.invoiceNumber;
+                if (extracted.nif) next.nif = extracted.nif;
+                if (extracted.baseAmount != null && extracted.vatRatePercent != null) {
+                    next.vatLines = [{ baseAmount: String(extracted.baseAmount), vatPercent: String(extracted.vatRatePercent) }];
+                }
+                if (extracted.totalAmount != null) next.totalAmount = String(extracted.totalAmount);
+                return next;
+            });
+        } catch (e: any) {
+            console.error('Error extrayendo datos de factura de proveedor:', e.message);
+        } finally {
+            setExtractingData(false);
+        }
     }
 
     function updateForm<K extends keyof FormState>(key: K, value: FormState[K]) {
+        setForm(prev => prev ? { ...prev, [key]: value } : prev);
+    }
+
+    function addVatLine() {
+        setForm(prev => prev ? { ...prev, vatLines: [...prev.vatLines, { baseAmount: '', vatPercent: '21' }] } : prev);
+    }
+
+    function removeVatLine(index: number) {
         setForm(prev => {
             if (!prev) return prev;
-            const next = { ...prev, [key]: value };
-            if (key === 'baseAmount' || key === 'vatPercent') {
-                const base = parseFloat(next.baseAmount);
-                const vat = parseFloat(next.vatPercent);
-                if (!isNaN(base) && !isNaN(vat)) {
-                    next.totalAmount = (base + base * vat / 100).toFixed(2);
-                }
-            }
-            return next;
+            const vatLines = prev.vatLines.filter((_, i) => i !== index);
+            return { ...prev, vatLines, totalAmount: computeTotalFromLines(vatLines) };
+        });
+    }
+
+    function updateVatLine(index: number, key: keyof VatLineForm, value: string) {
+        setForm(prev => {
+            if (!prev) return prev;
+            const vatLines = prev.vatLines.map((l, i) => i === index ? { ...l, [key]: value } : l);
+            return { ...prev, vatLines, totalAmount: computeTotalFromLines(vatLines) };
         });
     }
 
@@ -137,16 +182,15 @@ export default function FacturasProveedores() {
         setSaving(true);
         setFormError('');
         try {
-            const base = parseFloat(form.baseAmount);
-            const vat = parseFloat(form.vatPercent);
+            const vatLines = form.vatLines
+                .map(l => ({ baseAmount: parseFloat(l.baseAmount), vatRate: parseFloat(l.vatPercent) / 100 }))
+                .filter(l => !isNaN(l.baseAmount) && !isNaN(l.vatRate));
             const payload = {
                 invoiceNumber: form.invoiceNumber || null,
                 nif: form.nif || null,
                 date: form.date,
                 supplierName: form.supplierName.trim(),
-                baseAmount: isNaN(base) ? null : base,
-                vatRate: isNaN(vat) ? null : vat / 100,
-                vatAmount: (!isNaN(base) && !isNaN(vat)) ? Number((base * vat / 100).toFixed(2)) : null,
+                vatLines,
                 totalAmount: parseFloat(form.totalAmount),
                 reference: form.reference || null,
                 notes: form.notes || null,
@@ -212,10 +256,16 @@ export default function FacturasProveedores() {
     }
 
     const totals = invoices.reduce((acc, i) => ({
-        base: acc.base + (i.baseAmount ?? 0),
-        vat: acc.vat + (i.vatAmount ?? 0),
+        base: acc.base + i.vatLines.reduce((s, l) => s + l.baseAmount, 0),
+        vat: acc.vat + i.vatLines.reduce((s, l) => s + l.vatAmount, 0),
         total: acc.total + i.totalAmount,
     }), { base: 0, vat: 0, total: 0 });
+
+    function formatVatRateColumn(vatLines: VatLine[]): string {
+        if (vatLines.length === 0) return '—';
+        if (vatLines.length === 1) return (vatLines[0].vatRate * 100).toFixed(0) + '%';
+        return 'varios';
+    }
 
     return (
         <div>
@@ -274,8 +324,12 @@ export default function FacturasProveedores() {
                                     <td className="py-2 px-3 text-gray-dark font-medium">{inv.invoiceNumber ?? '—'}</td>
                                     <td className="py-2 px-3">{inv.supplierName}</td>
                                     <td className="py-2 px-3">{new Date(inv.date).toLocaleDateString('es-ES')}</td>
-                                    <td className="py-2 px-3 text-right">{inv.baseAmount != null ? inv.baseAmount.toFixed(2) + ' €' : '—'}</td>
-                                    <td className="py-2 px-3 text-right">{inv.vatRate != null ? (inv.vatRate * 100).toFixed(0) + '%' : '—'}</td>
+                                    <td className="py-2 px-3 text-right">
+                                        {inv.vatLines.length > 0 ? inv.vatLines.reduce((s, l) => s + l.baseAmount, 0).toFixed(2) + ' €' : '—'}
+                                    </td>
+                                    <td className="py-2 px-3 text-right" title={inv.vatLines.map(l => (l.vatRate * 100).toFixed(0) + '%').join(', ')}>
+                                        {formatVatRateColumn(inv.vatLines)}
+                                    </td>
                                     <td className="py-2 px-3 text-right">{inv.totalAmount.toFixed(2)} €</td>
                                     <td className="py-2 px-3 text-right whitespace-nowrap">
                                         {inv.filePath && (
@@ -319,6 +373,7 @@ export default function FacturasProveedores() {
                     <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg mx-4">
                         <h3 className="text-sm font-semibold text-gray-dark mb-4">
                             {form.id ? 'Editar factura de proveedor' : 'Nueva factura de proveedor'}
+                            {extractingData && <span className="text-xs text-gray font-normal ml-2">extrayendo datos del adjunto...</span>}
                         </h3>
                         <form onSubmit={handleSave} noValidate>
                             <div className="grid grid-cols-2 gap-4 mb-4">
@@ -342,15 +397,30 @@ export default function FacturasProveedores() {
                                     <input className={inputClass} type="date" value={form.date}
                                         onChange={e => updateForm('date', e.target.value)} />
                                 </div>
-                                <div>
-                                    <label className={labelClass}>Base</label>
-                                    <input className={inputClass} type="number" step="0.01" value={form.baseAmount}
-                                        onChange={e => updateForm('baseAmount', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>IVA %</label>
-                                    <input className={inputClass} type="number" step="0.01" value={form.vatPercent}
-                                        onChange={e => updateForm('vatPercent', e.target.value)} />
+                                <div className="col-span-2">
+                                    <label className={labelClass}>Líneas de IVA</label>
+                                    {form.vatLines.map((line, i) => {
+                                        const base = parseFloat(line.baseAmount);
+                                        const vat = parseFloat(line.vatPercent);
+                                        const cuota = (!isNaN(base) && !isNaN(vat)) ? (base * vat / 100).toFixed(2) + ' €' : '—';
+                                        return (
+                                            <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-center mt-1">
+                                                <input className={inputClass} type="number" step="0.01" placeholder="Base"
+                                                    value={line.baseAmount} onChange={e => updateVatLine(i, 'baseAmount', e.target.value)} />
+                                                <input className={inputClass} type="number" step="0.01" placeholder="IVA %"
+                                                    value={line.vatPercent} onChange={e => updateVatLine(i, 'vatPercent', e.target.value)} />
+                                                <span className="text-sm text-gray-dark">{cuota}</span>
+                                                <button type="button" onClick={() => removeVatLine(i)}
+                                                    className="text-gray hover:text-orange transition-colors text-xs font-semibold">
+                                                    Quitar
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                    <button type="button" onClick={addVatLine}
+                                        className="text-xs text-gray hover:text-gray-dark transition-colors mt-2 underline">
+                                        + Añadir línea de IVA
+                                    </button>
                                 </div>
                                 <div>
                                     <label className={labelClass}>Total *</label>

@@ -9,24 +9,51 @@ function quarterRange(year, quarter) {
     return { startDate, endDate };
 }
 
+async function insertVatLines(invoiceId, vatLines) {
+    if (!vatLines || vatLines.length === 0) return;
+    const values = vatLines.map(l => [invoiceId, l.baseAmount, l.vatRate, Number((l.baseAmount * l.vatRate).toFixed(2))]);
+    await executeQuery(
+        `INSERT INTO casademiranda.supplier_invoice_vat_lines (supplier_invoice_id, base_amount, vat_rate, vat_amount) VALUES ?`,
+        [values]
+    );
+}
+
+async function getVatLinesByInvoiceIds(ids) {
+    if (!ids || ids.length === 0) return new Map();
+    const rows = await executeQuery(
+        `SELECT supplier_invoice_id AS supplierInvoiceId, base_amount AS baseAmount, vat_rate AS vatRate, vat_amount AS vatAmount
+         FROM casademiranda.supplier_invoice_vat_lines
+         WHERE supplier_invoice_id IN (?)`,
+        [ids]
+    );
+    const byInvoice = new Map();
+    for (const row of rows ?? []) {
+        const list = byInvoice.get(row.supplierInvoiceId) ?? [];
+        list.push({
+            baseAmount: Number(row.baseAmount),
+            vatRate: Number(row.vatRate),
+            vatAmount: Number(row.vatAmount),
+        });
+        byInvoice.set(row.supplierInvoiceId, list);
+    }
+    return byInvoice;
+}
+
 export async function listSupplierInvoices(year, quarter) {
     const { startDate, endDate } = quarterRange(year, quarter);
-    const rows = await executeQuery(
+    const invoices = await executeQuery(
         `SELECT id, invoice_number AS invoiceNumber, nif, date, supplier_name AS supplierName,
-                base_amount AS baseAmount, vat_rate AS vatRate, vat_amount AS vatAmount,
                 total_amount AS totalAmount, reference, notes, file_path AS filePath
          FROM casademiranda.supplier_invoices
          WHERE date BETWEEN ? AND ?
          ORDER BY date, id`,
         [startDate, endDate]
     );
-    // mysql2 devuelve las columnas DECIMAL como string; el frontend necesita numeros (toFixed, sumas).
-    return (rows ?? []).map(row => ({
+    const linesByInvoice = await getVatLinesByInvoiceIds((invoices ?? []).map(i => i.id));
+    return (invoices ?? []).map(row => ({
         ...row,
-        baseAmount: row.baseAmount != null ? Number(row.baseAmount) : null,
-        vatRate: row.vatRate != null ? Number(row.vatRate) : null,
-        vatAmount: row.vatAmount != null ? Number(row.vatAmount) : null,
         totalAmount: Number(row.totalAmount),
+        vatLines: linesByInvoice.get(row.id) ?? [],
     }));
 }
 
@@ -53,29 +80,30 @@ export async function listRegisteredEmailUids() {
 }
 
 export async function createSupplierInvoice(data) {
-    const { invoiceNumber, nif, date, supplierName, baseAmount, vatRate, vatAmount, totalAmount, reference, notes, emailUid } = data;
+    const { invoiceNumber, nif, date, supplierName, totalAmount, reference, notes, emailUid, vatLines } = data;
     const result = await executeQuery(
         `INSERT INTO casademiranda.supplier_invoices
-            (invoice_number, nif, date, supplier_name, base_amount, vat_rate, vat_amount, total_amount, reference, notes, email_uid)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [invoiceNumber ?? null, nif ?? null, date, supplierName,
-         baseAmount ?? null, vatRate ?? null, vatAmount ?? null, totalAmount,
+            (invoice_number, nif, date, supplier_name, total_amount, reference, notes, email_uid)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [invoiceNumber ?? null, nif ?? null, date, supplierName, totalAmount,
          reference ?? null, notes ?? null, emailUid ?? null]
     );
-    return result.insertId;
+    const id = result.insertId;
+    await insertVatLines(id, vatLines);
+    return id;
 }
 
 export async function updateSupplierInvoice(id, data) {
-    const { invoiceNumber, nif, date, supplierName, baseAmount, vatRate, vatAmount, totalAmount, reference, notes } = data;
+    const { invoiceNumber, nif, date, supplierName, totalAmount, reference, notes, vatLines } = data;
     await executeQuery(
         `UPDATE casademiranda.supplier_invoices
-         SET invoice_number = ?, nif = ?, date = ?, supplier_name = ?, base_amount = ?,
-             vat_rate = ?, vat_amount = ?, total_amount = ?, reference = ?, notes = ?
+         SET invoice_number = ?, nif = ?, date = ?, supplier_name = ?, total_amount = ?, reference = ?, notes = ?
          WHERE id = ?`,
-        [invoiceNumber ?? null, nif ?? null, date, supplierName,
-         baseAmount ?? null, vatRate ?? null, vatAmount ?? null, totalAmount,
+        [invoiceNumber ?? null, nif ?? null, date, supplierName, totalAmount,
          reference ?? null, notes ?? null, id]
     );
+    await executeQuery('DELETE FROM casademiranda.supplier_invoice_vat_lines WHERE supplier_invoice_id = ?', [id]);
+    await insertVatLines(id, vatLines);
 }
 
 export async function deleteSupplierInvoice(id) {

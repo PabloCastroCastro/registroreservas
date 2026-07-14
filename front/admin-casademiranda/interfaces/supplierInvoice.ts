@@ -1,16 +1,25 @@
+export interface VatLine {
+    baseAmount: number;
+    vatRate: number;
+    vatAmount: number;
+}
+
 export interface SupplierInvoice {
     id: number;
     invoiceNumber: string | null;
     nif: string | null;
     date: string;
     supplierName: string;
-    baseAmount: number | null;
-    vatRate: number | null;
-    vatAmount: number | null;
+    vatLines: VatLine[];
     totalAmount: number;
     reference: string | null;
     notes: string | null;
     filePath: string | null;
+}
+
+export interface SupplierInvoiceVatLineInput {
+    baseAmount: number;
+    vatRate: number;
 }
 
 export interface SupplierInvoiceInput {
@@ -18,9 +27,7 @@ export interface SupplierInvoiceInput {
     nif?: string | null;
     date: string;
     supplierName: string;
-    baseAmount?: number | null;
-    vatRate?: number | null;
-    vatAmount?: number | null;
+    vatLines: SupplierInvoiceVatLineInput[];
     totalAmount: number;
     reference?: string | null;
     notes?: string | null;
@@ -33,6 +40,15 @@ export interface PendingSupplierEmail {
     subject: string;
     from: string;
     date: string;
+    supplierId: number;
     supplierName: string;
     hasAttachment: boolean;
+}
+
+export interface ExtractedInvoiceData {
+    invoiceNumber: string | null;
+    nif: string | null;
+    baseAmount: number | null;
+    vatRatePercent: number | null;
+    totalAmount: number | null;
 }
