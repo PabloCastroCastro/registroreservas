@@ -1,9 +1,41 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { listSuppliers, createSupplier, updateSupplier, deleteSupplier } from '@/services/suppliers';
-import type { Supplier } from '@/interfaces/supplier';
+import type { Supplier, SupplierTemplate } from '@/interfaces/supplier';
 
 const inputClass = "mt-1 w-full border border-gray-light rounded-lg px-3 py-2 text-gray-dark text-sm focus:outline-none focus:border-gray";
+const monoInputClass = inputClass + " font-mono text-xs";
 const labelClass = "text-xs text-gray uppercase tracking-wide block";
+
+const emptyTemplate: SupplierTemplate = {
+    invoiceNumberPattern: null,
+    nifPattern: null,
+    baseAmountPattern: null,
+    vatRatePattern: null,
+    totalAmountPattern: null,
+};
+
+const TEMPLATE_FIELDS: { key: keyof SupplierTemplate; label: string; placeholder: string }[] = [
+    { key: 'invoiceNumberPattern', label: 'Nº Factura', placeholder: String.raw`Factura n[ºo]\.?\s*([\w-]+)` },
+    { key: 'nifPattern', label: 'NIF', placeholder: String.raw`NIF:?\s*([A-Z0-9]+)` },
+    { key: 'baseAmountPattern', label: 'Base imponible', placeholder: String.raw`Base imponible\s*([\d.,]+)` },
+    { key: 'vatRatePattern', label: 'IVA %', placeholder: String.raw`IVA\s*\((\d+)%\)` },
+    { key: 'totalAmountPattern', label: 'Total', placeholder: String.raw`Total factura\s*([\d.,]+)\s*€` },
+];
+
+function TemplateFields({ value, onChange }: { value: SupplierTemplate; onChange: (t: SupplierTemplate) => void }) {
+    return (
+        <div className="grid grid-cols-1 gap-2 mt-2">
+            {TEMPLATE_FIELDS.map(f => (
+                <div key={f.key}>
+                    <label className={labelClass}>{f.label}</label>
+                    <input className={monoInputClass} placeholder={f.placeholder}
+                        value={value[f.key] ?? ''}
+                        onChange={e => onChange({ ...value, [f.key]: e.target.value })} />
+                </div>
+            ))}
+        </div>
+    );
+}
 
 interface Props {
     onClose: () => void;
@@ -17,6 +49,8 @@ export default function ProveedoresModal({ onClose }: Props) {
     const [name, setName] = useState('');
     const [domain, setDomain] = useState('');
     const [subjectKeyword, setSubjectKeyword] = useState('');
+    const [template, setTemplate] = useState<SupplierTemplate>(emptyTemplate);
+    const [showTemplate, setShowTemplate] = useState(false);
     const [creating, setCreating] = useState(false);
     const [createError, setCreateError] = useState('');
 
@@ -24,6 +58,8 @@ export default function ProveedoresModal({ onClose }: Props) {
     const [editName, setEditName] = useState('');
     const [editDomain, setEditDomain] = useState('');
     const [editSubjectKeyword, setEditSubjectKeyword] = useState('');
+    const [editTemplate, setEditTemplate] = useState<SupplierTemplate>(emptyTemplate);
+    const [showEditTemplate, setShowEditTemplate] = useState(false);
     const [savingEdit, setSavingEdit] = useState(false);
     const [editError, setEditError] = useState('');
 
@@ -50,10 +86,12 @@ export default function ProveedoresModal({ onClose }: Props) {
         setCreating(true);
         setCreateError('');
         try {
-            await createSupplier(name.trim(), domain.trim(), subjectKeyword.trim() || null);
+            await createSupplier(name.trim(), domain.trim(), subjectKeyword.trim() || null, template);
             setName('');
             setDomain('');
             setSubjectKeyword('');
+            setTemplate(emptyTemplate);
+            setShowTemplate(false);
             await load();
         } catch (e: any) {
             setCreateError(e.message);
@@ -65,6 +103,14 @@ export default function ProveedoresModal({ onClose }: Props) {
     function startEdit(s: Supplier) {
         setEditingId(s.id);
         setEditName(s.name);
+        setEditTemplate({
+            invoiceNumberPattern: s.invoiceNumberPattern,
+            nifPattern: s.nifPattern,
+            baseAmountPattern: s.baseAmountPattern,
+            vatRatePattern: s.vatRatePattern,
+            totalAmountPattern: s.totalAmountPattern,
+        });
+        setShowEditTemplate(false);
         setEditDomain(s.domain);
         setEditSubjectKeyword(s.subjectKeyword ?? '');
         setEditError('');
@@ -78,7 +124,7 @@ export default function ProveedoresModal({ onClose }: Props) {
         setSavingEdit(true);
         setEditError('');
         try {
-            await updateSupplier(id, editName.trim(), editDomain.trim(), editSubjectKeyword.trim() || null);
+            await updateSupplier(id, editName.trim(), editDomain.trim(), editSubjectKeyword.trim() || null, editTemplate);
             setEditingId(null);
             await load();
         } catch (e: any) {
@@ -127,6 +173,11 @@ export default function ProveedoresModal({ onClose }: Props) {
                             </button>
                         </div>
                     </div>
+                    <button type="button" onClick={() => setShowTemplate(v => !v)}
+                        className="text-xs text-gray hover:text-gray-dark transition-colors mt-2 underline">
+                        {showTemplate ? 'Ocultar plantilla de extracción' : 'Plantilla de extracción (opcional)'}
+                    </button>
+                    {showTemplate && <TemplateFields value={template} onChange={setTemplate} />}
                     {createError && <p className="text-xs text-orange mt-2">{createError}</p>}
                 </form>
 
@@ -147,7 +198,8 @@ export default function ProveedoresModal({ onClose }: Props) {
                             </thead>
                             <tbody>
                                 {suppliers.map(s => (
-                                    <tr key={s.id} className="border-b border-gray-light last:border-0">
+                                    <Fragment key={s.id}>
+                                    <tr className="border-b border-gray-light last:border-0">
                                         {editingId === s.id ? (
                                             <>
                                                 <td className="py-2 px-3">
@@ -163,6 +215,10 @@ export default function ProveedoresModal({ onClose }: Props) {
                                                         onChange={e => setEditSubjectKeyword(e.target.value)} />
                                                 </td>
                                                 <td className="py-2 px-3 text-right whitespace-nowrap">
+                                                    <button onClick={() => setShowEditTemplate(v => !v)}
+                                                        className="text-gray hover:text-gray-dark transition-colors text-xs font-semibold mr-3">
+                                                        Plantilla
+                                                    </button>
                                                     <button onClick={() => handleSaveEdit(s.id)} disabled={savingEdit}
                                                         className="text-gray hover:text-green transition-colors text-xs font-semibold mr-3 disabled:opacity-40">
                                                         Guardar
@@ -191,6 +247,14 @@ export default function ProveedoresModal({ onClose }: Props) {
                                             </>
                                         )}
                                     </tr>
+                                    {editingId === s.id && showEditTemplate && (
+                                        <tr className="border-b border-gray-light last:border-0">
+                                            <td colSpan={4} className="py-2 px-3 bg-gray-light bg-opacity-20">
+                                                <TemplateFields value={editTemplate} onChange={setEditTemplate} />
+                                            </td>
+                                        </tr>
+                                    )}
+                                    </Fragment>
                                 ))}
                                 {suppliers.length === 0 && (
                                     <tr><td colSpan={4} className="py-4 px-3 text-center text-gray text-sm">Sin proveedores registrados</td></tr>

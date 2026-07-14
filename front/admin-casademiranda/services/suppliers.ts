@@ -1,4 +1,4 @@
-import type { Supplier } from '../interfaces/supplier';
+import type { Supplier, SupplierTemplate } from '../interfaces/supplier';
 import { getToken } from '../auth/auth';
 import { API_HOST } from './config';
 
@@ -13,12 +13,12 @@ export async function listSuppliers(): Promise<Supplier[]> {
     return res.json();
 }
 
-export async function createSupplier(name: string, domain: string, subjectKeyword: string | null): Promise<void> {
+export async function createSupplier(name: string, domain: string, subjectKeyword: string | null, template: SupplierTemplate): Promise<void> {
     const token = getToken();
     const res = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ name, domain, subjectKeyword })
+        body: JSON.stringify({ name, domain, subjectKeyword, ...template })
     });
     if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -26,12 +26,12 @@ export async function createSupplier(name: string, domain: string, subjectKeywor
     }
 }
 
-export async function updateSupplier(id: number, name: string, domain: string, subjectKeyword: string | null): Promise<void> {
+export async function updateSupplier(id: number, name: string, domain: string, subjectKeyword: string | null, template: SupplierTemplate): Promise<void> {
     const token = getToken();
     const res = await fetch(`${API_URL}/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ name, domain, subjectKeyword })
+        body: JSON.stringify({ name, domain, subjectKeyword, ...template })
     });
     if (!res.ok) {
         const body = await res.json().catch(() => ({}));
