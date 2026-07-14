@@ -8,7 +8,7 @@ function quarterOf(month) {
     return Math.ceil(month / 3);
 }
 
-const listInvoices = async (year, quarter) => {
+export function getConfirmationNumbersForQuarter(year, quarter) {
     const files = fs.readdirSync(FACTURAS_DIR);
     const matched = [];
     for (const file of files) {
@@ -19,11 +19,16 @@ const listInvoices = async (year, quarter) => {
         if (quarter && quarterOf(Number(fileMonth)) !== Number(quarter)) continue;
         matched.push(file.replace('.pdf', ''));
     }
+    return matched;
+}
 
+const listInvoices = async (year, quarter) => {
+    const matched = getConfirmationNumbersForQuarter(year, quarter);
     if (matched.length === 0) return [];
 
     const rows = await executeQuery(
-        `SELECT b.confirmation_number, b.check_out, c.name, c.surname, br.price, brex.price_bed
+        `SELECT b.confirmation_number, b.check_in, b.check_out, c.name, c.surname,
+                br.price, brex.number_bed, brex.price_bed
          FROM bookings b
          INNER JOIN booking_customer bc ON b.booking_id = bc.booking_id
          INNER JOIN customers c ON bc.customer_id = c.customer_id AND c.made_booking = 1
@@ -45,7 +50,10 @@ const listInvoices = async (year, quarter) => {
             };
             invoices.set(row.confirmation_number, invoice);
         }
-        invoice.total += Number(row.price ?? 0) + Number(row.price_bed ?? 0);
+        const nights = Math.round((new Date(row.check_out) - new Date(row.check_in)) / 86400000);
+        const roomTotal = nights * Number(row.price ?? 0);
+        const extraBedTotal = row.price_bed != null ? nights * (row.number_bed ?? 1) * Number(row.price_bed) : 0;
+        invoice.total += roomTotal + extraBedTotal;
     }
 
     return matched
