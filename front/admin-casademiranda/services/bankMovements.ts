@@ -1,4 +1,4 @@
-import type { BankMovement, BankMovementInput } from '../interfaces/bankMovement';
+import type { BankMovement, BankMovementInput, BankMovementPreview } from '../interfaces/bankMovement';
 import { getToken } from '../auth/auth';
 import { API_HOST } from './config';
 
@@ -46,4 +46,34 @@ export async function deleteBankMovement(id: number): Promise<void> {
         headers: { 'Authorization': `Bearer ${token}` }
     });
     if (!res.ok) throw new Error(`Error HTTP ${res.status}`);
+}
+
+export async function previewBankMovementsImport(file: File): Promise<BankMovementPreview[]> {
+    const token = getToken();
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch(`${API_URL}/import/preview`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+    });
+    if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message ?? `Error HTTP ${res.status}`);
+    }
+    return res.json();
+}
+
+export async function commitBankMovementsImport(movements: BankMovementInput[]): Promise<{ inserted: number }> {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/import/commit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ movements })
+    });
+    if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message ?? `Error HTTP ${res.status}`);
+    }
+    return res.json();
 }

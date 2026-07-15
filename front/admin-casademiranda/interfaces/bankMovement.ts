@@ -16,3 +16,7 @@ export interface BankMovementInput {
     amount: number;
     notes?: string | null;
 }
+
+export interface BankMovementPreview extends BankMovementInput {
+    duplicate: boolean;
+}

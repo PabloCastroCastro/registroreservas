@@ -44,3 +44,12 @@ export async function updateBankMovement(id, data) {
 export async function deleteBankMovement(id) {
     await executeQuery('DELETE FROM casademiranda.bank_movements WHERE id = ?', [id]);
 }
+
+export async function createBankMovements(movements) {
+    let inserted = 0;
+    for (const movement of movements) {
+        await createBankMovement(movement);
+        inserted++;
+    }
+    return inserted;
+}
