@@ -3,7 +3,10 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { Tabs } from 'flowbite-react';
 import Navbar from '@/components/navbar/navbar';
+import FacturasEmitidas from '@/components/contabilidad/facturas-emitidas';
 import FacturasProveedores from '@/components/contabilidad/facturas-proveedores';
+import InformeGestoriaTab from '@/components/contabilidad/informe-gestoria';
+import MovimientosBanco from '@/components/contabilidad/movimientos-banco';
 import { isAdmin } from '@/auth/auth';
 
 export default function Contabilidad() {
@@ -25,13 +28,16 @@ export default function Contabilidad() {
 
                 <Tabs.Group style="underline">
                     <Tabs.Item active title="Facturas emitidas">
-                        <p className="text-sm text-gray">Próximamente</p>
+                        <FacturasEmitidas />
                     </Tabs.Item>
                     <Tabs.Item title="Facturas proveedores">
                         <FacturasProveedores />
                     </Tabs.Item>
                     <Tabs.Item title="Informe / Gestoría">
-                        <p className="text-sm text-gray">Próximamente</p>
+                        <InformeGestoriaTab />
+                    </Tabs.Item>
+                    <Tabs.Item title="Movimientos banco">
+                        <MovimientosBanco />
                     </Tabs.Item>
                 </Tabs.Group>
             </div>

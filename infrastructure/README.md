@@ -188,3 +188,48 @@ git pull
 cd infrastructure
 sudo systemctl restart registroreservas
 ```
+
+---
+
+## Rotar la contraseña de la base de datos
+
+Cambiar `MYSQL_ROOT_PASSWORD` en `compose.yaml`/`.env` **no rota la contraseña real** de un MySQL que ya tiene datos: esa variable solo la usa la imagen oficial de MySQL para fijarla la primera vez que se inicializa el volumen (`bbdd/data`). En un despliegue ya en marcha hay que rotarla a mano contra el MySQL en vivo:
+
+```bash
+cd ~/registroreservas/infrastructure
+
+# 1. Backup antes de tocar nada
+docker compose exec db sh -c 'mysqldump -u root -p"$MYSQL_ROOT_PASSWORD" casademiranda' > "bbdd/casademiranda-backup-$(date +%Y%m%d-%H%M).sql"
+
+# 2. Generar contraseña nueva y rotarla en el MySQL en vivo
+NEW_PASS=$(openssl rand -hex 24)
+docker compose exec db mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e \
+  "ALTER USER 'root'@'%' IDENTIFIED BY '${NEW_PASS}'; ALTER USER 'root'@'localhost' IDENTIFIED BY '${NEW_PASS}'; FLUSH PRIVILEGES;"
+
+# Verificar que la nueva contraseña funciona antes de seguir
+docker compose exec db mysql -u root -p"${NEW_PASS}" -e "SELECT 1;"
+
+# 3. Guardar la nueva contraseña en .env
+echo "MYSQL_ROOT_PASSWORD=${NEW_PASS}" >> .env
+
+# 4. Actualizar la contraseña en la configuración del backend y volver a cifrarla
+docker compose run --rm \
+  -v "$(pwd)/../server/configuration:/server/configuration" \
+  backend node configuration/setSecret.js sql.password "${NEW_PASS}"
+docker compose run --rm \
+  -v "$(pwd)/../server/configuration:/server/configuration" \
+  backend node configuration/encryptSecrets.js
+
+# 5. Reiniciar el backend con la contraseña nueva
+docker compose up -d --build backend
+rm -f ../server/configuration/*.bak
+```
+
+> Las contraseñas de configuración del backend se guardan cifradas (AES-256-GCM, clave maestra `CONFIG_MASTER_KEY` en `.env`). El paso 4 actualiza el valor y lo vuelve a cifrar automáticamente; no deja copias en claro en disco.
+
+Verificar que el backend arrancó bien antes de dar la rotación por terminada:
+
+```bash
+docker compose logs --tail=30 backend
+curl -s http://localhost:3003/reserva -o /dev/null -w "%{http_code}\n"
+```

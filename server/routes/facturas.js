@@ -1,9 +1,16 @@
 import express from 'express';
-import { authGuard } from '../middleware/auth.js';
+import fs from 'fs';
+import { authGuard, adminGuard } from '../middleware/auth.js';
 import { generarFactura, previewFactura } from '../pdf/createPDF.js';
 import sendMail from '../mail/sendMail.js';
+import listInvoices from '../invoices/listInvoices.js';
+import { getInformeResumen } from '../invoices/informeGestoria.js';
+import { generateInformeExcel } from '../excel/generateInformeGestoria.js';
+import executeQuery from '../sql/sqlUtils.js';
 
 const router = express.Router();
+
+const CONFIRMATION_NUMBER_RE = /^\d{11}$/;
 
 function parseBillBody(body) {
     const checkInDate = new Date(body.fechaCheckIn).toLocaleDateString('es-ES');
@@ -63,6 +70,88 @@ router.post('/factura', async function (req, res) {
     await generarFactura(reserva, cliente);
     sendMail(reserva.numeroFactura, cliente.nombre, cliente.apellidos, cliente.email, req.body.enviarACliente === true);
     res.send('Datos recibidos correctamente.');
+});
+
+router.get('/factura/list', async function (req, res) {
+    if (!adminGuard(req, res)) return;
+
+    try {
+        const { year, quarter } = req.query;
+        const invoices = await listInvoices(year, quarter);
+        res.json(invoices);
+    } catch (err) {
+        console.error('Error listando facturas:', err);
+        res.sendStatus(500);
+    }
+});
+
+router.get('/factura/informe', async function (req, res) {
+    if (!adminGuard(req, res)) return;
+
+    try {
+        const { year, quarter } = req.query;
+        const informe = await getInformeResumen(year, quarter);
+        res.json(informe);
+    } catch (err) {
+        console.error('Error generando informe de gestoría:', err);
+        res.sendStatus(500);
+    }
+});
+
+router.get('/factura/informe/excel', async function (req, res) {
+    if (!adminGuard(req, res)) return;
+
+    try {
+        const { year, quarter } = req.query;
+        const buffer = await generateInformeExcel(year, quarter);
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="InformeGestoria_${year}T${quarter}.xlsx"`);
+        res.send(buffer);
+    } catch (err) {
+        console.error('Error generando Excel de informe de gestoría:', err);
+        res.sendStatus(500);
+    }
+});
+
+router.get('/factura/:confirmationNumber/pdf', function (req, res) {
+    if (!adminGuard(req, res)) return;
+
+    const { confirmationNumber } = req.params;
+    if (!CONFIRMATION_NUMBER_RE.test(confirmationNumber)) return res.sendStatus(400);
+
+    try {
+        const buffer = fs.readFileSync('./facturas-cliente/' + confirmationNumber + '.pdf');
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename="${confirmationNumber}.pdf"`);
+        res.send(buffer);
+    } catch (err) {
+        res.sendStatus(404);
+    }
+});
+
+router.post('/factura/:confirmationNumber/resend', async function (req, res) {
+    if (!adminGuard(req, res)) return;
+
+    const { confirmationNumber } = req.params;
+    if (!CONFIRMATION_NUMBER_RE.test(confirmationNumber)) return res.sendStatus(400);
+
+    try {
+        const rows = await executeQuery(
+            `SELECT c.name, c.surname, c.email FROM casademiranda.bookings b
+             INNER JOIN casademiranda.booking_customer bc ON b.booking_id = bc.booking_id
+             INNER JOIN casademiranda.customers c ON bc.customer_id = c.customer_id AND c.made_booking = 1
+             WHERE b.confirmation_number = ?`,
+            [confirmationNumber]
+        );
+        if (!rows || rows.length === 0) return res.sendStatus(404);
+
+        const { name, surname, email } = rows[0];
+        sendMail(confirmationNumber, name, surname, email);
+        res.sendStatus(200);
+    } catch (err) {
+        console.error('Error reenviando factura:', err);
+        res.sendStatus(500);
+    }
 });
 
 export default router;

@@ -4,6 +4,17 @@ import { listSuppliers, findSupplierByDomain, createSupplier, updateSupplier, de
 
 const router = express.Router();
 
+function parseTemplate(body) {
+    const field = v => (v ?? '').trim() || null;
+    return {
+        invoiceNumberPattern: field(body.invoiceNumberPattern),
+        nifPattern: field(body.nifPattern),
+        baseAmountPattern: field(body.baseAmountPattern),
+        vatRatePattern: field(body.vatRatePattern),
+        totalAmountPattern: field(body.totalAmountPattern),
+    };
+}
+
 router.get('/proveedores', async function (req, res) {
     if (!adminGuard(req, res)) return;
     try {
@@ -25,7 +36,7 @@ router.post('/proveedores', async function (req, res) {
     try {
         const existing = await findSupplierByDomain(domain);
         if (existing) return res.status(409).json({ message: 'Ya existe un proveedor con ese dominio' });
-        const id = await createSupplier(name, domain, subjectKeyword);
+        const id = await createSupplier(name, domain, subjectKeyword, parseTemplate(req.body));
         res.status(201).json({ id });
     } catch (err) {
         console.error('Error creando proveedor:', err);
@@ -44,7 +55,7 @@ router.put('/proveedores/:id', async function (req, res) {
     try {
         const existing = await findSupplierByDomain(domain, req.params.id);
         if (existing) return res.status(409).json({ message: 'Ya existe un proveedor con ese dominio' });
-        await updateSupplier(req.params.id, name, domain, subjectKeyword);
+        await updateSupplier(req.params.id, name, domain, subjectKeyword, parseTemplate(req.body));
         res.sendStatus(204);
     } catch (err) {
         console.error('Error actualizando proveedor:', err);
