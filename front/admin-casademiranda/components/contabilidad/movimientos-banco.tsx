@@ -48,7 +48,43 @@ function MovementsTable({ title, accentClass, items, total, onEdit, onDelete }: 
     return (
         <div>
             <h4 className={`text-xs uppercase tracking-wide font-semibold mb-2 ${accentClass}`}>{title}</h4>
-            <div className="overflow-x-auto border border-gray-light rounded-lg">
+
+            {/* Móvil: tarjetas apiladas */}
+            <div className="md:hidden border border-gray-light rounded-lg divide-y divide-gray-light">
+                {items.map(m => (
+                    <div key={m.id} className="p-3">
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                                <p className="text-sm text-gray-dark break-words">{m.description}</p>
+                                <p className="text-xs text-gray mt-0.5">{new Date(m.date).toLocaleDateString('es-ES')}</p>
+                            </div>
+                            <p className="text-sm font-semibold text-gray-dark whitespace-nowrap">{m.amount.toFixed(2)} €</p>
+                        </div>
+                        <div className="flex gap-4 mt-2">
+                            <button onClick={() => onEdit(m)}
+                                className="text-gray hover:text-gray-dark transition-colors text-xs font-semibold">
+                                Editar
+                            </button>
+                            <button onClick={() => onDelete(m.id, m.description)}
+                                className="text-gray hover:text-orange transition-colors text-xs font-semibold">
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+                ))}
+                {items.length === 0 && (
+                    <p className="py-4 px-3 text-center text-gray text-sm">Sin movimientos en este periodo</p>
+                )}
+                {items.length > 0 && (
+                    <div className="flex justify-between items-center px-3 py-2 bg-gray-light bg-opacity-30">
+                        <span className="text-xs text-gray uppercase tracking-wide font-semibold">Total</span>
+                        <span className="text-sm font-semibold text-gray-dark">{total.toFixed(2)} €</span>
+                    </div>
+                )}
+            </div>
+
+            {/* Escritorio: tabla */}
+            <div className="hidden md:block overflow-x-auto border border-gray-light rounded-lg">
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b border-gray-light">
@@ -347,8 +383,8 @@ export default function MovimientosBanco() {
                                 ? `Se han detectado ${previewRows.filter(r => r.duplicate).length} movimientos que ya existen en este rango de fechas y aparecen desmarcados. Revisa la selección antes de importar.`
                                 : 'Revisa los movimientos detectados antes de importarlos.'}
                         </p>
-                        <div className="overflow-y-auto flex-1 mb-4">
-                            <table className="w-full text-sm">
+                        <div className="overflow-auto flex-1 mb-4">
+                            <table className="w-full text-sm min-w-[520px]">
                                 <thead>
                                     <tr className="border-b border-gray-light sticky top-0 bg-white">
                                         <th className="py-2 px-3"></th>
