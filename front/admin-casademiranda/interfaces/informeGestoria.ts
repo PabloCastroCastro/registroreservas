@@ -20,19 +20,7 @@ export interface ProveedorDetalle {
 export interface InformeGestoria {
     ingresosFacturas: number;
     gastosFacturas: number;
-    ingresosBanco: number;
-    gastosBanco: number;
     resultado: number;
     clientes: ClienteDetalle[];
     proveedores: ProveedorDetalle[];
-    movimientos: BankMovementDetalle[];
-}
-
-export interface BankMovementDetalle {
-    id: number;
-    date: string;
-    type: 'ingreso' | 'gasto';
-    description: string;
-    amount: number;
-    notes: string | null;
 }

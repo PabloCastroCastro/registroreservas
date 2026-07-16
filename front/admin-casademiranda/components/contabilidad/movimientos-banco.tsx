@@ -35,6 +35,66 @@ interface PreviewRow extends BankMovementPreview {
     selected: boolean;
 }
 
+interface MovementsTableProps {
+    title: string;
+    accentClass: string;
+    items: BankMovement[];
+    total: number;
+    onEdit: (m: BankMovement) => void;
+    onDelete: (id: number, description: string) => void;
+}
+
+function MovementsTable({ title, accentClass, items, total, onEdit, onDelete }: MovementsTableProps) {
+    return (
+        <div>
+            <h4 className={`text-xs uppercase tracking-wide font-semibold mb-2 ${accentClass}`}>{title}</h4>
+            <div className="overflow-x-auto border border-gray-light rounded-lg">
+                <table className="w-full text-sm">
+                    <thead>
+                        <tr className="border-b border-gray-light">
+                            <th className="text-left py-2 px-3 text-xs text-gray uppercase tracking-wide font-semibold">Fecha</th>
+                            <th className="text-left py-2 px-3 text-xs text-gray uppercase tracking-wide font-semibold">Razón</th>
+                            <th className="text-right py-2 px-3 text-xs text-gray uppercase tracking-wide font-semibold">Importe</th>
+                            <th className="py-2 px-3"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {items.map(m => (
+                            <tr key={m.id} className="border-b border-gray-light last:border-0">
+                                <td className="py-2 px-3">{new Date(m.date).toLocaleDateString('es-ES')}</td>
+                                <td className="py-2 px-3">{m.description}</td>
+                                <td className="py-2 px-3 text-right">{m.amount.toFixed(2)} €</td>
+                                <td className="py-2 px-3 text-right whitespace-nowrap">
+                                    <button onClick={() => onEdit(m)}
+                                        className="text-gray hover:text-gray-dark transition-colors text-xs font-semibold mr-3">
+                                        Editar
+                                    </button>
+                                    <button onClick={() => onDelete(m.id, m.description)}
+                                        className="text-gray hover:text-orange transition-colors text-xs font-semibold">
+                                        Eliminar
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                        {items.length === 0 && (
+                            <tr><td colSpan={4} className="py-4 px-3 text-center text-gray text-sm">Sin movimientos en este periodo</td></tr>
+                        )}
+                    </tbody>
+                    {items.length > 0 && (
+                        <tfoot>
+                            <tr>
+                                <td colSpan={2} className="py-2 px-3 text-right text-xs text-gray uppercase tracking-wide font-semibold">Total</td>
+                                <td className="py-2 px-3 text-right font-semibold text-gray-dark">{total.toFixed(2)} €</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    )}
+                </table>
+            </div>
+        </div>
+    );
+}
+
 export default function MovimientosBanco() {
     const [year, setYear] = useState(currentYear);
     const [quarter, setQuarter] = useState(currentQuarter());
@@ -175,8 +235,10 @@ export default function MovimientosBanco() {
         }
     }
 
-    const totalIngresos = movements.filter(m => m.type === 'ingreso').reduce((sum, m) => sum + m.amount, 0);
-    const totalGastos = movements.filter(m => m.type === 'gasto').reduce((sum, m) => sum + m.amount, 0);
+    const ingresos = movements.filter(m => m.type === 'ingreso');
+    const gastos = movements.filter(m => m.type === 'gasto');
+    const totalIngresos = ingresos.reduce((sum, m) => sum + m.amount, 0);
+    const totalGastos = gastos.reduce((sum, m) => sum + m.amount, 0);
 
     return (
         <div>
@@ -215,59 +277,11 @@ export default function MovimientosBanco() {
             ) : error ? (
                 <p className="text-sm text-orange">{error}</p>
             ) : (
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b border-gray-light">
-                                <th className="text-left py-2 px-3 text-xs text-gray uppercase tracking-wide font-semibold">Tipo</th>
-                                <th className="text-left py-2 px-3 text-xs text-gray uppercase tracking-wide font-semibold">Fecha</th>
-                                <th className="text-left py-2 px-3 text-xs text-gray uppercase tracking-wide font-semibold">Razón</th>
-                                <th className="text-right py-2 px-3 text-xs text-gray uppercase tracking-wide font-semibold">Importe</th>
-                                <th className="py-2 px-3"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {movements.map(m => (
-                                <tr key={m.id} className="border-b border-gray-light last:border-0">
-                                    <td className="py-2 px-3">
-                                        <span className={m.type === 'ingreso' ? 'text-green font-semibold' : 'text-orange font-semibold'}>
-                                            {m.type === 'ingreso' ? 'Ingreso' : 'Gasto'}
-                                        </span>
-                                    </td>
-                                    <td className="py-2 px-3">{new Date(m.date).toLocaleDateString('es-ES')}</td>
-                                    <td className="py-2 px-3">{m.description}</td>
-                                    <td className="py-2 px-3 text-right">{m.amount.toFixed(2)} €</td>
-                                    <td className="py-2 px-3 text-right whitespace-nowrap">
-                                        <button onClick={() => openEdit(m)}
-                                            className="text-gray hover:text-gray-dark transition-colors text-xs font-semibold mr-3">
-                                            Editar
-                                        </button>
-                                        <button onClick={() => handleDelete(m.id, m.description)}
-                                            className="text-gray hover:text-orange transition-colors text-xs font-semibold">
-                                            Eliminar
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                            {movements.length === 0 && (
-                                <tr><td colSpan={5} className="py-4 px-3 text-center text-gray text-sm">Sin movimientos en este periodo</td></tr>
-                            )}
-                        </tbody>
-                        {movements.length > 0 && (
-                            <tfoot>
-                                <tr>
-                                    <td colSpan={3} className="py-2 px-3 text-right text-xs text-gray uppercase tracking-wide font-semibold">Total ingresos</td>
-                                    <td className="py-2 px-3 text-right font-semibold text-gray-dark">{totalIngresos.toFixed(2)} €</td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <td colSpan={3} className="py-2 px-3 text-right text-xs text-gray uppercase tracking-wide font-semibold">Total gastos</td>
-                                    <td className="py-2 px-3 text-right font-semibold text-gray-dark">{totalGastos.toFixed(2)} €</td>
-                                    <td></td>
-                                </tr>
-                            </tfoot>
-                        )}
-                    </table>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <MovementsTable title="Ingresos" accentClass="text-green" items={ingresos} total={totalIngresos}
+                        onEdit={openEdit} onDelete={handleDelete} />
+                    <MovementsTable title="Gastos" accentClass="text-orange" items={gastos} total={totalGastos}
+                        onEdit={openEdit} onDelete={handleDelete} />
                 </div>
             )}
 

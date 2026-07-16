@@ -21,7 +21,6 @@ export default function InformeGestoriaTab() {
     const [error, setError] = useState('');
     const [showClientes, setShowClientes] = useState(false);
     const [showProveedores, setShowProveedores] = useState(false);
-    const [showMovimientos, setShowMovimientos] = useState(false);
     const [exporting, setExporting] = useState(false);
 
     useEffect(() => { load(); }, [year, quarter]);
@@ -84,15 +83,7 @@ export default function InformeGestoriaTab() {
                 <p className="text-sm text-orange">{error}</p>
             ) : informe && (
                 <>
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                        <div className="border border-gray-light rounded-lg p-4">
-                            <p className={labelClass}>Gastos banco</p>
-                            <p className="text-lg font-semibold text-gray-dark">{informe.gastosBanco.toFixed(2)} €</p>
-                        </div>
-                        <div className="border border-gray-light rounded-lg p-4">
-                            <p className={labelClass}>Ingresos banco</p>
-                            <p className="text-lg font-semibold text-gray-dark">{informe.ingresosBanco.toFixed(2)} €</p>
-                        </div>
+                    <div className="grid grid-cols-3 gap-4 mb-6">
                         <div className="border border-gray-light rounded-lg p-4">
                             <p className={labelClass}>Gastos facturas</p>
                             <p className="text-lg font-semibold text-gray-dark">{informe.gastosFacturas.toFixed(2)} €</p>
@@ -171,42 +162,6 @@ export default function InformeGestoriaTab() {
                                     ))}
                                     {informe.proveedores.length === 0 && (
                                         <tr><td colSpan={4} className="py-4 px-3 text-center text-gray text-sm">Sin facturas en este periodo</td></tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-
-                    <button onClick={() => setShowMovimientos(v => !v)}
-                        className="text-xs text-gray hover:text-gray-dark transition-colors underline block mb-2">
-                        {showMovimientos ? 'Ocultar movimientos de banco' : `Ver movimientos de banco (${informe.movimientos.length})`}
-                    </button>
-                    {showMovimientos && (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b border-gray-light">
-                                        <th className="text-left py-2 px-3 text-xs text-gray uppercase tracking-wide font-semibold">Tipo</th>
-                                        <th className="text-left py-2 px-3 text-xs text-gray uppercase tracking-wide font-semibold">Fecha</th>
-                                        <th className="text-left py-2 px-3 text-xs text-gray uppercase tracking-wide font-semibold">Razón</th>
-                                        <th className="text-right py-2 px-3 text-xs text-gray uppercase tracking-wide font-semibold">Importe</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {informe.movimientos.map(m => (
-                                        <tr key={m.id} className="border-b border-gray-light last:border-0">
-                                            <td className="py-2 px-3">
-                                                <span className={m.type === 'ingreso' ? 'text-green font-semibold' : 'text-orange font-semibold'}>
-                                                    {m.type === 'ingreso' ? 'Ingreso' : 'Gasto'}
-                                                </span>
-                                            </td>
-                                            <td className="py-2 px-3">{new Date(m.date).toLocaleDateString('es-ES')}</td>
-                                            <td className="py-2 px-3">{m.description}</td>
-                                            <td className="py-2 px-3 text-right">{m.amount.toFixed(2)} €</td>
-                                        </tr>
-                                    ))}
-                                    {informe.movimientos.length === 0 && (
-                                        <tr><td colSpan={4} className="py-4 px-3 text-center text-gray text-sm">Sin movimientos en este periodo</td></tr>
                                     )}
                                 </tbody>
                             </table>
