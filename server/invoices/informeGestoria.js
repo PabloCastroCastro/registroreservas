@@ -54,12 +54,12 @@ export async function getInformeResumen(year, quarter) {
         getClienteDetalle(year, quarter),
         getProveedorDetalle(year, quarter),
     ]);
-    const ingresos = clientes.reduce((sum, c) => sum + c.total, 0);
-    const gastos = proveedores.reduce((sum, p) => sum + p.totalAmount, 0);
+    const ingresosFacturas = clientes.reduce((sum, c) => sum + c.total, 0);
+    const gastosFacturas = proveedores.reduce((sum, p) => sum + p.totalAmount, 0);
     return {
-        ingresos,
-        gastos,
-        resultado: ingresos - gastos,
+        ingresosFacturas,
+        gastosFacturas,
+        resultado: ingresosFacturas - gastosFacturas,
         clientes,
         proveedores,
     };

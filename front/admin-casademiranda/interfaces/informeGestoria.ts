@@ -18,8 +18,8 @@ export interface ProveedorDetalle {
 }
 
 export interface InformeGestoria {
-    ingresos: number;
-    gastos: number;
+    ingresosFacturas: number;
+    gastosFacturas: number;
     resultado: number;
     clientes: ClienteDetalle[];
     proveedores: ProveedorDetalle[];

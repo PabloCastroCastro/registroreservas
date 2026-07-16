@@ -83,14 +83,14 @@ export default function InformeGestoriaTab() {
                 <p className="text-sm text-orange">{error}</p>
             ) : informe && (
                 <>
-                    <div className="grid grid-cols-3 gap-4 mb-6 max-w-xl">
+                    <div className="grid grid-cols-3 gap-4 mb-6">
                         <div className="border border-gray-light rounded-lg p-4">
-                            <p className={labelClass}>Ingresos</p>
-                            <p className="text-lg font-semibold text-gray-dark">{informe.ingresos.toFixed(2)} €</p>
+                            <p className={labelClass}>Gastos facturas</p>
+                            <p className="text-lg font-semibold text-gray-dark">{informe.gastosFacturas.toFixed(2)} €</p>
                         </div>
                         <div className="border border-gray-light rounded-lg p-4">
-                            <p className={labelClass}>Gastos</p>
-                            <p className="text-lg font-semibold text-gray-dark">{informe.gastos.toFixed(2)} €</p>
+                            <p className={labelClass}>Ingresos facturas</p>
+                            <p className="text-lg font-semibold text-gray-dark">{informe.ingresosFacturas.toFixed(2)} €</p>
                         </div>
                         <div className="border border-gray-light rounded-lg p-4">
                             <p className={labelClass}>Resultado</p>
@@ -141,7 +141,7 @@ export default function InformeGestoriaTab() {
                         {showProveedores ? 'Ocultar detalle de proveedores' : `Ver detalle de proveedores (${informe.proveedores.length})`}
                     </button>
                     {showProveedores && (
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto mb-6">
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b border-gray-light">
