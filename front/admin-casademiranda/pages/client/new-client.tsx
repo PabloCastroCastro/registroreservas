@@ -12,6 +12,7 @@ import { findMunicipioByName } from '@/utils/municipioSearch';
 import { MunicipioSelector } from '@/components/clients/MunicipioSelector';
 import { PostalCodeSelector } from '@/components/clients/PostalCodeSelector';
 import { PaisSelector } from '@/components/clients/PaisSelector';
+import { isValidEmailFormat, suggestEmailCorrection } from '@/utils/email';
 
 type Country = {
     pais: string;
@@ -40,6 +41,7 @@ export default function NewClient() {
     const [phone, setPhone] = useState("");
     const [otherPhone, setOtherPhone] = useState("");
     const [email, setEmail] = useState("");
+    const [emailSuggestion, setEmailSuggestion] = useState<string | null>(null);
     const [relationship, setRelationship] = useState("");
     const [line, setLine] = useState("");
     const [line2, setLine2] = useState("");
@@ -60,6 +62,7 @@ export default function NewClient() {
     const [backFile, setBackFile] = useState<File | null>(null);
 
     const validData = (client: Client) => {
+        if (client.email && !isValidEmailFormat(client.email)) return false;
         return true;
     }
 
@@ -140,7 +143,7 @@ export default function NewClient() {
 
         if (!validData(client)) {
 
-            alert('Los datos del cliente no son validos')
+            alert('El email no tiene un formato válido')
             return new Error('Invalid client data')
         }
 
@@ -297,7 +300,16 @@ export default function NewClient() {
 
                         <div className="grid grid-cols-1">
                             <label className='text-gray-dark text-opacity-75' id="email">Email:</label>
-                            <input type="text" className='rounded-full' id="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                            <input type="email" className='rounded-full' id="email" name="email" value={email}
+                                onChange={(e) => { setEmail(e.target.value); setEmailSuggestion(suggestEmailCorrection(e.target.value)); }} />
+                            {emailSuggestion && (
+                                <p className="text-xs text-orange mt-1">
+                                    ¿Quisiste decir{' '}
+                                    <button type="button" className="underline" onClick={() => { setEmail(emailSuggestion); setEmailSuggestion(null); }}>
+                                        {emailSuggestion}
+                                    </button>?
+                                </p>
+                            )}
                         </div>
                         
                         <div className="grid grid-cols-1">

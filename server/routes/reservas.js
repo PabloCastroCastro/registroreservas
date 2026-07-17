@@ -11,6 +11,7 @@ import sendConfirmationBookingMail from '../confirmacion-reserva/sendMailConfirm
 import { checkAllRoomsAvailability } from '../bookings/checkAvailability.js';
 import { listBookingDishes, addBookingDish, removeBookingDish } from '../bookings/bookingDishes.js';
 import executeQuery from '../sql/sqlUtils.js';
+import { isValidEmailFormat } from '../validation/email.js';
 
 const router = express.Router();
 
@@ -57,6 +58,10 @@ router.get('/reserva', async (req, res) => {
 
 router.post('/reserva', async (req, res) => {
     if (!authGuard(req, res)) return;
+
+    if (!isValidEmailFormat(req.body.email)) {
+        return res.status(400).json({ message: 'El email no tiene un formato válido' });
+    }
 
     console.log('query: ', JSON.stringify(req.query));
 

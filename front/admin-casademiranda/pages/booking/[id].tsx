@@ -21,6 +21,7 @@ import Link from 'next/link'
 import { Client } from '@/interfaces/client';
 import ClientComponent from '@/components/clients/clientComponent';
 import DateComponent from '@/components/dates/dateComponent';
+import { isValidEmailFormat, suggestEmailCorrection } from '@/utils/email';
 
 function validateClientForCheckin(c: Client): string[] {
     const errors: string[] = [];
@@ -106,6 +107,8 @@ export default function BookingPage() {
     const [billConcepto, setBillConcepto] = useState('');
     const [billExtras, setBillExtras] = useState<BillExtra[]>([]);
     const [billEmail, setBillEmail] = useState('');
+    const [billEmailError, setBillEmailError] = useState('');
+    const [billEmailSuggestion, setBillEmailSuggestion] = useState<string | null>(null);
     const [billEnviarACliente, setBillEnviarACliente] = useState(false);
     const [billNombreEmpresa, setBillNombreEmpresa] = useState('');
     const [billCodigoPostalCiudad, setBillCodigoPostalCiudad] = useState('');
@@ -205,7 +208,17 @@ export default function BookingPage() {
         };
     }
 
+    function validateBillEmail(): boolean {
+        if (billEmail.trim() && !isValidEmailFormat(billEmail)) {
+            setBillEmailError('Formato de email no válido');
+            return false;
+        }
+        setBillEmailError('');
+        return true;
+    }
+
     async function handlePreviewBill() {
+        if (!validateBillEmail()) return;
         const bill = buildBillPayload();
         if (!bill) return;
         setBillPreviewing(true);
@@ -221,6 +234,7 @@ export default function BookingPage() {
     }
 
     async function handleCreateBill() {
+        if (!validateBillEmail()) return;
         const bill = buildBillPayload();
         if (!bill) return;
         setBillLoading(true);
@@ -627,7 +641,21 @@ export default function BookingPage() {
                                         )}
                                         <div className="sm:col-span-2">
                                             <label className={labelClass}>Email destinatario</label>
-                                            <input className={inputClass} type="email" value={billEmail} onChange={e => setBillEmail(e.target.value)} placeholder="email@ejemplo.com" />
+                                            <input className={inputClass} type="email" value={billEmail}
+                                                onChange={e => {
+                                                    setBillEmail(e.target.value);
+                                                    setBillEmailError('');
+                                                    setBillEmailSuggestion(suggestEmailCorrection(e.target.value));
+                                                }} placeholder="email@ejemplo.com" />
+                                            {billEmailError && <p className="text-xs text-orange mt-1">{billEmailError}</p>}
+                                            {!billEmailError && billEmailSuggestion && (
+                                                <p className="text-xs text-orange mt-1">
+                                                    ¿Quisiste decir{' '}
+                                                    <button type="button" className="underline" onClick={() => { setBillEmail(billEmailSuggestion); setBillEmailSuggestion(null); }}>
+                                                        {billEmailSuggestion}
+                                                    </button>?
+                                                </p>
+                                            )}
                                             <label className="flex items-center gap-2 mt-2 text-xs text-gray-dark">
                                                 <input
                                                     type="checkbox"

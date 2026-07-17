@@ -6,6 +6,7 @@ import type { RequestRoom } from '@/interfaces/room';
 import * as APIBooking from "../../services/bookings";
 import * as APIRoomPrices from "../../services/roomPrices";
 import { getRoomsAvailability } from "../../services/bookings";
+import { isValidEmailFormat, suggestEmailCorrection } from "@/utils/email";
 
 const ALL_ROOMS = ['A Fonte', 'O Carpinteiro', 'O Cuberto', 'O Faiado'];
 import { useRouter } from 'next/router';
@@ -26,6 +27,7 @@ export default function NewBooking() {
     const [surname2, setSurname2] = useState("");
     const [identifier, setIdentifier] = useState("");
     const [email, setEmail] = useState("");
+    const [emailSuggestion, setEmailSuggestion] = useState<string | null>(null);
     const [confirmedEmail, setConfirmedEmail] = useState("");
     const [sendEmail, setSendEmail] = useState<boolean>(false);
     const [checkIn, setCheckIn] = useState("");
@@ -106,7 +108,7 @@ export default function NewBooking() {
 
         if (!email.trim()) {
             e.email = 'El email es obligatorio';
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        } else if (!isValidEmailFormat(email)) {
             e.email = 'Formato de email no válido';
         } else if (email !== confirmedEmail) {
             e.confirmedEmail = 'Los emails no coinciden';
@@ -194,8 +196,20 @@ export default function NewBooking() {
                             <div>
                                 <label className={labelClass}>Email *</label>
                                 <input className={f('email')} type="email" value={email}
-                                    onChange={e => { setEmail(e.target.value); clearError('email'); clearError('confirmedEmail'); }} />
+                                    onChange={e => {
+                                        setEmail(e.target.value);
+                                        clearError('email'); clearError('confirmedEmail');
+                                        setEmailSuggestion(suggestEmailCorrection(e.target.value));
+                                    }} />
                                 {errors.email && <p className={errorClass}>{errors.email}</p>}
+                                {!errors.email && emailSuggestion && (
+                                    <p className={errorClass}>
+                                        ¿Quisiste decir{' '}
+                                        <button type="button" className="underline" onClick={() => { setEmail(emailSuggestion); setEmailSuggestion(null); }}>
+                                            {emailSuggestion}
+                                        </button>?
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <label className={labelClass}>Confirmar email *</label>
