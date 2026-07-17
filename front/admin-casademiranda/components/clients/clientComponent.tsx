@@ -13,7 +13,7 @@ function Field({ label, value }: { label: string; value?: string | number | null
     return (
         <div>
             <p className="text-xs text-gray uppercase tracking-wide">{label}</p>
-            <p className="text-gray-dark font-medium">{value || '—'}</p>
+            <p className="text-gray-dark font-medium break-words">{value || '—'}</p>
         </div>
     );
 }
