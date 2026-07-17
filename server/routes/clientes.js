@@ -2,11 +2,16 @@ import express from 'express';
 import { authGuard } from '../middleware/auth.js';
 import { save, update } from '../clients/saveClient.js';
 import { listAllCustomers, listCustomerById, listCustomerByBookingId, listCustomerByIdentifier } from '../clients/listClient.js';
+import { isValidEmailFormat } from '../validation/email.js';
 
 const router = express.Router();
 
 router.post('/cliente', async (req, res) => {
     if (!authGuard(req, res)) return;
+
+    if (req.body.email && !isValidEmailFormat(req.body.email)) {
+        return res.status(400).json({ message: 'El email no tiene un formato válido' });
+    }
 
     console.log('query: ', JSON.stringify(req.query));
 
@@ -41,6 +46,10 @@ router.post('/cliente', async (req, res) => {
 
 router.put('/cliente', async (req, res) => {
     if (!authGuard(req, res)) return;
+
+    if (req.body.email && !isValidEmailFormat(req.body.email)) {
+        return res.status(400).json({ message: 'El email no tiene un formato válido' });
+    }
 
     console.log('query: ', JSON.stringify(req.query));
 
