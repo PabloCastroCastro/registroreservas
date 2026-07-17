@@ -8,6 +8,7 @@ export interface Supplier {
     baseAmountPattern: string | null;
     vatRatePattern: string | null;
     totalAmountPattern: string | null;
+    datePattern: string | null;
 }
 
 export interface SupplierTemplate {
@@ -16,4 +17,5 @@ export interface SupplierTemplate {
     baseAmountPattern: string | null;
     vatRatePattern: string | null;
     totalAmountPattern: string | null;
+    datePattern: string | null;
 }

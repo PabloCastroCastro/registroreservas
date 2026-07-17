@@ -5,7 +5,8 @@ const SELECT_FIELDS = `id, name, domain, subject_keyword AS subjectKeyword,
     nif_pattern AS nifPattern,
     base_amount_pattern AS baseAmountPattern,
     vat_rate_pattern AS vatRatePattern,
-    total_amount_pattern AS totalAmountPattern`;
+    total_amount_pattern AS totalAmountPattern,
+    date_pattern AS datePattern`;
 
 export async function listSuppliers() {
     const rows = await executeQuery(
@@ -32,8 +33,8 @@ export async function findSupplierByDomain(domain, excludeId = null) {
 export async function createSupplier(name, domain, subjectKeyword, template = {}) {
     const result = await executeQuery(
         `INSERT INTO casademiranda.suppliers
-            (name, domain, subject_keyword, invoice_number_pattern, nif_pattern, base_amount_pattern, vat_rate_pattern, total_amount_pattern)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            (name, domain, subject_keyword, invoice_number_pattern, nif_pattern, base_amount_pattern, vat_rate_pattern, total_amount_pattern, date_pattern)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
             name, domain, subjectKeyword ?? null,
             template.invoiceNumberPattern ?? null,
@@ -41,6 +42,7 @@ export async function createSupplier(name, domain, subjectKeyword, template = {}
             template.baseAmountPattern ?? null,
             template.vatRatePattern ?? null,
             template.totalAmountPattern ?? null,
+            template.datePattern ?? null,
         ]
     );
     return result.insertId;
@@ -50,7 +52,7 @@ export async function updateSupplier(id, name, domain, subjectKeyword, template 
     await executeQuery(
         `UPDATE casademiranda.suppliers
          SET name = ?, domain = ?, subject_keyword = ?,
-             invoice_number_pattern = ?, nif_pattern = ?, base_amount_pattern = ?, vat_rate_pattern = ?, total_amount_pattern = ?
+             invoice_number_pattern = ?, nif_pattern = ?, base_amount_pattern = ?, vat_rate_pattern = ?, total_amount_pattern = ?, date_pattern = ?
          WHERE id = ?`,
         [
             name, domain, subjectKeyword ?? null,
@@ -59,6 +61,7 @@ export async function updateSupplier(id, name, domain, subjectKeyword, template 
             template.baseAmountPattern ?? null,
             template.vatRatePattern ?? null,
             template.totalAmountPattern ?? null,
+            template.datePattern ?? null,
             id,
         ]
     );

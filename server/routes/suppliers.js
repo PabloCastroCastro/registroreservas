@@ -12,6 +12,7 @@ function parseTemplate(body) {
         baseAmountPattern: field(body.baseAmountPattern),
         vatRatePattern: field(body.vatRatePattern),
         totalAmountPattern: field(body.totalAmountPattern),
+        datePattern: field(body.datePattern),
     };
 }
 

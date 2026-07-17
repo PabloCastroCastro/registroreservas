@@ -15,6 +15,10 @@ const save = async (booking, customer) => {
         throw new Error('Only one customer for identifier');
     } else {
         idCustomer = customers[0].customer_id;
+        // El cliente ya existía (misma identificación en otra reserva): sus datos deben
+        // actualizarse con los recién introducidos, no conservar los antiguos (p.ej. email).
+        await executeQuery('UPDATE casademiranda.customers SET name = ?, surname = ?, surname2 = ?, email = ? WHERE customer_id = ?;',
+            [customer.nombre, customer.apellido1 ?? customer.apellidos ?? "", customer.apellido2 ?? null, customer.email, idCustomer]);
     }
 
     let alredyExistBooking = await executeQuery('SELECT booking_id FROM casademiranda.bookings WHERE other_platform_reference =?', [booking.referenciaOtraPlataforma]);

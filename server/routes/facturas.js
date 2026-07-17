@@ -7,6 +7,7 @@ import listInvoices from '../invoices/listInvoices.js';
 import { getInformeResumen } from '../invoices/informeGestoria.js';
 import { generateInformeExcel } from '../excel/generateInformeGestoria.js';
 import executeQuery from '../sql/sqlUtils.js';
+import { isValidEmailFormat } from '../validation/email.js';
 
 const router = express.Router();
 
@@ -65,6 +66,10 @@ router.post('/factura/preview', async function (req, res) {
 
 router.post('/factura', async function (req, res) {
     if (!authGuard(req, res)) return;
+
+    if (req.body.email && !isValidEmailFormat(req.body.email)) {
+        return res.status(400).json({ message: 'El email no tiene un formato válido' });
+    }
 
     const { reserva, cliente } = parseBillBody(req.body);
     await generarFactura(reserva, cliente);
