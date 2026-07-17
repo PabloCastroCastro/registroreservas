@@ -51,4 +51,5 @@ export interface ExtractedInvoiceData {
     baseAmount: number | null;
     vatRatePercent: number | null;
     totalAmount: number | null;
+    date: string | null;
 }
