@@ -108,6 +108,14 @@ function cleanNif(str) {
     return cleaned || null;
 }
 
+function normalizeSpanishDate(str) {
+    if (!str) return null;
+    const match = /^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/.exec(str.trim());
+    if (!match) return null;
+    const [, day, month, year] = match;
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+}
+
 function applyInvoiceTemplate(text, template) {
     return {
         invoiceNumber: extractField(text, template.invoiceNumberPattern),
@@ -115,10 +123,11 @@ function applyInvoiceTemplate(text, template) {
         baseAmount: parseSpanishNumber(extractField(text, template.baseAmountPattern)),
         vatRatePercent: parseSpanishNumber(extractField(text, template.vatRatePattern)),
         totalAmount: parseSpanishNumber(extractField(text, template.totalAmountPattern)),
+        date: normalizeSpanishDate(extractField(text, template.datePattern)),
     };
 }
 
-const EMPTY_RESULT = { invoiceNumber: null, nif: null, baseAmount: null, vatRatePercent: null, totalAmount: null };
+const EMPTY_RESULT = { invoiceNumber: null, nif: null, baseAmount: null, vatRatePercent: null, totalAmount: null, date: null };
 
 export async function extractSupplierInvoiceFields(buffer, contentType, filename, template) {
     try {

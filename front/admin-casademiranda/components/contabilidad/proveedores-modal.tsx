@@ -12,6 +12,7 @@ const emptyTemplate: SupplierTemplate = {
     baseAmountPattern: null,
     vatRatePattern: null,
     totalAmountPattern: null,
+    datePattern: null,
 };
 
 const TEMPLATE_FIELDS: { key: keyof SupplierTemplate; label: string; placeholder: string }[] = [
@@ -20,6 +21,7 @@ const TEMPLATE_FIELDS: { key: keyof SupplierTemplate; label: string; placeholder
     { key: 'baseAmountPattern', label: 'Base imponible', placeholder: String.raw`Base imponible\s*([\d.,]+)` },
     { key: 'vatRatePattern', label: 'IVA %', placeholder: String.raw`IVA\s*\((\d+)%\)` },
     { key: 'totalAmountPattern', label: 'Total', placeholder: String.raw`Total factura\s*([\d.,]+)\s*€` },
+    { key: 'datePattern', label: 'Fecha', placeholder: String.raw`FECHA:\s*(\d{2}/\d{2}/\d{4})` },
 ];
 
 function TemplateFields({ value, onChange }: { value: SupplierTemplate; onChange: (t: SupplierTemplate) => void }) {
@@ -109,6 +111,7 @@ export default function ProveedoresModal({ onClose }: Props) {
             baseAmountPattern: s.baseAmountPattern,
             vatRatePattern: s.vatRatePattern,
             totalAmountPattern: s.totalAmountPattern,
+            datePattern: s.datePattern,
         });
         setShowEditTemplate(false);
         setEditDomain(s.domain);

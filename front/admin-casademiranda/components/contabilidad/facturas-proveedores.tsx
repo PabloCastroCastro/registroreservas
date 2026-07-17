@@ -135,6 +135,7 @@ export default function FacturasProveedores() {
                 const next = { ...prev };
                 if (extracted.invoiceNumber) next.invoiceNumber = extracted.invoiceNumber;
                 if (extracted.nif) next.nif = extracted.nif;
+                if (extracted.date) next.date = extracted.date;
                 if (extracted.baseAmount != null && extracted.vatRatePercent != null) {
                     next.vatLines = [{ baseAmount: String(extracted.baseAmount), vatPercent: String(extracted.vatRatePercent) }];
                 }
